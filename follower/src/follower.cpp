@@ -3,34 +3,20 @@
 #include "sensor_msgs/LaserScan.h"
 #include "geometry_msgs/Twist.h"
 
+#include <algorithm>
 
 ros::Publisher  pub;
 
-void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
-{
-    if (!msg->ranges.empty()) {
-	int minindex = -1;
-	float min = FLT_MAX;
+void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
+    auto it = std::min_element(msg->ranges.begin(), msg->ranges.end());
+	auto minindex = std::distance(msg->ranges.begin(), it);
 
-	for(int i = 0; i < msg->ranges.size(); ++i) {
-		if(msg->ranges[i] < min) {
-			min = msg->ranges[i];
-			minindex = i;
-		}
-	}
-
-        ROS_INFO("min range is %f", min);
-	ROS_INFO("min index is %d", minindex);
-	float newangle = msg->angle_min + minindex*msg->angle_increment;
-	ROS_INFO("new angle %f", newangle);
-
+	float newangle = msg->angle_min + minindex * msg->angle_increment;
 	float rightangle = newangle - 1.57;
-
 
 	geometry_msgs::Twist move;
 
-
-	if( rightangle > 1.5|| rightangle < -1.5) {
+	if (rightangle > 1.5 || rightangle < -1.5) {
 		move.linear.x = 0;
 	} else {
 		move.linear.x = 0.1;
@@ -44,27 +30,16 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
 	move.angular.z = rightangle;
 
 	pub.publish(move);
-	
-	
-    }
 }
 
-
-
-int main(int argc, char **argv)
-{
-
-
+int main(int argc, char **argv) {
   ros::init(argc, argv, "twoway");
-
-
   ros::NodeHandle n;
-
 
   ros::Subscriber sub = n.subscribe("scan", 1, laserCallback);
   pub = n.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/navi", 1000);
 
   ros::spin();
 
-  return 0;
+  return EXIT_SUCCESS;
 }
