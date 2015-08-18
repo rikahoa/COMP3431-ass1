@@ -9,37 +9,37 @@ ros::Publisher  pub;
 
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     auto it = std::min_element(msg->ranges.begin(), msg->ranges.end());
-	auto minindex = std::distance(msg->ranges.begin(), it);
+    auto minindex = std::distance(msg->ranges.begin(), it);
 
-	float newangle = msg->angle_min + minindex * msg->angle_increment;
-	float rightangle = newangle - 1.57;
+    float newangle = msg->angle_min + minindex * msg->angle_increment;
+    float rightangle = newangle - 1.57;
 
-	geometry_msgs::Twist move;
+    geometry_msgs::Twist move;
 
-	if (rightangle > 1.5 || rightangle < -1.5) {
-		move.linear.x = 0;
-	} else {
-		move.linear.x = 0.1;
-	}
+    if (rightangle > 1.5 || rightangle < -1.5) {
+        move.linear.x = 0;
+    } else {
+        move.linear.x = 0.1;
+    }
 
-	move.linear.y = 0;
-	move.linear.z = 0;
+    move.linear.y = 0;
+    move.linear.z = 0;
 
-	move.angular.x = 0;
-	move.angular.y = 0;
-	move.angular.z = rightangle;
+    move.angular.x = 0;
+    move.angular.y = 0;
+    move.angular.z = rightangle;
 
-	pub.publish(move);
+    pub.publish(move);
 }
 
 int main(int argc, char **argv) {
-  ros::init(argc, argv, "twoway");
-  ros::NodeHandle n;
+    ros::init(argc, argv, "twoway");
+    ros::NodeHandle n;
 
-  ros::Subscriber sub = n.subscribe("scan", 1, laserCallback);
-  pub = n.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/navi", 1000);
+    ros::Subscriber sub = n.subscribe("scan", 1, laserCallback);
+    pub = n.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/navi", 1000);
 
-  ros::spin();
+    ros::spin();
 
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
