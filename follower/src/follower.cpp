@@ -24,21 +24,27 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
 	float newangle = msg->angle_min + minindex*msg->angle_increment;
 	ROS_INFO("new angle %f", newangle);
 
-	if( newangle > 0.1 || newangle < -0.1) {
-	//Cheat way turn left  or right by the angle we want  within a threhsold
-		geometry_msgs::Twist move;
+	float rightangle = newangle - 1.57;
 
 
+	geometry_msgs::Twist move;
+
+
+	if( rightangle > 1.5|| rightangle < -1.5) {
 		move.linear.x = 0;
-		move.linear.y = 0;
-		move.linear.z = 0;
-
-		move.angular.x = 0;
-		move.angular.y = 0;
-		move.angular.z = newangle;
-
-		pub.publish(move);
+	} else {
+		move.linear.x = 0.1;
 	}
+
+	move.linear.y = 0;
+	move.linear.z = 0;
+
+	move.angular.x = 0;
+	move.angular.y = 0;
+	move.angular.z = rightangle;
+
+	pub.publish(move);
+	
 	
     }
 }
