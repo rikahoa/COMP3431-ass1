@@ -4,19 +4,22 @@
 #include "geometry_msgs/Twist.h"
 
 #include <algorithm>
+#include <cmath>
 
-ros::Publisher  pub;
+constexpr float PI = acos(-1);
+
+ros::Publisher pub;
 
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     auto it = std::min_element(msg->ranges.begin(), msg->ranges.end());
     auto minindex = std::distance(msg->ranges.begin(), it);
 
     float newangle = msg->angle_min + minindex * msg->angle_increment;
-    float rightangle = newangle - 1.57;
+    float rightangle = newangle - PI/2;
 
     geometry_msgs::Twist move;
 
-    if (rightangle > 1.5 || rightangle < -1.5) {
+    if (rightangle > PI/2 || rightangle < -PI/2) {
         move.linear.x = 0;
     } else {
         move.linear.x = 0.1;
