@@ -1,3 +1,0 @@
-[submodule "src/crosbot"]
-	path = src/crosbot
-	url = git://robolab.ai.cse.unsw.edu.au/ros/crosbot
