@@ -49,3 +49,4 @@ CATKIN_IGNORE
 # swaps
 *.swp
 *.swo
+tmp/
