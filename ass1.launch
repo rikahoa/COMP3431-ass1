@@ -1,0 +1,7 @@
+<launch>
+    <node name="planner" pkg="ass1" type="planner" output="screen"/>
+    <node name="movement" pkg="ass1" type="movement" output="screen"/>
+    <node name="waypoint" pkg="ass1" type="waypoint" output="screen"/>
+    <node name="beacon" pkg="ass1" type="beacon" output="screen"/>
+    <node name="exploration" pkg="ass1" type="exploration" output="screen"/>
+</launch>
