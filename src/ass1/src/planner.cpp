@@ -2,6 +2,7 @@
 #include "sensor_msgs/LaserScan.h"
 #include "geometry_msgs/Twist.h"
 #include "nav_msgs/OccupancyGrid.h"
+#include "nav_msgs/Odometry.h"
 
 #include <algorithm>
 #include <cmath>
@@ -14,12 +15,17 @@ class Planner {
         Planner(ros::NodeHandle n) : n(n) {
             laser_sub = n.subscribe("scan", 1, &Planner::laser_callback, this);
             map_sub = n.subscribe("map", 1, &Planner::map_callback, this);
+            odom_sub = n.subscribe("odom", 1, &Planner::odom_callback, this);
             
             movement_pub = n.advertise<geometry_msgs::Twist>("/ass1/movement", 1);
         }
 
         void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &msg) {
             ROS_INFO_STREAM("I HAVE A MAP");
+        }
+
+        void odom_callback(const nav_msgs::Odometry::ConstPtr &msg) {
+            ROS_INFO_STREAM("Odometry: " << *msg);
         }
 
         void laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
@@ -56,8 +62,10 @@ class Planner {
     private:
         ros::NodeHandle n;
         ros::Publisher movement_pub;
+
         ros::Subscriber laser_sub;
         ros::Subscriber map_sub;
+        ros::Subscriber odom_sub;
 };
 
 int main(int argc, char *argv[]) {
