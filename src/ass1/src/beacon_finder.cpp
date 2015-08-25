@@ -19,7 +19,7 @@ class BeaconFinder {
 };
 
 int main(int argc, char *argv[]) {
-    ros::init(argc, argv, "beacon");
+    ros::init(argc, argv, "beacon_finder");
     ros::NodeHandle n;
 
     BeaconFinder beacon_finder(n);

@@ -1,0 +1,4 @@
+<launch>
+    <node name="follower" pkg="ass1" type="follower" output="screen"/>
+    <node name="movement" pkg="ass1" type="movement" output="screen"/>
+</launch>

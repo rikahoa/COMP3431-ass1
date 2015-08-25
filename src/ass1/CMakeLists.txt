@@ -208,3 +208,6 @@ target_link_libraries(waypoint ${catkin_LIBRARIES})
 
 add_executable(planner src/planner.cpp)
 target_link_libraries(planner ${catkin_LIBRARIES})
+
+add_executable(follower src/follower.cpp)
+target_link_libraries(follower ${catkin_LIBRARIES})
