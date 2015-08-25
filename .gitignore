@@ -50,3 +50,6 @@ CATKIN_IGNORE
 *.swp
 *.swo
 tmp/
+ros_export.*
+
+devel

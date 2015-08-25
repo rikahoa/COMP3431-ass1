@@ -16,21 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
-## US: Executeables
-add_executable(movement src/movement.cpp)
-target_link_libraries(movement ${catkin_LIBRARIES})
-
-add_executable(exploration src/exploration.cpp)
-target_link_libraries(exploration ${catkin_LIBRARIES})
-
-add_executable(beacon src/beacon.cpp)
-target_link_libraries(beacon ${catkin_LIBRARIES})
-
-add_executable(waypoint src/waypoint.cpp)
-target_link_libraries(waypoint ${catkin_LIBRARIES})
-
-add_executable(planner src/planner.cpp)
-target_link_libraries(planner ${catkin_LIBRARIES})
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -208,3 +193,18 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+## US: Executeables
+add_executable(movement src/movement.cpp)
+target_link_libraries(movement ${catkin_LIBRARIES})
+
+add_executable(exploration src/exploration.cpp)
+target_link_libraries(exploration ${catkin_LIBRARIES})
+
+add_executable(beacon src/beacon.cpp)
+target_link_libraries(beacon ${catkin_LIBRARIES})
+
+add_executable(waypoint src/waypoint.cpp)
+target_link_libraries(waypoint ${catkin_LIBRARIES})
+
+add_executable(planner src/planner.cpp)
+target_link_libraries(planner ${catkin_LIBRARIES})
