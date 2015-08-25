@@ -10,8 +10,29 @@ constexpr float PI = acos(-1);
 
 ros::Publisher pub;
 
+template <class ForwardIterator>
+ForwardIterator min_element_fuck_nans(ForwardIterator first, ForwardIterator last) {
+    if (first == last) {
+        return last;
+    }
+    ForwardIterator smallest = first;
+    while (smallest != last && *smallest != *smallest) {
+        ++smallest;
+    }
+    while (++first != last) {
+        if (*first < *last) {
+            smallest = first;
+        }
+    }
+    return smallest;
+}
+
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     auto it = std::min_element(msg->ranges.begin(), msg->ranges.end());
+    if (it == msg->ranges.end()) {
+        ROS_INFO("No data received.");
+        return;
+    }
     auto minindex = std::distance(msg->ranges.begin(), it);
 
     float newangle = msg->angle_min + minindex * msg->angle_increment;
