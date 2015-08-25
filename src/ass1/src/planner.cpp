@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "sensor_msgs/LaserScan.h"
 #include "geometry_msgs/Twist.h"
+#include "nav_msgs/OccupancyGrid.h"
 
 #include <algorithm>
 #include <cmath>
@@ -11,11 +12,17 @@ class Planner {
     public:
         
         Planner(ros::NodeHandle n) : n(n) {
+            laser_sub = n.subscribe("scan", 1, &Planner::laser_callback, this);
+            map_sub = n.subscribe("map", 1, &Planner::map_callback, this);
+            
             movement_pub = n.advertise<geometry_msgs::Twist>("/ass1/movement", 1);
-            laser_sub = n.subscribe("scan", 1, &Planner::laserCallback, this);
         }
 
-        void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
+        void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &msg) {
+            ROS_INFO_STREAM("I HAVE A MAP");
+        }
+
+        void laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
             auto it = std::min_element(msg->ranges.begin(), msg->ranges.end());
             if (it == msg->ranges.end()) {
                 ROS_INFO("No data received.");
@@ -50,6 +57,7 @@ class Planner {
         ros::NodeHandle n;
         ros::Publisher movement_pub;
         ros::Subscriber laser_sub;
+        ros::Subscriber map_sub;
 };
 
 int main(int argc, char *argv[]) {
