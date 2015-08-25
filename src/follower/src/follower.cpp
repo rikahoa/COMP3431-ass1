@@ -20,7 +20,7 @@ ForwardIterator min_element_fuck_nans(ForwardIterator first, ForwardIterator las
         ++smallest;
     }
     while (++first != last) {
-        if (*first < *last) {
+        if (*first < *last && *first == *first) {
             smallest = first;
         }
     }
