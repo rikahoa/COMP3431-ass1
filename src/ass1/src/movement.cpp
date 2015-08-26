@@ -5,17 +5,17 @@ class Movement {
     public:
         Movement(ros::NodeHandle n) : n(n) {
             navi_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/navi", 1);
-            movement_sub = n.subscribe("ass1/movement", 1, &Movement::movement_sub_callback, this);
-        }
-
-        void movement_sub_callback(const geometry_msgs::Twist::ConstPtr& msg) {
-            ROS_DEBUG_STREAM("Moving x = " << msg->linear.x << ", angle z = " << msg->angular.z);
-            navi_pub.publish(*msg);
+            movement_sub = n.subscribe("ass1/movement", 1, &Movement::movement_callback, this);
         }
     private:
         ros::NodeHandle n;
         ros::Publisher navi_pub;
         ros::Subscriber movement_sub;
+
+        void movement_callback(const geometry_msgs::Twist &msg) {
+            ROS_DEBUG_STREAM("Moving x = " << msg.linear.x << ", angle z = " << msg.angular.z);
+            navi_pub.publish(msg);
+        }
 };
 
 int main(int argc, char *argv[]) {
