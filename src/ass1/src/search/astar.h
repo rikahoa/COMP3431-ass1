@@ -10,22 +10,6 @@ public:
     State(int x, int y, int cost) : 
         State(x, y, cost, make_pair(-1, -1)) {};
     virtual ~State() {};
-    State(const State &s) : x(s.x), y(s.y), cost(s.cost), parent(s.parent) {};
-    State(State &&s) : x(s.x), y(s.y), cost(s.cost), parent(s.parent) {};
-    State& operator=(const State& s) { 
-        this->x = s.x; 
-        this->y = s.y; 
-        this->cost = s.cost; 
-        this->parent = s.parent;
-        return *this;
-    }
-    State& operator=(State&& s) { 
-        this->x = s.x; 
-        this->y = s.y; 
-        this->cost = s.cost;
-        this->parent = s.parent;
-        return *this;
-    }
 
     double get_cost() const { 
         return cost; 
