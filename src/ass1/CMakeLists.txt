@@ -126,6 +126,26 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+add_library(ass1_astar src/search/astar.cpp)
+
+add_executable(movement src/movement.cpp)
+target_link_libraries(movement ${catkin_LIBRARIES})
+
+add_executable(exploration src/exploration.cpp)
+target_link_libraries(exploration ${catkin_LIBRARIES} ass1_astar)
+
+add_executable(beacon_finder src/beacon_finder.cpp)
+target_link_libraries(beacon_finder ${catkin_LIBRARIES})
+
+add_executable(waypoint src/waypoint.cpp)
+target_link_libraries(waypoint ${catkin_LIBRARIES})
+
+add_executable(planner src/planner.cpp)
+target_link_libraries(planner ${catkin_LIBRARIES})
+
+add_executable(follower src/follower.cpp)
+target_link_libraries(follower ${catkin_LIBRARIES})
+
 ## Declare a C++ library
 # add_library(ass1
 #   src/${PROJECT_NAME}/ass1.cpp
@@ -196,20 +216,3 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 ## US: Executeables
-add_executable(movement src/movement.cpp)
-target_link_libraries(movement ${catkin_LIBRARIES})
-
-add_executable(exploration src/exploration.cpp)
-target_link_libraries(exploration ${catkin_LIBRARIES})
-
-add_executable(beacon_finder src/beacon_finder.cpp)
-target_link_libraries(beacon_finder ${catkin_LIBRARIES})
-
-add_executable(waypoint src/waypoint.cpp)
-target_link_libraries(waypoint ${catkin_LIBRARIES})
-
-add_executable(planner src/planner.cpp)
-target_link_libraries(planner ${catkin_LIBRARIES})
-
-add_executable(follower src/follower.cpp)
-target_link_libraries(follower ${catkin_LIBRARIES})
