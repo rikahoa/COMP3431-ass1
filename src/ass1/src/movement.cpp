@@ -26,8 +26,23 @@ class Movement {
 
     void movement_and_laser_callback(const geometry_msgs::TwistStampedConstPtr &twistStamped, const sensor_msgs::LaserScanConstPtr &laserScan) {
         ROS_DEBUG_STREAM("Moving x = " << twistStamped->twist.linear.x << ", angle z = " << twistStamped->twist.angular.z);
-        //TODO Check with laser to see we wont crash before we move
-        navi_pub.publish(twistStamped->twist);
+	
+        bool safe = false;
+
+	    if (twistStamped->twist.angular.z < laserScan->angle_min || twistStamped->twist.angular.z > laserScan->angle_max) {
+            safe = true;
+        } else {
+            double angleDelta = twistStamped->twist.angular.z - laserScan->angle_min;
+            int delta = angleDelta/laserScan->angle_increment;
+            
+            if(laserScan->ranges[delta] < 0.1) {
+                safe = true;            
+            }
+        }
+
+        if(safe) {
+             navi_pub.publish(twistStamped->twist);
+        }
     }
 };
 
