@@ -29,9 +29,15 @@ class State {
             return *this;
         }
 
-        virtual double get_cost() const { 
+        double get_cost() const { 
             return cost; 
         }
+
+        double get_total_cost() const {
+            return get_cost() + get_heuristic();
+        }
+
+        virtual double get_heuristic() const = 0;
 
         virtual bool is_goal(const vector<vector<int>> &map, int xmax, int ymax) const = 0;
 
@@ -52,7 +58,7 @@ class State {
         }
 
         friend bool operator<(const State &a, const State &b) {
-            return a.get_cost() < b.get_cost();
+            return a.get_total_cost() < b.get_total_cost();
         }
         
         virtual vector<State*> explore(const vector<vector<int>> &map, int xmax, int ymax) const = 0; 
@@ -67,26 +73,24 @@ class ExplorationState : public State {
         ExplorationState(int x, int y, int cost, pair<int, int> parent) : 
             State(x, y, cost, parent) {};
 
+        virtual double get_heuristic() const override {
+            return 0;
+        }
+        
         virtual bool is_goal(const vector<vector<int>> &map, int xmax, int ymax) const override {
             return x == static_cast<int>(map.size()) - 1 && y == 0;
         }
 
         virtual vector<State*> explore(const vector<vector<int>> &map, int xmax, int ymax) const override {
             vector<State*> new_states;
-
-            if (y + 1 < ymax) {
-                new_states.push_back(new ExplorationState(x, y+1, this->get_cost() + map[x][y], this->get_position()));
+            
+            for (const auto &p : vector<pair<int, int>>{make_pair(-1,0),make_pair(1,0),make_pair(0,-1),make_pair(0,1)}) {
+                int x = this->x + p.first;
+                int y = this->y + p.second;
+                if (x >= 0 && x < xmax && y >= 0 && y < ymax) {
+                    new_states.push_back(new ExplorationState(x, y, this->get_cost() + map[x][y], this->get_position()));
+                }
             }
-            if (x + 1 < xmax) {
-                new_states.push_back(new ExplorationState(x+1, y, this->get_cost() + map[x][y], this->get_position()));
-            }
-            if (y - 1 >= 0) {
-                new_states.push_back(new ExplorationState(x, y-1, this->get_cost() + map[x][y], this->get_position()));
-            }
-            if (x - 1 >= 0) {
-                new_states.push_back(new ExplorationState(x-1, y, this->get_cost() + map[x][y], this->get_position()));
-            }
-
             return new_states;
         }
 
