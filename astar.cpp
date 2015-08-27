@@ -144,7 +144,7 @@ search(const vector<vector<int>> &map, int xmax, int ymax, int xstart, int ystar
         }
         
         // otherwise, search
-        auto explore = curr->explore(map, xmax, ymax, [parents](pair<int, int> point) { return parents.find(point) == parents.end(); });
+        auto explore = curr->explore(map, xmax, ymax, [&parents](pair<int, int> point) { return parents.find(point) == parents.end(); });
         for (auto it = explore.begin(); it != explore.end(); ++it) {
             pq.push(*it);
         }
