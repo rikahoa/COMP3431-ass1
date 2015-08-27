@@ -6,12 +6,12 @@ class ExplorationMap {
 	private:
 	  int width;
 	  int height;
-	  int map[][];
+	  std::vector<std::vector<int> map;
 
 	  std::pair<int,int> start;
 
   public: 
-	  ExplorationMap(int awidth, int aheight,  int amap[][], int robotx, int roboty) {
+	  ExplorationMap(int awidth, int aheight,   std::vector<std::vector<int> amap, int robotx, int roboty) {
 	    map = amap;
 	    width = awidth;
       height =  aheight;
