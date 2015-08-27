@@ -70,7 +70,7 @@ class ExplorationState : public State {
         }
         
         virtual bool is_goal(const vector<vector<int>> &map, int xmax, int ymax) const override {
-            return x == static_cast<int>(map.size()) - 1 && y == 0;
+            return x == xmax - 1 && y == 0;
         }
 
         virtual vector<State*> explore(const vector<vector<int>> &map, int xmax, int ymax, std::function<bool(pair<int,int>)> check) const override {
@@ -100,7 +100,7 @@ search(const vector<vector<int>> &map, int xmax, int ymax, int xstart, int ystar
     class PairHash{
     public:
         size_t operator()(const pair<int, int> &k) const {
-            return k.first * 10000 + k.second;
+            return k.first * 100000 + k.second;
         }
     };
 
@@ -128,6 +128,7 @@ search(const vector<vector<int>> &map, int xmax, int ymax, int xstart, int ystar
         
         // check if not found already
         if (parents.find(curr->get_position()) != parents.end()) {
+            delete curr;
             continue;
         }
         parents[curr->get_position()] = curr->get_parent();
@@ -165,11 +166,11 @@ search(const vector<vector<int>> &map, int xmax, int ymax, int xstart, int ystar
 int main(void) {
     vector<vector<int>> map;
 
-    map.push_back(vector<int>{12,244,67});
-    map.push_back(vector<int>{5,104,42});
-    map.push_back(vector<int>{0,10,1});
+    map.push_back(vector<int>{12,244,67,1});
+    map.push_back(vector<int>{5,104,42,999});
+    map.push_back(vector<int>{0,10,1,2});
 
-    auto path = search(map, 3, 3, 0, 0);
+    auto path = search(map, map[0].size(), map.size(), 0, 0);
     
     for (const auto &coord : path) {
         cout << "(" << coord.first << "," << coord.second << ")" << endl;
