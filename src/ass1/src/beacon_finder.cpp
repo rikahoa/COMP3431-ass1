@@ -9,7 +9,6 @@
 #include <cmath>
 #include <iostream>
 
-
 class Beacon {
 private:
     double x, y;
@@ -18,7 +17,6 @@ private:
 
 class BeaconFinder {
 public:
-    
     BeaconFinder(ros::NodeHandle n) : n(n) {
         // location_pub = n.advertise<??>("/ass1/beacons", 1);
     }
@@ -28,10 +26,8 @@ private:
     ros::Publisher location_pub;
 };
 
-
 void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
     try {
-
         // Convert from ROS image msg to OpenCV matrix images
         cv_bridge::CvImagePtr cv_ptr;
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
@@ -66,13 +62,10 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
         imshow("Yellow", yellow_threshold);
 
         cv::waitKey(30);
-    }
-    catch (cv_bridge::Exception& e) {
+    } catch (cv_bridge::Exception& e) {
         ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
     }
 }
-
-
 
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "beacon_finder");
