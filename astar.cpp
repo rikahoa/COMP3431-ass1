@@ -29,7 +29,7 @@ class State {
             return *this;
         }
 
-        double get_cost() const { 
+        virtual double get_cost() const { 
             return cost; 
         }
 
