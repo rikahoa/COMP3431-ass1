@@ -126,25 +126,25 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library(ass1_astar src/search/astar.cpp)
+add_library(ass1lib src/lib/astar.cpp)
 
 add_executable(movement src/movement.cpp)
-target_link_libraries(movement ${catkin_LIBRARIES})
+target_link_libraries(movement ${catkin_LIBRARIES} ass1lib)
 
 add_executable(exploration src/exploration.cpp)
-target_link_libraries(exploration ${catkin_LIBRARIES} ass1_astar)
+target_link_libraries(exploration ${catkin_LIBRARIES} ass1lib)
 
 add_executable(beacon_finder src/beacon_finder.cpp)
-target_link_libraries(beacon_finder ${catkin_LIBRARIES})
+target_link_libraries(beacon_finder ${catkin_LIBRARIES} ass1lib)
 
 add_executable(waypoint src/waypoint.cpp)
-target_link_libraries(waypoint ${catkin_LIBRARIES})
+target_link_libraries(waypoint ${catkin_LIBRARIES} ass1lib)
 
 add_executable(planner src/planner.cpp)
-target_link_libraries(planner ${catkin_LIBRARIES})
+target_link_libraries(planner ${catkin_LIBRARIES} ass1lib)
 
 add_executable(follower src/follower.cpp)
-target_link_libraries(follower ${catkin_LIBRARIES})
+target_link_libraries(follower ${catkin_LIBRARIES} ass1lib)
 
 ## Declare a C++ library
 # add_library(ass1

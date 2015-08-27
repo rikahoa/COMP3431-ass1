@@ -1,3 +1,6 @@
+#ifndef _ASS1_ASTAR_H
+#define _ASS1_ASTAR_H
+
 #include <iostream>
 #include <queue>
 #include <vector>
@@ -49,4 +52,6 @@ protected:
 // warning: initial_state gets deleted!
 vector<pair<int, int>> search(const vector<vector<int>> &map, 
         int xmax, int ymax, 
-        State *initial_state); 
+        State *initial_state);
+
+#endif

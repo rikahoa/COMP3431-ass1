@@ -1,6 +1,6 @@
 #include "ros/ros.h"
 #include "geometry_msgs/Twist.h"
-#include "search/astar.h"
+#include "lib/astar.h"
 
 class ExplorationState : public State {
 public:
