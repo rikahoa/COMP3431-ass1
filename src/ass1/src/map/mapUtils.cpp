@@ -20,7 +20,13 @@ class MapUtils {
     }
 
     static TwistMessage calculateMovement(std::pair<int,int> robot, std::pair<int,int> destination, ODOM) {
+
       //Do some geometry shit also need to get current angle of  robot
+      //calculate angle between robot and explorationmap result
+      //calculate angle of robot
+      //do a subtraction
+      // generate twist message
+
 
       return NULL;
     }
