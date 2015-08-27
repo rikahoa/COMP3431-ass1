@@ -128,6 +128,7 @@ search(const vector<vector<int>> &map, int xmax, int ymax, int xstart, int ystar
         
         // check if not found already
         if (parents.find(curr->get_position()) != parents.end()) {
+            delete curr;
             continue;
         }
         parents[curr->get_position()] = curr->get_parent();
