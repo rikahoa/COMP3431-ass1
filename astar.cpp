@@ -80,7 +80,7 @@ class ExplorationState : public State {
                 int x = this->x + p.first;
                 int y = this->y + p.second;
                 if (x >= 0 && x < xmax && y >= 0 && y < ymax) {
-                    new_states.push_back(new ExplorationState(x, y, this->get_cost() + map[x][y], this->get_position()));
+                    new_states.push_back(new ExplorationState(x, y, this->get_cost() + map[y][x], this->get_position()));
                 }
             }
             return new_states;
