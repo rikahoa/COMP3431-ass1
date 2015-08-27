@@ -53,7 +53,7 @@ class State {
             return a.get_total_cost() < b.get_total_cost();
         }
         
-        virtual vector<State*> explore(const vector<vector<int>> &map, int xmax, int ymax) const = 0; 
+        virtual vector<State*> explore(const vector<vector<int>> &map, int xmax, int ymax, std::function<bool(pair<int,int>)> check) const = 0; 
     protected:
         int x, y;
         double cost;
@@ -73,13 +73,13 @@ class ExplorationState : public State {
             return x == static_cast<int>(map.size()) - 1 && y == 0;
         }
 
-        virtual vector<State*> explore(const vector<vector<int>> &map, int xmax, int ymax) const override {
+        virtual vector<State*> explore(const vector<vector<int>> &map, int xmax, int ymax, std::function<bool(pair<int,int>)> check) const override {
             vector<State*> new_states;
             
             for (const auto &p : vector<pair<int, int>>{make_pair(-1,0),make_pair(1,0),make_pair(0,-1),make_pair(0,1)}) {
                 int x = this->x + p.first;
                 int y = this->y + p.second;
-                if (x >= 0 && x < xmax && y >= 0 && y < ymax) {
+                if (x >= 0 && x < xmax && y >= 0 && y < ymax && check(make_pair(x, y))) {
                     new_states.push_back(new ExplorationState(x, y, this->get_cost() + map[y][x], this->get_position()));
                 }
             }
@@ -144,13 +144,9 @@ search(const vector<vector<int>> &map, int xmax, int ymax, int xstart, int ystar
         }
         
         // otherwise, search
-        auto explore = curr->explore(map, xmax, ymax);
+        auto explore = curr->explore(map, xmax, ymax, [parents](pair<int, int> point) { return parents.find(point) == parents.end(); });
         for (auto it = explore.begin(); it != explore.end(); ++it) {
-            if (parents.find((*it)->get_position()) == parents.end()) {
-                pq.push(*it);
-            } else {
-                delete *it;
-            }
+            pq.push(*it);
         }
         delete curr;
     }
@@ -169,7 +165,7 @@ search(const vector<vector<int>> &map, int xmax, int ymax, int xstart, int ystar
 int main(void) {
     vector<vector<int>> map;
 
-    map.push_back(vector<int>{12,18,67});
+    map.push_back(vector<int>{12,244,67});
     map.push_back(vector<int>{5,104,42});
     map.push_back(vector<int>{0,10,1});
 
