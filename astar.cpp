@@ -56,7 +56,7 @@ class State {
         virtual vector<State*> explore(const vector<vector<int>> &map, int xmax, int ymax) const = 0; 
     protected:
         int x, y;
-        int cost;
+        double cost;
         pair<int, int> parent;
 };
 
@@ -170,8 +170,8 @@ int main(void) {
     vector<vector<int>> map;
 
     map.push_back(vector<int>{12,18,67});
-    map.push_back(vector<int>{5,422,42});
-    map.push_back(vector<int>{0,999,1});
+    map.push_back(vector<int>{5,104,42});
+    map.push_back(vector<int>{0,10,1});
 
     auto path = search(map, 3, 3, 0, 0);
     
