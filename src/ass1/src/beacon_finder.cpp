@@ -6,24 +6,37 @@
 #include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
+#include <XmlRpcException.h>
+
 #include <cmath>
 #include <iostream>
+#include <string>
+
+using namespace std;
 
 class Beacon {
+public:
+    Beacon(string top, string bottom) : 
+        x(0), y(0), known_location(false), top(top), bottom(bottom) {
+        ROS_INFO_STREAM("Looking for beacon top=" << top << ",bottom=" << bottom);
+    }
 private:
     double x, y;
+    bool known_location;
+    string top, bottom;
     // COLOURS
 };
 
 class BeaconFinder {
 public:
-    BeaconFinder(ros::NodeHandle n) : n(n) {
+    BeaconFinder(ros::NodeHandle n, vector<Beacon> beacons) : n(n), beacons(beacons) {
         // location_pub = n.advertise<??>("/ass1/beacons", 1);
     }
 
 private:
     ros::NodeHandle n;
     ros::Publisher location_pub;
+    vector<Beacon> beacons;
 };
 
 void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
@@ -52,9 +65,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
         cv::SimpleBlobDetector detector(params);
         detector.detect(pink_threshold, keypoints);
         cv::Mat blobs;
-        cv::drawKeypoints( pink_threshold, keypoints, blobs, cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
-
-
+        cv::drawKeypoints( pink_threshold, keypoints, blobs, 
+                cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
 
         // gui display
         imshow("Blobs", blobs);
@@ -70,6 +82,30 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "beacon_finder");
     ros::NodeHandle n;
+
+	XmlRpc::XmlRpcValue beacons_cfg;
+	n.getParam("/beacons", beacons_cfg);
+    std::vector<Beacon> beacons;
+
+    try {
+		int i = 0;
+		do {
+			char beacon_name[256];
+			sprintf(beacon_name, "beacon%d", i);
+			if (!beacons_cfg.hasMember(beacon_name)) {
+				break;
+            }
+
+			XmlRpc::XmlRpcValue beacon_cfg = beacons_cfg[std::string(beacon_name)];
+			if (!(beacon_cfg.hasMember("top") && beacon_cfg.hasMember("bottom"))) {
+				continue;
+            }
+
+			beacons.push_back(Beacon((string) beacon_cfg["top"], (string) beacon_cfg["bottom"]));
+		} while ((++i) != 0);
+	} catch (XmlRpc::XmlRpcException& e) {
+		ROS_ERROR("Unable to parse beacon parameter. (%s)", e.getMessage().c_str());
+	}
     
     cv::namedWindow("Pink");
     cv::namedWindow("Yellow");
@@ -77,7 +113,7 @@ int main(int argc, char *argv[]) {
     cv::namedWindow("blobs");
     cv::startWindowThread();
 
-    BeaconFinder beacon_finder(n);
+    BeaconFinder beacon_finder(n, beacons);
 
     image_transport::ImageTransport it(n);
 	image_transport::Subscriber sub = it.subscribe("/camera/rgb/image_color", 1, imageCallback);

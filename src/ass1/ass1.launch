@@ -1,5 +1,6 @@
 <launch>
     <param name="/use_sim_time" value="false"/>
+    <include file="$(find ass1)/beacons.launch"/>
 
     <node pkg="crosbot_ogmbicp" type="crosbot_ogmbicp" name="icp">
         <rosparam>
