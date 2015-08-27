@@ -110,13 +110,13 @@ search(const vector<vector<int>> &map, int xmax, int ymax, int xstart, int ystar
         }
     };
 
-    struct StatePtrEquals {
+    struct StatePtrPQEquals {
         bool operator()(const State* lhs, const State* rhs) {
-            return *lhs < *rhs;
+            return !(*lhs < *rhs);
         }
     };
 
-    priority_queue<State*, vector<State*>, StatePtrEquals> pq;
+    priority_queue<State*, vector<State*>, StatePtrPQEquals> pq;
     unordered_map<pair<int, int>, pair<int, int>, PairHash, PairEquals> parents;
     vector<pair<int, int>> path;
 
