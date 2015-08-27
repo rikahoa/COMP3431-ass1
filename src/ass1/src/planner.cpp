@@ -20,12 +20,14 @@ class Planner {
             movement_pub = n.advertise<geometry_msgs::Twist>("/ass1/movement", 1);
         }
 
-        void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &msg) {
+    private:
+
+        void map_callback(const nav_msgs::OccupancyGrid &msg) {
             ROS_INFO_STREAM("I HAVE A MAP");
         }
 
-        void odom_callback(const nav_msgs::Odometry::ConstPtr &msg) {
-            ROS_INFO_STREAM("Odometry: " << *msg);
+        void odom_callback(const nav_msgs::Odometry &msg) {
+            ROS_INFO_STREAM("Odometry: " << msg);
         }
 
         void laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
@@ -59,7 +61,6 @@ class Planner {
             movement_pub.publish(move);
         }
 
-    private:
         ros::NodeHandle n;
         ros::Publisher movement_pub;
 
