@@ -4,6 +4,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
+#include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <cmath>
 #include <iostream>
@@ -35,14 +36,34 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
         cv_bridge::CvImagePtr cv_ptr;
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
         cv::Mat src = cv_ptr->image;
-        // OpenCV filters
-        cv::Mat hsv, threshold;
-        cv::cvtColor( src, hsv, CV_BGR2HSV);
-        cv::inRange( hsv, cv::Scalar(140,90,90), cv::Scalar(180,255,255), threshold);
+        imshow("original", src);
+
+        // OpenCV filters to find colours
+        cv::Mat hsv, pink_threshold, yellow_threshold;
+        cv::cvtColor(src, hsv, CV_BGR2HSV);
+        cv::inRange(hsv, cv::Scalar(140,90,90), cv::Scalar(180,255,255), pink_threshold);
+        cv::inRange(hsv, cv::Scalar(20,90,90), cv::Scalar(30,255,255), yellow_threshold);
+
+
+        // blob detection
+        cv::SimpleBlobDetector::Params params; 
+        params.filterByCircularity = true;
+        params.minCircularity = 0.1;
+        params.filterByArea = true;
+        params.minArea = 100;
+        
+        std::vector<cv::KeyPoint> keypoints;
+        cv::SimpleBlobDetector detector(params);
+        detector.detect(pink_threshold, keypoints);
+        cv::Mat blobs;
+        cv::drawKeypoints( pink_threshold, keypoints, blobs, cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+
+
 
         // gui display
-        imshow("detected", threshold);
-        imshow("original", src);
+        imshow("Blobs", blobs);
+        imshow("Pink", pink_threshold);
+        imshow("Yellow", yellow_threshold);
 
         cv::waitKey(30);
     }
@@ -57,17 +78,21 @@ int main(int argc, char *argv[]) {
     ros::init(argc, argv, "beacon_finder");
     ros::NodeHandle n;
     
-    cv::namedWindow("detected");
+    cv::namedWindow("Pink");
+    cv::namedWindow("Yellow");
     cv::namedWindow("original");
+    cv::namedWindow("blobs");
     cv::startWindowThread();
 
     BeaconFinder beacon_finder(n);
 
     image_transport::ImageTransport it(n);
-	image_transport::Subscriber sub = it.subscribe("image_raw", 1, imageCallback);
+	image_transport::Subscriber sub = it.subscribe("/camera/rgb/image_color", 1, imageCallback);
     ros::spin();
-    cv::destroyWindow("detected");
+    cv::destroyWindow("Pink");
+    cv::destroyWindow("Yellow");
     cv::destroyWindow("original");
+    cv::destroyWindow("blobs");
 
     return 0;
 }
