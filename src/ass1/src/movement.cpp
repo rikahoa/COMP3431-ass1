@@ -24,12 +24,11 @@ class Movement {
         ros::NodeHandle n;
         ros::Publisher navi_pub;
 
-        void movement_and_laser_callback(const geometry_msgs::TwistStampedConstPtr &twistStamped, const sensor_msgs::LaserScanConstPtr &laserScan) {
-            ROS_DEBUG_STREAM("Moving x = " << twistStamped->twist.linear.x << ", angle z = " << twistStamped->twist.angular.z);
-	    //TODO Check with laser to see we wont crash before we move
-
-            navi_pub.publish(twistStamped->twist);
-        }
+    void movement_and_laser_callback(const geometry_msgs::TwistStampedConstPtr &twistStamped, const sensor_msgs::LaserScanConstPtr &laserScan) {
+        ROS_DEBUG_STREAM("Moving x = " << twistStamped->twist.linear.x << ", angle z = " << twistStamped->twist.angular.z);
+        //TODO Check with laser to see we wont crash before we move
+        navi_pub.publish(twistStamped->twist);
+    }
 };
 
 int main(int argc, char *argv[]) {

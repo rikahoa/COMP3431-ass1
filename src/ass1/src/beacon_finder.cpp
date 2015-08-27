@@ -11,21 +11,21 @@
 
 
 class Beacon {
-    private:
-        double x, y;
-        // COLOURS
+private:
+    double x, y;
+    // COLOURS
 };
 
 class BeaconFinder {
-    public:
-        
-        BeaconFinder(ros::NodeHandle n) : n(n) {
-            // location_pub = n.advertise<??>("/ass1/beacons", 1);
-        }
+public:
+    
+    BeaconFinder(ros::NodeHandle n) : n(n) {
+        // location_pub = n.advertise<??>("/ass1/beacons", 1);
+    }
 
-    private:
-        ros::NodeHandle n;
-        ros::Publisher location_pub;
+private:
+    ros::NodeHandle n;
+    ros::Publisher location_pub;
 };
 
 
