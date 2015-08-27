@@ -11,7 +11,7 @@ private:
     int x;
     int y;
     int costToCurr = 0;
-    int priority;
+    int priority = 0;
 public:
     Path(Path* parent, int x, int y) :
         parent{parent}, x{x}, y{y} {
@@ -20,7 +20,6 @@ public:
             } else {
                 costToCurr = parent->costToCurr + 1;
             }
-            priority = costToCurr + estimate();
     }
 
     int getX() const {
@@ -43,16 +42,13 @@ public:
         priority = p;
     }
 
-    Path* getParent() {
+    Path* getParent() const {
         return parent;
     }
 
-    friend bool operator<(const Path& a, const Path& b) {
-        return a.getPriority() < b.getPriority();
-    }
-
-    int estimate() {
-        return 0;
+    bool operator()(const Path* a, const Path* b) const {
+        return a->getCostToCurr() < b->getCostToCurr();        
+   	//return a.getPriority() < b.getPriority();
     }
 
     std::vector<std::pair<int, int>> getNeighbours() {
@@ -81,13 +77,21 @@ public:
     }
 };
 
+class Compare {
+public:
+    bool operator()(Path* a, Path* b) {
+        return a->getCostToCurr() < b->getCostToCurr();        
+   	//return a.getPriority() < b.getPriority();
+    }
+};
+
 // Returns a vector of [x, y] coordinate pairs
 // vector[0] = starting point
 // vector[lastIndex] = goal point
 std::vector<std::pair<int, int>> findPath(int startX, int startY, int map[MAP_ROWS][MAP_COLS], int goalValue) {
     
     std::vector<std::pair<int, int>> v;
-    std::priority_queue<Path*> pq;
+    std::priority_queue<Path*, std::vector<Path*>, Compare> pq;
     
     // Add current starting cell    
     Path* p = new Path{NULL, startX, startY};
@@ -96,7 +100,7 @@ std::vector<std::pair<int, int>> findPath(int startX, int startY, int map[MAP_RO
     while (!pq.empty()) {
         Path* temp = pq.top();
         pq.pop();
-
+        std::cout << "popping " << temp->getX() << ", " << temp->getY() << " with cost " << temp->getCostToCurr() << std::endl;
         if (map[temp->getX()][temp->getY()] == goalValue) {
             v.insert(v.begin(), std::pair<int, int>(temp->getX(), temp->getY()));
             
@@ -108,22 +112,30 @@ std::vector<std::pair<int, int>> findPath(int startX, int startY, int map[MAP_RO
             }
 
             // TODO: Garbage collection?? 
+            delete par;
             break;
         }
 
+	    std::cout << "neighbours of " << temp->getX() << ", " << temp->getY() << " are " << std::endl;
         for (auto n : temp->getNeighbours()) {
             // If it is the cell we came from, ignore it
             if (temp->getParent() != NULL && n.first == temp->getParent()->getX()
                                           && n.second == temp->getParent()->getY()) {
                     continue;
             }
+	    std::cout << n.first << ", " << n.second << std::endl;
             Path *neighbourNode = new Path{temp, n.first, n.second};
-            int priority = neighbourNode->getCostToCurr() + map[neighbourNode->getX()][neighbourNode->getY()];
+/*
+            int priority = neighbourNode->getCostToCurr() +
+			            map[neighbourNode->getX()][neighbourNode->getY()];
             neighbourNode->updatePriority(priority);
+*/
             pq.push(neighbourNode);
         }
     }
-
+    
+    // Garbage collection
+    delete p;
     return v;
 }
 
@@ -133,7 +145,7 @@ int main (void) {
                                    {100,  0,  0},
                                    {100,  5, -1}};
 
-    std::vector<std::pair<int, int>> p = findPath(0, 0, map, -1);
+    std::vector<std::pair<int, int>> p = findPath(1, 1, map, 5);
     std::cout << "shortest path is " << std::endl;
     for (auto a : p) {
         std::cout << "[" << a.first << ", " << a.second << "]";
