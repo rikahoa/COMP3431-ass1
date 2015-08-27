@@ -1,4 +1,4 @@
-#include "ros/ros.h"
+#include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/highgui/highgui.hpp>
@@ -35,15 +35,14 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
         cv_bridge::CvImagePtr cv_ptr;
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
         cv::Mat src = cv_ptr->image;
-
         // OpenCV filters
-        Mat hsv, threshold;
+        cv::Mat hsv, threshold;
         cv::cvtColor( src, hsv, CV_BGR2HSV);
-        cv::inRange( hsv, Scalar(150,120,120), Scalar(170,255,255), threshold);
+        cv::inRange( hsv, cv::Scalar(140,90,90), cv::Scalar(180,255,255), threshold);
 
         // gui display
-       // imshow("view", threshold);
-       // imshow("orig", src);
+        imshow("detected", threshold);
+        imshow("original", src);
 
         cv::waitKey(30);
     }
@@ -57,13 +56,18 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg) {
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "beacon_finder");
     ros::NodeHandle n;
+    
+    cv::namedWindow("detected");
+    cv::namedWindow("original");
+    cv::startWindowThread();
 
     BeaconFinder beacon_finder(n);
 
-    image_transport::ImageTransport it(nh);
+    image_transport::ImageTransport it(n);
 	image_transport::Subscriber sub = it.subscribe("image_raw", 1, imageCallback);
-
     ros::spin();
+    cv::destroyWindow("detected");
+    cv::destroyWindow("original");
 
     return 0;
 }
