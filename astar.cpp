@@ -76,7 +76,7 @@ class ExplorationState : public State {
         virtual vector<State*> explore(const vector<vector<int>> &map, int xmax, int ymax, std::function<bool(pair<int,int>)> check) const override {
             vector<State*> new_states;
             
-            for (const auto &p : vector<pair<int, int>>{make_pair(-1,0),make_pair(1,0),make_pair(0,-1),make_pair(0,1)}) {
+            for (const auto &p : ExplorationState::DIRECTIONS) {
                 int x = this->x + p.first;
                 int y = this->y + p.second;
                 if (x >= 0 && x < xmax && y >= 0 && y < ymax && check(make_pair(x, y))) {
@@ -85,8 +85,12 @@ class ExplorationState : public State {
             }
             return new_states;
         }
-
+    private:
+        // for speed ups
+        static const vector<pair<int, int>> DIRECTIONS;
 };
+        
+const vector<pair<int,int>> ExplorationState::DIRECTIONS = vector<pair<int, int>>{make_pair(-1,0),make_pair(1,0),make_pair(0,-1),make_pair(0,1)};
 
 class WaypointState : public State {
     public:
