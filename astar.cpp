@@ -45,14 +45,6 @@ class State {
             return make_pair(x, y);
         }
 
-        int get_x() const {
-            return x;
-        }
-
-        int get_y() const {
-            return y;
-        }
-
         pair<int, int> get_parent() const {
             return parent;
         }
