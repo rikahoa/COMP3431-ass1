@@ -1,9 +1,0 @@
-<library path="lib/libsample">
-	<class name="sample/StatusDisplay"
-			type="comp3431::StatusDisplay"
-			base_class_type="rviz::Panel">
-		<description>
-			A panel widget that displays coloured status messages and can call a Go service. 
-		</description>
-	</class>
-</library>
