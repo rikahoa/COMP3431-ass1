@@ -1,9 +1,11 @@
-#include "ros/ros.h"
+#include <ros/ros.h>
 
 #include <message_filters/subscriber.h>
-#include <message_filters/time_synchronizer.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <sensor_msgs/LaserScan.h>
+
 
 class Movement {
     public:
@@ -12,8 +14,10 @@ class Movement {
   	
             message_filters::Subscriber<geometry_msgs::TwistStamped> movement_sub(n, "/ass1/movement", 1);
   	    message_filters::Subscriber<sensor_msgs::LaserScan> laser_sub(n, "/scan", 1);
-	    //TODO Make it an approximate time synchronizer
-	    message_filters::TimeSynchronizer<geometry_msgs::TwistStamped, sensor_msgs::LaserScan> sync(movement_sub, laser_sub, 10);
+ 	    
+	    typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::TwistStamped, sensor_msgs::LaserScan> ApproxTwistLaserPolicy;
+
+	    message_filters::Synchronizer<ApproxTwistLaserPolicy> sync(ApproxTwistLaserPolicy(5), movement_sub, laser_sub);
 	    sync.registerCallback(boost::bind(&Movement::movement_and_laser_callback, this, _1, _2));
 	}
     private:
