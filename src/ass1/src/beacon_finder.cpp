@@ -54,18 +54,26 @@ private:
             cv::inRange(hsv, cv::Scalar(140,90,90), cv::Scalar(180,255,255), pink_threshold);
             cv::inRange(hsv, cv::Scalar(20,90,90), cv::Scalar(30,255,255), yellow_threshold);
 
+            pink_threshold = cv::Scalar::all(255) - pink_threshold;
+
             // blob detection
             cv::SimpleBlobDetector::Params params; 
-            params.filterByCircularity = true;
-            params.minCircularity = 0.1;
-            params.filterByArea = true;
-            params.minArea = 100;
+            
+            //params.minThreshold = 10;
+            //params.maxThreshold = 200;
+            //params.filterByCircularity = true;
+            //params.minCircularity = 0.1;
+            params.filterByArea = 1;
+            params.minArea = 200;
+            params.maxArea = 100000;
+            //params.filterByInertia = true;
+            //params.minInertiaRatio = 0.01;
             
             std::vector<cv::KeyPoint> keypoints;
             cv::SimpleBlobDetector detector(params);
             detector.detect(pink_threshold, keypoints);
             cv::Mat blobs;
-            cv::drawKeypoints( pink_threshold, keypoints, blobs, 
+            cv::drawKeypoints( src, keypoints, blobs, 
                     cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
 
             // gui display
