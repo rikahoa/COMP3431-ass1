@@ -38,7 +38,7 @@ private:
     ros::NodeHandle n;
     vector<Beacon> beacons;
     image_transport::ImageTransport it;
-	image_transport::Subscriber image_sub;
+    image_transport::Subscriber image_sub;
 
     void image_callback(const sensor_msgs::ImageConstPtr& msg) {
         try {
@@ -84,29 +84,29 @@ int main(int argc, char *argv[]) {
     ros::init(argc, argv, "beacon_finder");
     ros::NodeHandle n;
 
-	XmlRpc::XmlRpcValue beacons_cfg;
-	n.getParam("/beacons", beacons_cfg);
+    XmlRpc::XmlRpcValue beacons_cfg;
+    n.getParam("/beacons", beacons_cfg);
     std::vector<Beacon> beacons;
 
     try {
-		int i = 0;
-		do {
-			char beacon_name[256];
-			sprintf(beacon_name, "beacon%d", i);
-			if (!beacons_cfg.hasMember(beacon_name)) {
-				break;
+        int i = 0;
+        do {
+            char beacon_name[256];
+            sprintf(beacon_name, "beacon%d", i);
+            if (!beacons_cfg.hasMember(beacon_name)) {
+                break;
             }
 
-			XmlRpc::XmlRpcValue beacon_cfg = beacons_cfg[std::string(beacon_name)];
-			if (!(beacon_cfg.hasMember("top") && beacon_cfg.hasMember("bottom"))) {
-				continue;
+            XmlRpc::XmlRpcValue beacon_cfg = beacons_cfg[std::string(beacon_name)];
+            if (!(beacon_cfg.hasMember("top") && beacon_cfg.hasMember("bottom"))) {
+                continue;
             }
 
-			beacons.push_back(Beacon((string) beacon_cfg["top"], (string) beacon_cfg["bottom"]));
-		} while ((++i) != 0);
-	} catch (XmlRpc::XmlRpcException& e) {
-		ROS_ERROR("Unable to parse beacon parameter. (%s)", e.getMessage().c_str());
-	}
+            beacons.push_back(Beacon((string) beacon_cfg["top"], (string) beacon_cfg["bottom"]));
+        } while ((++i) != 0);
+    } catch (XmlRpc::XmlRpcException& e) {
+        ROS_ERROR("Unable to parse beacon parameter. (%s)", e.getMessage().c_str());
+    }
     
     cv::namedWindow("Pink");
     cv::namedWindow("Yellow");
