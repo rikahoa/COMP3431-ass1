@@ -69,7 +69,7 @@ private:
                     cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
 
             // gui display
-            imshow("Blobs", blobs);
+            imshow("blobs", blobs);
             imshow("Pink", pink_threshold);
             imshow("Yellow", yellow_threshold);
 
