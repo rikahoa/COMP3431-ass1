@@ -53,9 +53,9 @@ private:
             cv::Mat hsv, pink_threshold, yellow_threshold, blue_threshold, green_threshold;
             cv::cvtColor(src, hsv, CV_BGR2HSV);
             cv::inRange(hsv, cv::Scalar(130,90,90), cv::Scalar(170,255,255), pink_threshold);
-            cv::inRange(hsv, cv::Scalar(20,90,90), cv::Scalar(40,255,255), yellow_threshold);
+            cv::inRange(hsv, cv::Scalar(15,50,50), cv::Scalar(30,255,255), yellow_threshold);
             cv::inRange(hsv, cv::Scalar(91,90,90), cv::Scalar(120,255,255), blue_threshold);
-            cv::inRange(hsv, cv::Scalar(70,90,90), cv::Scalar(90,255,255), green_threshold);
+            cv::inRange(hsv, cv::Scalar(70,50,50), cv::Scalar(90,255,255), green_threshold);
             
            
             blue_threshold = cv::Scalar::all(255) - blue_threshold;
@@ -108,7 +108,44 @@ private:
 
             cv::drawKeypoints( blobs, yellow_keypoints, blobs, 
                     cv::Scalar(125,125,125), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
-            
+           
+
+           /*
+            // output for pair detection
+            double pillar_threshold = 20;
+            for( std::vector<cv::KeyPoint>::iterator pink_pt = pink_keypoints.begin(); pink_pt != pink_keypoints.end(); pink_pt++ ) {
+                for(std::vector<cv::KeyPoint>::iterator blue_pt = blue_keypoints.begin(); blue_pt != blue_keypoints.end(); blue_pt++ ) {
+                    if( std::abs(pink_pt->pt.x - blue_pt->pt.x) < pillar_threshold ) {
+                        if( pink_pt->pt.y < blue_pt->pt.y ) {
+                            ROS_INFO("Top: pink, Bot: blue, pink( x %f, y %f ), blue( x %f, y %f )", pink_pt->pt.x, pink_pt->pt.y, blue_pt->pt.x, blue_pt->pt.y  );
+                        } else {
+                            ROS_INFO("Top: blue, Bot: pink, pink( x %f, y %f ), blue( x %f, y %f )", pink_pt->pt.x, pink_pt->pt.y, blue_pt->pt.x, blue_pt->pt.y  );
+                        }
+                    }
+                }
+                for(std::vector<cv::KeyPoint>::iterator yellow_pt = yellow_keypoints.begin(); yellow_pt!= yellow_keypoints.end(); yellow_pt++ ) {
+                    if( std::abs(pink_pt->pt.x - yellow_pt->pt.x) < pillar_threshold ) {
+                        if( pink_pt->pt.y < yellow_pt->pt.y ) {
+                            ROS_INFO("Top: pink, Bot: yellow, pink( x %f, y %f ), yellow( x %f, y %f )", pink_pt->pt.x, pink_pt->pt.y, yellow_pt->pt.x, yellow_pt->pt.y  );
+                        } else {
+                            ROS_INFO("Top: yellow, Bot: pink, pink( x %f, y %f ), yellow( x %f, y %f )", pink_pt->pt.x, pink_pt->pt.y, yellow_pt->pt.x, yellow_pt->pt.y  );
+                        }
+                    }
+                }
+                for(std::vector<cv::KeyPoint>::iterator green_pt = green_keypoints.begin(); green_pt!= green_keypoints.end(); green_pt++ ) {
+                    if( std::abs(pink_pt->pt.x - green_pt->pt.x) < pillar_threshold ) {
+                        if( pink_pt->pt.y < green_pt->pt.y ) {
+                            ROS_INFO("Top: pink, Bot: green, pink( x %f, y %f ), green( x %f, y %f )", pink_pt->pt.x, pink_pt->pt.y, green_pt->pt.x, green_pt->pt.y  );
+                        } else {
+                            ROS_INFO("Top: green, Bot: pink, pink( x %f, y %f ), green( x %f, y %f )", pink_pt->pt.x, pink_pt->pt.y, green_pt->pt.x, green_pt->pt.y  );
+                        }
+                    }
+                }
+
+
+            }
+            */
+
             // gui display
             imshow("blobs", blobs);
             imshow("Pink", pink_threshold);
