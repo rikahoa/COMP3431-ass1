@@ -22,7 +22,10 @@ public:
             int x = this->x + p.first;
             int y = this->y + p.second;
             if (x >= 0 && x < maze.get_occupancy_grid().info.width && 
-                    y >= 0 && y < maze.get_occupancy_grid().info.height && check(make_pair(x, y))) {
+                    y >= 0 && y < maze.get_occupancy_grid().info.height && 
+                    check(make_pair(x, y)) &&
+                    maze.get_occupancy_grid().
+                        data[y * maze.get_occupancy_grid().info.height + x] <= 0) {
                 new_states.push_back(
                         new ExplorationState(x, y, this->get_cost() + 1, 
                             this->get_position()));
