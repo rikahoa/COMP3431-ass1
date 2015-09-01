@@ -1,6 +1,6 @@
 #include "ros/ros.h"
 #include "sensor_msgs/LaserScan.h"
-#include "geometry_msgs/Twist.h"
+#include "geometry_msgs/TwistStamped.h"
 
 #include <algorithm>
 #include <cmath>
@@ -11,7 +11,7 @@ class Follower {
 public:
     
     Follower(ros::NodeHandle n) : n(n) {
-        movement_pub = n.advertise<geometry_msgs::Twist>("/ass1/movement", 1);
+        movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
         laser_sub = n.subscribe("scan", 1, &Follower::laserCallback, this);
     }
 
@@ -28,20 +28,22 @@ public:
         
         ROS_DEBUG_STREAM("min=" << *it << ",minindex=" << 
                 minindex << ",rightangle=" << rightangle);
-        geometry_msgs::Twist move;
+        geometry_msgs::TwistStamped move;
+
+	move.header = msg->header;
 
         if (rightangle > PI/2 || rightangle < -PI/2) {
-            move.linear.x = 0;
+            move.twist.linear.x = 0;
         } else {
-            move.linear.x = 0.15;
+            move.twist.linear.x = 0.15;
         }
 
-        move.linear.y = 0;
-        move.linear.z = 0;
+        move.twist.linear.y = 0;
+        move.twist.linear.z = 0;
 
-        move.angular.x = 0;
-        move.angular.y = 0;
-        move.angular.z = rightangle;
+        move.twist.angular.x = 0;
+        move.twist.angular.y = 0;
+        move.twist.angular.z = rightangle;
 
         movement_pub.publish(move);
     }

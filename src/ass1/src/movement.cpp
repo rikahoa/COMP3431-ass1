@@ -9,26 +9,24 @@
 
 class Movement {
 public:
-    Movement(ros::NodeHandle n) : n(n) {
+    Movement(ros::NodeHandle n) : n(n),movement_sub(n, "/ass1/movement", 1),laser_sub(n, "/scan", 1)   {
         navi_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/navi", 1);
 
-        message_filters::Subscriber<geometry_msgs::TwistStamped> movement_sub(n, "/ass1/movement", 1);
-        message_filters::Subscriber<sensor_msgs::LaserScan> laser_sub(n, "/scan", 1);
-        
-        typedef message_filters::sync_policies::
-            ApproximateTime<geometry_msgs::TwistStamped, sensor_msgs::LaserScan> 
-            ApproxTwistLaserPolicy;
+        typedef message_filters::sync_policies::ApproximateTime<geometry_msgs::TwistStamped, sensor_msgs::LaserScan> ApproxTwistLaserPolicy;
 
         message_filters::Synchronizer<ApproxTwistLaserPolicy> 
-            sync(ApproxTwistLaserPolicy(5), movement_sub, laser_sub);
+            sync(ApproxTwistLaserPolicy(10), movement_sub, laser_sub);
         sync.registerCallback(boost::bind(&Movement::movement_and_laser_callback, this, _1, _2));
     }
 private:
     ros::NodeHandle n;
     ros::Publisher navi_pub;
 
-    void movement_and_laser_callback(const geometry_msgs::TwistStampedConstPtr &twistStamped, 
-            const sensor_msgs::LaserScanConstPtr &laserScan) {
+    message_filters::Subscriber<geometry_msgs::TwistStamped> movement_sub;
+    message_filters::Subscriber<sensor_msgs::LaserScan> laser_sub;
+
+    void movement_and_laser_callback(const geometry_msgs::TwistStamped::ConstPtr &twistStamped, 
+            const sensor_msgs::LaserScan::ConstPtr &laserScan) {
 
         bool safe = false;
 
@@ -45,11 +43,11 @@ private:
         }
 
         if (safe) {
-             ROS_DEBUG_STREAM("Moving: x = " << twistStamped->twist.linear.x << 
+             ROS_INFO_STREAM("Moving: x = " << twistStamped->twist.linear.x << 
                 ", angle z = " << twistStamped->twist.angular.z);
              navi_pub.publish(twistStamped->twist);
         } else {
-            ROS_WARN_STREAM("Cannot Move x = " << twistStamped->twist.linear.x << 
+            ROS_INFO_STREAM("Cannot Move x = " << twistStamped->twist.linear.x << 
                     ", angle z = " << twistStamped->twist.angular.z);
         }
     }
