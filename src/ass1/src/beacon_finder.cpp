@@ -12,6 +12,7 @@
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <XmlRpcException.h>
+#include <nav_msgs/Odometry.h>
 
 #include <cmath>
 #include <iostream>
@@ -20,8 +21,6 @@
 using namespace std;
 
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, sensor_msgs::Image> SyncPolicy;
-
-ros::Publisher laser_crop;
 
 class Beacon {
 public:
@@ -41,27 +40,19 @@ class BeaconFinder {
 public:
     BeaconFinder(ros::NodeHandle n, vector<Beacon> beacons) : n(n),
         beacons(beacons),
-        i(n, "/camera/rgb/image_color", 1),
-        l(n, "/scan", 1),
-        sync(SyncPolicy(10), l, i) {
+        img_msg(n, "/camera/rgb/image_color", 1),
+        lsr_msg(n, "/scan", 1),
+        sync(SyncPolicy(10), lsr_msg, img_msg) {
 
         // Use ApproximateTime message_filter to read both kinect image and laser.
         sync.registerCallback(boost::bind(&BeaconFinder::image_callback, this, _1, _2) );
-
-        /*
-        location_pub = n.advertise<??>("/ass1/beacons", 1);
-        image_sub = it.subscribe("/camera/rgb/image_color", 1, &BeaconFinder::image_callback, this);
-        image_sub = it.subscribe("image_raw", 1, &BeaconFinder::image_callback, this);
-        */
     }
 
 private:
     ros::NodeHandle n;
     vector<Beacon> beacons;
- //   image_transport::ImageTransport it;
- //   image_transport::Subscriber image_sub;
-    message_filters::Subscriber<sensor_msgs::Image> i;
-    message_filters::Subscriber<sensor_msgs::LaserScan> l;
+    message_filters::Subscriber<sensor_msgs::Image> img_msg;
+    message_filters::Subscriber<sensor_msgs::LaserScan> lsr_msg;
     message_filters::Synchronizer<SyncPolicy> sync;
 
     void image_callback(const sensor_msgs::LaserScan::ConstPtr& laser, const sensor_msgs::Image::ConstPtr& image) {
@@ -70,8 +61,6 @@ private:
             cv_bridge::CvImagePtr cv_ptr;
             cv_ptr = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::BGR8);
             cv::Mat src = cv_ptr->image;
-        //    ROS_INFO("laser size: %d, mat size: %d", laser->ranges.size(), src.cols );
-            //imshow("original", src);
 
             // OpenCV filters to find colours
             cv::Mat hsv, pink_threshold, yellow_threshold, blue_threshold, green_threshold;
@@ -81,18 +70,14 @@ private:
             cv::inRange(hsv, cv::Scalar(91,90,90), cv::Scalar(120,255,255), blue_threshold);
             cv::inRange(hsv, cv::Scalar(70,50,50), cv::Scalar(90,255,255), green_threshold);
             
-           
             blue_threshold = cv::Scalar::all(255) - blue_threshold;
             pink_threshold = cv::Scalar::all(255) - pink_threshold;
             yellow_threshold = cv::Scalar::all(255) - yellow_threshold;
             green_threshold = cv::Scalar::all(255) - green_threshold;
+
             // blob detection
             cv::SimpleBlobDetector::Params params; 
             
-            //params.minThreshold = 10;
-            //params.maxThreshold = 200;
-            //params.filterByCircularity = true;
-            //params.minCircularity = 0.1;
             params.filterByArea = 1;
             params.minArea = 200;
             params.maxArea = 100000;
@@ -101,12 +86,7 @@ private:
             params.filterByInertia = true;
             params.minInertiaRatio = 0.5;
             
-            std::vector<cv::KeyPoint> pink_keypoints;
-            std::vector<cv::KeyPoint> yellow_keypoints;
-            std::vector<cv::KeyPoint> blue_keypoints;
-            std::vector<cv::KeyPoint> green_keypoints;
-           
-
+            std::vector<cv::KeyPoint> pink_keypoints, yellow_keypoints, blue_keypoints, green_keypoints;
 
             cv::SimpleBlobDetector detector(params);
             detector.detect(pink_threshold, pink_keypoints);
@@ -114,12 +94,6 @@ private:
             detector.detect(blue_threshold, blue_keypoints);
             detector.detect(green_threshold, green_keypoints);
             
-            // add all vectors together
-            std::vector<cv::KeyPoint> all_key_points(pink_keypoints.begin(), pink_keypoints.end());
-            all_key_points.insert(all_key_points.end(), yellow_keypoints.begin(), yellow_keypoints.end());
-            all_key_points.insert(all_key_points.end(), blue_keypoints.begin(), blue_keypoints.end());
-            all_key_points.insert(all_key_points.end(), green_keypoints.begin(), green_keypoints.end());
-             
             cv::Mat blobs;
             cv::drawKeypoints( src, pink_keypoints, blobs, 
                     cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
@@ -134,46 +108,43 @@ private:
                     cv::Scalar(125,125,125), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
            
 
-            // output for pair detection
+            // acceptable horizontal distance between the 2 colours on a pillar
             double pillar_threshold = 20;
+
             for( std::vector<cv::KeyPoint>::iterator pink_pt = pink_keypoints.begin(); pink_pt != pink_keypoints.end(); pink_pt++ ) {
 
-
-                // THIS NEEDS FIXING
                 double xCo = pink_pt->pt.x;
                 xCo = xCo - 320;
                 double theta = atan(xCo*tan(27.5)/320.0);
                 double lTheta = theta - laser->angle_min;
                 int distance_index = lTheta / laser->angle_increment;
                 double distance = laser->ranges[distance_index];
-                //double angle = (pink_pt->pt.x / 640) * 144; 
-                //int distance_index = 268 + (int)angle;
-                ROS_INFO("%f init angle, pink index %d/681, Pink distance %f", lTheta, distance_index, laser->ranges[distance_index] );
+
 
                 for(std::vector<cv::KeyPoint>::iterator blue_pt = blue_keypoints.begin(); blue_pt != blue_keypoints.end(); blue_pt++ ) {
                     if( std::abs(pink_pt->pt.x - blue_pt->pt.x) < pillar_threshold ) {
                         if( pink_pt->pt.y < blue_pt->pt.y ) {
-                            ROS_INFO("Top: pink, Bot: blue, pink( x %f, y %f ), blue( x %f, y %f )", pink_pt->pt.x, pink_pt->pt.y, blue_pt->pt.x, blue_pt->pt.y  );
+                            ROS_INFO("T: pink, B: blue, dist(%f), angle(%f)", distance, lTheta );
                         } else {
-                            ROS_INFO("Top: blue, Bot: pink, pink( x %f, y %f ), blue( x %f, y %f )", pink_pt->pt.x, pink_pt->pt.y, blue_pt->pt.x, blue_pt->pt.y  );
+                            ROS_INFO("T: blue, B: pink, dist(%f), angle(%f)", distance, lTheta );
                         }
                     }
                 }
                 for(std::vector<cv::KeyPoint>::iterator yellow_pt = yellow_keypoints.begin(); yellow_pt!= yellow_keypoints.end(); yellow_pt++ ) {
                     if( std::abs(pink_pt->pt.x - yellow_pt->pt.x) < pillar_threshold ) {
                         if( pink_pt->pt.y < yellow_pt->pt.y ) {
-                            ROS_INFO("Top: pink, Bot: yellow, pink( x %f, y %f ), yellow( x %f, y %f )", pink_pt->pt.x, pink_pt->pt.y, yellow_pt->pt.x, yellow_pt->pt.y  );
+                            ROS_INFO("T: pink, B: yellow, dist(%f), angle(%f)", distance, lTheta );
                         } else {
-                            ROS_INFO("Top: yellow, Bot: pink, pink( x %f, y %f ), yellow( x %f, y %f )", pink_pt->pt.x, pink_pt->pt.y, yellow_pt->pt.x, yellow_pt->pt.y  );
+                            ROS_INFO("T: yellow, B: pink, dist(%f), angle(%f)", distance, lTheta );
                         }
                     }
                 }
                 for(std::vector<cv::KeyPoint>::iterator green_pt = green_keypoints.begin(); green_pt!= green_keypoints.end(); green_pt++ ) {
                     if( std::abs(pink_pt->pt.x - green_pt->pt.x) < pillar_threshold ) {
                         if( pink_pt->pt.y < green_pt->pt.y ) {
-                            ROS_INFO("Top: pink, Bot: green, pink( x %f, y %f ), green( x %f, y %f )", pink_pt->pt.x, pink_pt->pt.y, green_pt->pt.x, green_pt->pt.y  );
+                            ROS_INFO("T: pink, B: green, dist(%f), angle(%f)", distance, lTheta );
                         } else {
-                            ROS_INFO("Top: green, Bot: pink, pink( x %f, y %f ), green( x %f, y %f )", pink_pt->pt.x, pink_pt->pt.y, green_pt->pt.x, green_pt->pt.y  );
+                            ROS_INFO("T: green, B: pink, dist(%f), angle(%f)", distance, lTheta );
                         }
                     }
                 }
@@ -182,18 +153,7 @@ private:
             }
 
             // gui display
-
             imshow("blobs", blobs);
-
-
-            /*
-            imshow("Pink", pink_threshold);
-            imshow("Yellow", yellow_threshold);
-            imshow("Blue", blue_threshold);
-*/
-
-// SHIT CODE HERE
-            laser_crop.publish(laser);
 
             cv::waitKey(30);
         } catch (cv_bridge::Exception& e) {
@@ -205,8 +165,6 @@ private:
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "beacon_finder");
     ros::NodeHandle n;
-
-    laser_crop = n.advertise<sensor_msgs::LaserScan>("laser_crop", 100);
 
     XmlRpc::XmlRpcValue beacons_cfg;
     n.getParam("/beacons", beacons_cfg);
@@ -231,24 +189,13 @@ int main(int argc, char *argv[]) {
     } catch (XmlRpc::XmlRpcException& e) {
         ROS_ERROR("Unable to parse beacon parameter. (%s)", e.getMessage().c_str());
     }
-   /* 
-    cv::namedWindow("Pink");
-    cv::namedWindow("Yellow");
-    cv::namedWindow("Blue");
-    cv::namedWindow("original");
-    */
+
     cv::namedWindow("blobs");
     cv::startWindowThread();
 
     BeaconFinder beacon_finder(n, beacons);
     
     ros::spin();
-    /*
-    cv::destroyWindow("Pink");
-    cv::destroyWindow("Yellow");
-    cv::destroyWindow("Blue");
-    cv::destroyWindow("original");
-    */
     cv::destroyWindow("blobs");
 
     return 0;
