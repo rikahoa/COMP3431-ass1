@@ -6,26 +6,25 @@
 
 class ExplorationState : public State {
 public:
-    ExplorationState(int x, int y, int cost) : ExplorationState(x, y, cost, make_pair(-1, -1)) {};
+    ExplorationState(int x, int y, int cost) : 
+        ExplorationState(x, y, cost, make_pair(-1, -1)) {};
 
-    virtual double get_heuristic() const override {
-        return 0;
-    }
-    
-    virtual bool is_goal(const vector<vector<int>> &map, int xmax, int ymax) const override {
-        return x == xmax - 1 && y == 0;
+    virtual bool is_goal(const Maze& maze) const override {
+        // TODO: replace
+        return maze.get_occupancy_grid().data[y * maze.get_occupancy_grid().info.height + x] == -1;
     }
 
-    virtual vector<State*> explore(const vector<vector<int>> &map, int xmax, int ymax, 
+    virtual vector<State*> explore(const Maze& maze, 
             std::function<bool(pair<int,int>)> check) const override {
         vector<State*> new_states;
         
         for (const auto &p : ExplorationState::DIRECTIONS) {
             int x = this->x + p.first;
             int y = this->y + p.second;
-            if (x >= 0 && x < xmax && y >= 0 && y < ymax && check(make_pair(x, y))) {
+            if (x >= 0 && x < maze.get_occupancy_grid().info.width && 
+                    y >= 0 && y < maze.get_occupancy_grid().info.height && check(make_pair(x, y))) {
                 new_states.push_back(
-                        new ExplorationState(x, y, this->get_cost() + map[y][x], 
+                        new ExplorationState(x, y, this->get_cost() + 1, 
                             this->get_position()));
             }
         }
@@ -36,7 +35,7 @@ private:
     static const vector<pair<int, int>> DIRECTIONS;
 
     ExplorationState(int x, int y, int cost, pair<int, int> parent) :
-        State(x, y, cost, parent) {};
+        State(x, y, cost, parent, 0) {};
 };
 
 const vector<pair<int,int>> ExplorationState::DIRECTIONS = 
@@ -60,7 +59,7 @@ private:
 };
 
 int main(int argc, char *argv[]) {
-    vector<vector<int>> map;
+    /*vector<vector<int>> map;
 
     map.push_back(vector<int>{12,244,67,1});
     map.push_back(vector<int>{5,104,42,999});
@@ -70,7 +69,7 @@ int main(int argc, char *argv[]) {
     
     for (const auto &coord : path) {
         cout << "(" << coord.first << "," << coord.second << ")" << endl;
-    }
+    }*/
 
     ros::init(argc, argv, "exploration");
     ros::NodeHandle n;

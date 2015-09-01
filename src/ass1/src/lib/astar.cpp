@@ -8,9 +8,7 @@
 
 using namespace std;
         
-vector<pair<int, int>> search(const vector<vector<int>> &map, 
-        int xmax, int ymax, 
-        State *initial_state) {
+vector<pair<int, int>> search(const Maze &maze, State *initial_state) {
     // need these for custom comparators
     class PairHash{
     public:
@@ -49,7 +47,7 @@ vector<pair<int, int>> search(const vector<vector<int>> &map,
         parents[curr->get_position()] = curr->get_parent();
         
         // found the goal? get out of here
-        if (curr->is_goal(map, xmax, ymax)) {
+        if (curr->is_goal(maze)) {
             auto curr_point = curr->get_position();
             while (curr_point.first != -1 && curr_point.second != -1) {
                 path.push_back(curr_point);
@@ -60,7 +58,7 @@ vector<pair<int, int>> search(const vector<vector<int>> &map,
         }
         
         // otherwise, search
-        auto explore = curr->explore(map, xmax, ymax, 
+        auto explore = curr->explore(maze,
                 [&parents](pair<int, int> point) { return parents.find(point) == parents.end(); });
         for (auto it = explore.begin(); it != explore.end(); ++it) {
             pq.push(*it);

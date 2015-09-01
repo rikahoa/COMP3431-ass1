@@ -5,13 +5,14 @@
 #include <queue>
 #include <vector>
 #include <algorithm>
+#include "maze.h"
 
 using namespace std;
 
 class State {
 public:
-    State(int x, int y, int cost) : 
-        State(x, y, cost, make_pair(-1, -1)) {};
+    State(int x, int y, int cost, double heuristic) : 
+        State(x, y, cost, make_pair(-1, -1), heuristic) {};
     virtual ~State() {};
 
     double get_cost() const { 
@@ -22,9 +23,11 @@ public:
         return get_cost() + get_heuristic();
     }
 
-    virtual double get_heuristic() const = 0;
+    double get_heuristic() const {
+        return heuristic;
+    }
 
-    virtual bool is_goal(const vector<vector<int>> &map, int xmax, int ymax) const = 0;
+    virtual bool is_goal(const Maze& maze) const = 0;
 
     pair<int, int> get_position() const {
         return make_pair(x, y);
@@ -38,20 +41,21 @@ public:
         return a.get_total_cost() < b.get_total_cost();
     }
     
-    virtual vector<State*> explore(const vector<vector<int>> &map, int xmax, int ymax, 
+    virtual vector<State*> explore(const Maze& maze,
             std::function<bool(pair<int,int>)> check) const = 0; 
 protected:
     int x, y;
     double cost;
     pair<int, int> parent;
+    double heuristic;
 
-    State(int x, int y, int cost, pair<int, int> parent) : 
-        x(x), y(y), cost(cost), parent(parent) {};
+    State(int x, int y, int cost, pair<int, int> parent, double heuristic) : 
+        x(x), y(y), cost(cost), parent(parent), heuristic(heuristic) {};
 };
 
 // warning: initial_state gets deleted!
-vector<pair<int, int>> search(const vector<vector<int>> &map, 
-        int xmax, int ymax, 
+vector<pair<int, int>> search(
+        const Maze& maze,
         State *initial_state);
 
 #endif
