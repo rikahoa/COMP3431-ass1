@@ -1,6 +1,8 @@
 #include "ros/ros.h"
 #include "geometry_msgs/Twist.h"
 #include "lib/astar.h"
+#include "lib/maze.h"
+#include "nav_msgs/OccupancyGrid.h"
 
 class ExplorationState : public State {
 public:
@@ -44,11 +46,17 @@ class Exploration {
 public:
     Exploration(ros::NodeHandle n) : n(n) {
         movement_pub = n.advertise<geometry_msgs::Twist>("/ass1/movement", 1);
+        map_sub = n.subscribe("/map", 1, &Exploration::map_callback, this);
     }
 
+    void map_callback(const nav_msgs::OccupancyGrid& og) {
+        this->maze.set_occupancy_grid(og);
+    }
 private:
+    Maze maze;
     ros::NodeHandle n;
     ros::Publisher movement_pub;
+    ros::Subscriber map_sub;
 };
 
 int main(int argc, char *argv[]) {

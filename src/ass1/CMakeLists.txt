@@ -126,7 +126,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library(ass1lib src/lib/astar.cpp)
+add_library(ass1lib src/lib/astar.cpp src/lib/maze.cpp)
 
 add_executable(movement src/movement.cpp)
 target_link_libraries(movement ${catkin_LIBRARIES} ass1lib)
