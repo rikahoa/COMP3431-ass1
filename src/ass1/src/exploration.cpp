@@ -2,6 +2,7 @@
 #include "geometry_msgs/Twist.h"
 #include "ass1lib/astar.h"
 #include "ass1lib/maze.h"
+#include "ass1lib/bot.h"
 #include "nav_msgs/OccupancyGrid.h"
 
 class ExplorationState : public State {
@@ -10,7 +11,6 @@ public:
         ExplorationState(x, y, cost, make_pair(-1, -1)) {};
 
     virtual bool is_goal(const Maze& maze) const override {
-        // TODO: replace, maybe?
         return maze.get_occupancy_grid().data[y * maze.get_occupancy_grid().info.height + x] == -1;
     }
 
@@ -56,6 +56,9 @@ public:
     }
 private:
     Maze maze;
+    Bot bot;
+    pair<double, double> target;
+
     ros::NodeHandle n;
     ros::Publisher movement_pub;
     ros::Subscriber map_sub;

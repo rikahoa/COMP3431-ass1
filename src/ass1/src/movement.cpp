@@ -47,7 +47,7 @@ private:
                 ", angle z = " << twistStamped->twist.angular.z);
              navi_pub.publish(twistStamped->twist);
         } else {
-            ROS_INFO_STREAM("Cannot Move x = " << twistStamped->twist.linear.x << 
+             ROS_INFO_STREAM("Cannot Move x = " << twistStamped->twist.linear.x << 
                     ", angle z = " << twistStamped->twist.angular.z);
         }
     }
