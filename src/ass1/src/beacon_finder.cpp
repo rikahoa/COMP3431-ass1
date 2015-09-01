@@ -1,6 +1,11 @@
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
+#include <message_filters/subscriber.h>
+#include <message_filters/time_synchronizer.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
 #include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/LaserScan.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
@@ -13,6 +18,9 @@
 #include <string>
 
 using namespace std;
+
+typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, sensor_msgs::Image> SyncPolicy;
+
 
 class Beacon {
 public:
@@ -27,27 +35,43 @@ private:
     // COLOURS
 };
 
+
 class BeaconFinder {
 public:
-    BeaconFinder(ros::NodeHandle n, vector<Beacon> beacons) : n(n), beacons(beacons), it(n) {
-        // location_pub = n.advertise<??>("/ass1/beacons", 1);
+    BeaconFinder(ros::NodeHandle n, vector<Beacon> beacons) : n(n),
+        beacons(beacons),
+        it(n),
+        i(n, "/camera/rgb/image_color", 1),
+        l(n, "/scan", 1),
+        sync(SyncPolicy(10), l, i) {
+
+        // Use ApproximateTime message_filter to read both kinect image and laser.
+        sync.registerCallback(boost::bind(&BeaconFinder::image_callback, this, _1, _2) );
+
+        /*
+        location_pub = n.advertise<??>("/ass1/beacons", 1);
         image_sub = it.subscribe("/camera/rgb/image_color", 1, &BeaconFinder::image_callback, this);
-        //image_sub = it.subscribe("image_raw", 1, &BeaconFinder::image_callback, this);
+        image_sub = it.subscribe("image_raw", 1, &BeaconFinder::image_callback, this);
+        */
     }
 
 private:
     ros::NodeHandle n;
     vector<Beacon> beacons;
-    image_transport::ImageTransport it;
-    image_transport::Subscriber image_sub;
+ //   image_transport::ImageTransport it;
+ //   image_transport::Subscriber image_sub;
+    message_filters::Subscriber<sensor_msgs::Image> i;
+    message_filters::Subscriber<sensor_msgs::LaserScan> l;
+    message_filters::Synchronizer<SyncPolicy> sync;
 
-    void image_callback(const sensor_msgs::ImageConstPtr& msg) {
+    void image_callback(const sensor_msgs::LaserScan::ConstPtr& laser, const sensor_msgs::Image::ConstPtr& image) {
         try {
             // Convert from ROS image msg to OpenCV matrix images
             cv_bridge::CvImagePtr cv_ptr;
-            cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+            cv_ptr = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::BGR8);
             cv::Mat src = cv_ptr->image;
-            imshow("original", src);
+        //    ROS_INFO("laser size: %d, mat size: %d", laser->ranges.size(), src.cols );
+            //imshow("original", src);
 
             // OpenCV filters to find colours
             cv::Mat hsv, pink_threshold, yellow_threshold, blue_threshold, green_threshold;
@@ -110,10 +134,16 @@ private:
                     cv::Scalar(125,125,125), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
            
 
-           /*
             // output for pair detection
             double pillar_threshold = 20;
             for( std::vector<cv::KeyPoint>::iterator pink_pt = pink_keypoints.begin(); pink_pt != pink_keypoints.end(); pink_pt++ ) {
+
+
+                // THIS NEEDS FIXING
+                double angle = (pink_pt->pt.x / 640) * 144; 
+                int distance_index = 268 + (int)angle;
+                ROS_INFO("%f init angle, pink index %d/681, Pink distance %f", angle, distance_index, laser->ranges[distance_index] );
+
                 for(std::vector<cv::KeyPoint>::iterator blue_pt = blue_keypoints.begin(); blue_pt != blue_keypoints.end(); blue_pt++ ) {
                     if( std::abs(pink_pt->pt.x - blue_pt->pt.x) < pillar_threshold ) {
                         if( pink_pt->pt.y < blue_pt->pt.y ) {
@@ -144,17 +174,21 @@ private:
 
 
             }
-            */
 
             // gui display
+
             imshow("blobs", blobs);
+            ROS_INFO("blob");
+
+
+            /*
             imshow("Pink", pink_threshold);
             imshow("Yellow", yellow_threshold);
             imshow("Blue", blue_threshold);
-
+*/
             cv::waitKey(30);
         } catch (cv_bridge::Exception& e) {
-            ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
+            ROS_ERROR("Could not convert from '%s' to 'bgr8'.", image->encoding.c_str());
         }
     }
 };
@@ -186,21 +220,24 @@ int main(int argc, char *argv[]) {
     } catch (XmlRpc::XmlRpcException& e) {
         ROS_ERROR("Unable to parse beacon parameter. (%s)", e.getMessage().c_str());
     }
-    
+   /* 
     cv::namedWindow("Pink");
     cv::namedWindow("Yellow");
     cv::namedWindow("Blue");
     cv::namedWindow("original");
+    */
     cv::namedWindow("blobs");
     cv::startWindowThread();
 
     BeaconFinder beacon_finder(n, beacons);
     
     ros::spin();
+    /*
     cv::destroyWindow("Pink");
     cv::destroyWindow("Yellow");
     cv::destroyWindow("Blue");
     cv::destroyWindow("original");
+    */
     cv::destroyWindow("blobs");
 
     return 0;
