@@ -20,18 +20,28 @@
 
 using namespace std;
 
-typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, sensor_msgs::Image> SyncPolicy;
+typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, sensor_msgs::Image, nav_msgs::Odometry> SyncPolicy;
 
 class Beacon {
 public:
     Beacon(string top, string bottom) : 
-        x(0), y(0), known_location(false), top(top), bottom(bottom) {
+        x(0), y(0), known_location(false), top(top), bottom(bottom), count(0) {
         ROS_INFO_STREAM("Looking for beacon top=" << top << ",bottom=" << bottom);
     }
-private:
+    void found_location() {
+        count++;
+        if( count >= 4 ) {
+            known_location = true;
+        }
+    }
+    bool is_found() { return known_location; }
+
     double x, y;
     bool known_location;
     string top, bottom;
+
+private:
+    int count;
     // COLOURS
 };
 
@@ -42,20 +52,22 @@ public:
         beacons(beacons),
         img_msg(n, "/camera/rgb/image_color", 1),
         lsr_msg(n, "/scan", 1),
-        sync(SyncPolicy(10), lsr_msg, img_msg) {
+        odom_msg(n, "/odom", 1),
+        sync(SyncPolicy(10), lsr_msg, img_msg, odom_msg) {
 
         // Use ApproximateTime message_filter to read both kinect image and laser.
-        sync.registerCallback(boost::bind(&BeaconFinder::image_callback, this, _1, _2) );
-    }
+        sync.registerCallback(boost::bind(&BeaconFinder::image_callback, this, _1, _2, _3) );
+   }
 
 private:
     ros::NodeHandle n;
     vector<Beacon> beacons;
     message_filters::Subscriber<sensor_msgs::Image> img_msg;
     message_filters::Subscriber<sensor_msgs::LaserScan> lsr_msg;
+    message_filters::Subscriber<nav_msgs::Odometry> odom_msg;
     message_filters::Synchronizer<SyncPolicy> sync;
 
-    void image_callback(const sensor_msgs::LaserScan::ConstPtr& laser, const sensor_msgs::Image::ConstPtr& image) {
+    void image_callback(const sensor_msgs::LaserScan::ConstPtr& laser, const sensor_msgs::Image::ConstPtr& image, const nav_msgs::Odometry::ConstPtr& odom) {
         try {
             // Convert from ROS image msg to OpenCV matrix images
             cv_bridge::CvImagePtr cv_ptr;
@@ -67,8 +79,8 @@ private:
             cv::cvtColor(src, hsv, CV_BGR2HSV);
             cv::inRange(hsv, cv::Scalar(130,90,90), cv::Scalar(170,255,255), pink_threshold);
             cv::inRange(hsv, cv::Scalar(15,50,50), cv::Scalar(30,255,255), yellow_threshold);
-            cv::inRange(hsv, cv::Scalar(91,90,90), cv::Scalar(120,255,255), blue_threshold);
-            cv::inRange(hsv, cv::Scalar(70,50,50), cv::Scalar(90,255,255), green_threshold);
+            cv::inRange(hsv, cv::Scalar(91,50,50), cv::Scalar(120,255,255), blue_threshold);
+            cv::inRange(hsv, cv::Scalar(70,20,20), cv::Scalar(90,255,255), green_threshold);
             
             blue_threshold = cv::Scalar::all(255) - blue_threshold;
             pink_threshold = cv::Scalar::all(255) - pink_threshold;
@@ -84,7 +96,7 @@ private:
             params.filterByConvexity = 1;
             params.minConvexity = 0.5;
             params.filterByInertia = true;
-            params.minInertiaRatio = 0.5;
+            params.minInertiaRatio = 0.65;
             
             std::vector<cv::KeyPoint> pink_keypoints, yellow_keypoints, blue_keypoints, green_keypoints;
 
@@ -106,7 +118,6 @@ private:
 
             cv::drawKeypoints( blobs, yellow_keypoints, blobs, 
                     cv::Scalar(125,125,125), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
-           
 
             // acceptable horizontal distance between the 2 colours on a pillar
             double pillar_threshold = 20;
@@ -125,8 +136,10 @@ private:
                     if( std::abs(pink_pt->pt.x - blue_pt->pt.x) < pillar_threshold ) {
                         if( pink_pt->pt.y < blue_pt->pt.y ) {
                             ROS_INFO("T: pink, B: blue, dist(%f), angle(%f)", distance, lTheta );
+                            found_beacon("pink", "blue");
                         } else {
                             ROS_INFO("T: blue, B: pink, dist(%f), angle(%f)", distance, lTheta );
+                            found_beacon("blue", "pink");
                         }
                     }
                 }
@@ -134,8 +147,10 @@ private:
                     if( std::abs(pink_pt->pt.x - yellow_pt->pt.x) < pillar_threshold ) {
                         if( pink_pt->pt.y < yellow_pt->pt.y ) {
                             ROS_INFO("T: pink, B: yellow, dist(%f), angle(%f)", distance, lTheta );
+                            found_beacon("pink", "yellow");
                         } else {
                             ROS_INFO("T: yellow, B: pink, dist(%f), angle(%f)", distance, lTheta );
+                            found_beacon("yellow", "pink");
                         }
                     }
                 }
@@ -143,21 +158,42 @@ private:
                     if( std::abs(pink_pt->pt.x - green_pt->pt.x) < pillar_threshold ) {
                         if( pink_pt->pt.y < green_pt->pt.y ) {
                             ROS_INFO("T: pink, B: green, dist(%f), angle(%f)", distance, lTheta );
+                            found_beacon("pink", "green");
                         } else {
                             ROS_INFO("T: green, B: pink, dist(%f), angle(%f)", distance, lTheta );
+                            found_beacon("green", "pink");
                         }
                     }
                 }
-
-
+            }
+            bool found_all = true; 
+            int count = 0;
+            for(auto it = beacons.begin(); it != beacons.end(); ++it) {
+                if( !it->is_found() ) {
+                    found_all = false;
+                } else {
+                    count++;
+                }
             }
 
+            ROS_INFO("Found %d/%d beacons", count, beacons.size() );
+            if( found_all ) {
+                ROS_INFO("Found all beacons");
+            }
             // gui display
             imshow("blobs", blobs);
 
             cv::waitKey(30);
         } catch (cv_bridge::Exception& e) {
             ROS_ERROR("Could not convert from '%s' to 'bgr8'.", image->encoding.c_str());
+        }
+    }
+
+    void found_beacon(string top, string bottom) {
+        for( auto it = beacons.begin(); it != beacons.end(); ++it ) {
+            if( it->top == top && it->bottom == bottom ) {
+                it->found_location();
+            }
         }
     }
 };
