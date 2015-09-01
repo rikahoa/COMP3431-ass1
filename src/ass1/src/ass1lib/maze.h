@@ -42,7 +42,10 @@ public:
 
         return grid_path;
     }
-
+    
+    int get_data(int x, int y) {
+        return this->og.data[x * this->og.info.height + y];
+    }
 private:
     nav_msgs::OccupancyGrid og;    
 };

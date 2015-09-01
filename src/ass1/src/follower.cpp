@@ -30,7 +30,7 @@ public:
                 minindex << ",rightangle=" << rightangle);
         geometry_msgs::TwistStamped move;
 
-	move.header = msg->header;
+	    move.header = msg->header;
 
         if (rightangle > PI/2 || rightangle < -PI/2) {
             move.twist.linear.x = 0;
