@@ -1,7 +1,7 @@
 #include "ros/ros.h"
 #include "geometry_msgs/Twist.h"
-#include "lib/astar.h"
-#include "lib/maze.h"
+#include "ass1lib/astar.h"
+#include "ass1lib/maze.h"
 #include "nav_msgs/OccupancyGrid.h"
 
 class ExplorationState : public State {
