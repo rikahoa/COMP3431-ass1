@@ -56,7 +56,7 @@ public:
             
         sync.registerCallback(boost::bind(&Exploration::map_callback, this, _1, _2)); 
         
-        movement_pub = n.advertise<geometry_msgs::Twist>("/ass1/movement", 1);
+        movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
 
 
 
