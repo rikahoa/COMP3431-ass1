@@ -21,6 +21,7 @@ using namespace std;
 
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, sensor_msgs::Image> SyncPolicy;
 
+ros::Publisher laser_crop;
 
 class Beacon {
 public:
@@ -139,9 +140,15 @@ private:
 
 
                 // THIS NEEDS FIXING
-                double angle = (pink_pt->pt.x / 640) * 144; 
-                int distance_index = 268 + (int)angle;
-                ROS_INFO("%f init angle, pink index %d/681, Pink distance %f", angle, distance_index, laser->ranges[distance_index] );
+                double xCo = pink_pt->pt.x;
+                xCo = xCo - 320;
+                double theta = atan(xCo*tan(27.5)/320.0);
+                double lTheta = theta - laser->angle_min;
+                int distance_index = lTheta / laser->angle_increment;
+                double distance = laser->ranges[distance_index];
+                //double angle = (pink_pt->pt.x / 640) * 144; 
+                //int distance_index = 268 + (int)angle;
+                ROS_INFO("%f init angle, pink index %d/681, Pink distance %f", lTheta, distance_index, laser->ranges[distance_index] );
 
                 for(std::vector<cv::KeyPoint>::iterator blue_pt = blue_keypoints.begin(); blue_pt != blue_keypoints.end(); blue_pt++ ) {
                     if( std::abs(pink_pt->pt.x - blue_pt->pt.x) < pillar_threshold ) {
@@ -177,7 +184,6 @@ private:
             // gui display
 
             imshow("blobs", blobs);
-            ROS_INFO("blob");
 
 
             /*
@@ -185,6 +191,10 @@ private:
             imshow("Yellow", yellow_threshold);
             imshow("Blue", blue_threshold);
 */
+
+// SHIT CODE HERE
+            laser_crop.publish(laser);
+
             cv::waitKey(30);
         } catch (cv_bridge::Exception& e) {
             ROS_ERROR("Could not convert from '%s' to 'bgr8'.", image->encoding.c_str());
@@ -195,6 +205,8 @@ private:
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "beacon_finder");
     ros::NodeHandle n;
+
+    laser_crop = n.advertise<sensor_msgs::LaserScan>("laser_crop", 100);
 
     XmlRpc::XmlRpcValue beacons_cfg;
     n.getParam("/beacons", beacons_cfg);
