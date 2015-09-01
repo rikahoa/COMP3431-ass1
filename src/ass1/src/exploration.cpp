@@ -1,9 +1,15 @@
 #include "ros/ros.h"
-#include "geometry_msgs/Twist.h"
+#include "geometry_msgs/TwistStamped.h"
 #include "ass1lib/astar.h"
 #include "ass1lib/maze.h"
 #include "ass1lib/bot.h"
+#include <message_filters/subscriber.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
 #include "nav_msgs/OccupancyGrid.h"
+#include "nav_msgs/Odometry.h"
+
+typedef message_filters::sync_policies::ApproximateTime<nav_msgs::OccupancyGrid, nav_msgs::Odometry> ApproxPolicy;
 
 class ExplorationState : public State {
 public:
@@ -46,13 +52,18 @@ const vector<pair<int,int>> ExplorationState::DIRECTIONS =
 
 class Exploration {
 public:
-    Exploration(ros::NodeHandle n) : n(n) {
+    Exploration(ros::NodeHandle n) : n(n),map_sub(n, "/map", 1), odom_sub(n, "/odom", 1), sync(ApproxPolicy(10), map_sub, odom_sub)   {
+            
+        sync.registerCallback(boost::bind(&Exploration::map_callback, this, _1, _2)); 
+        
         movement_pub = n.advertise<geometry_msgs::Twist>("/ass1/movement", 1);
-        map_sub = n.subscribe("/map", 1, &Exploration::map_callback, this);
+
+
+
     }
 
-    void map_callback(const nav_msgs::OccupancyGrid& og) {
-        this->maze.set_occupancy_grid(og);
+    void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og, const nav_msgs::Odometry::ConstPtr &odom) {
+        this->maze.set_occupancy_grid(*og);
     }
 private:
     Maze maze;
@@ -61,7 +72,10 @@ private:
 
     ros::NodeHandle n;
     ros::Publisher movement_pub;
-    ros::Subscriber map_sub;
+    
+    message_filters::Subscriber<nav_msgs::OccupancyGrid> map_sub;
+    message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
+    message_filters::Synchronizer<ApproxPolicy> sync;
 };
 
 int main(int argc, char *argv[]) {
