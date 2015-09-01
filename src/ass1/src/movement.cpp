@@ -45,11 +45,11 @@ private:
         }
 
         if (safe) {
-             ROS_WARN_STREAM("Cannot move: x = " << twistStamped->twist.linear.x << 
+             ROS_DEBUG_STREAM("Moving: x = " << twistStamped->twist.linear.x << 
                 ", angle z = " << twistStamped->twist.angular.z);
              navi_pub.publish(twistStamped->twist);
         } else {
-            ROS_DEBUG_STREAM("Moving x = " << twistStamped->twist.linear.x << 
+            ROS_WARN_STREAM("Cannot Move x = " << twistStamped->twist.linear.x << 
                     ", angle z = " << twistStamped->twist.angular.z);
         }
     }
