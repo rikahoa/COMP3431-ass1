@@ -32,7 +32,8 @@ public:
             int grid_x = static_cast<int>(a.first * og.info.resolution);
             int grid_y = static_cast<int>(a.second * og.info.resolution);
 
-            if (grid_path.back().first == grid_x && grid_path.back().second == grid_y) {
+            if (!grid_path.empty() && grid_path.back().first == grid_x &&
+                    grid_path.back().second == grid_y) {
                 continue;
             }
 
