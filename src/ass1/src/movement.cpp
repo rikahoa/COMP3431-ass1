@@ -27,7 +27,7 @@ private:
     void movement_and_laser_callback(const geometry_msgs::TwistStamped::ConstPtr &twistStamped, 
             const sensor_msgs::LaserScan::ConstPtr &laserScan) {
 
-        ROS_INFO("Movement callback.");
+        ROS_DEBUG("Movement callback.");
     
         bool safe = false;
 
@@ -38,8 +38,8 @@ private:
             double angle_delta = twistStamped->twist.angular.z - laserScan->angle_min;
             int delta = angle_delta / laserScan->angle_increment;
             
-            ROS_INFO_STREAM("LaserScan Distance delta: " << delta);
-            ROS_INFO_STREAM("LaserScan Distance range[delta]: " << laserScan->ranges[delta]);
+            ROS_DEBUG_STREAM("LaserScan Distance delta: " << delta);
+            ROS_DEBUG_STREAM("LaserScan Distance range[delta]: " << laserScan->ranges[delta]);
             
             if (laserScan->ranges[delta] > 0.25) {
                 safe = true;            
@@ -47,7 +47,7 @@ private:
         }
 
         if (safe) {
-             ROS_INFO_STREAM("Moving: x = " << twistStamped->twist.linear.x << 
+             ROS_DEBUG_STREAM("Moving: x = " << twistStamped->twist.linear.x << 
                 ", angle z = " << twistStamped->twist.angular.z);
              navi_pub.publish(twistStamped->twist);
         } else {
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     ros::NodeHandle n;
     
     Movement movement(n);
-    ROS_INFO("Movement setup successfully.");
+    ROS_DEBUG("Movement setup successfully.");
 
     ros::spin();
 

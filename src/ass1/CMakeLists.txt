@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_msgs
   image_transport
   cv_bridge
+  tf
 )
 
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
@@ -149,6 +150,8 @@ target_link_libraries(planner ${catkin_LIBRARIES} ass1lib)
 add_executable(follower src/follower.cpp)
 target_link_libraries(follower ${catkin_LIBRARIES} ass1lib)
 
+add_executable(odom src/odom.cpp)
+target_link_libraries(odom ${catkin_LIBRARIES} ass1lib)
 ## Declare a C++ library
 # add_library(ass1
 #   src/${PROJECT_NAME}/ass1.cpp

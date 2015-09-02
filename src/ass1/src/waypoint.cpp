@@ -4,7 +4,6 @@
 class Waypoint {
 public:
     Waypoint(ros::NodeHandle n) : n(n) {
-        movement_pub = n.advertise<geometry_msgs::Twist>("/ass1/movement", 1);
     }
 
 private:
