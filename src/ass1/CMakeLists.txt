@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_msgs
   image_transport
   cv_bridge
+  tf
 )
 
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
