@@ -34,9 +34,8 @@ public:
         int counts = FIELD_OF_VIEW/newLaserScan.angle_increment;
         int start_index = (newLaserScan.angle_min - oldLaserScan->angle_min)/newLaserScan.angle_increment;
         
-        //NOT WORKING WHY NOT
-        //std::copy(oldLaserScan->ranges + start_index, oldLaserScan->ranges + start_index + counts, newLaserScan.ranges);
-        //std::copy(oldLaserScan->intensities + start_index, oldLaserScan->intensities + start_index + counts, newLaserScan.intensities);
+        std::copy(oldLaserScan->ranges.begin() + start_index, oldLaserScan->ranges.begin() + start_index + counts, std::back_inserter(newLaserScan.ranges));
+        std::copy(oldLaserScan->intensities.begin() + start_index, oldLaserScan->intensities.begin() + start_index + counts, back_inserter(newLaserScan.intensities));
         
         simple_laser_pub.publish(newLaserScan);
     }
