@@ -15,6 +15,7 @@
     <node name="planner" pkg="ass1" type="planner" output="screen" />
     <node name="movement" pkg="ass1" type="movement" output="screen" />
     <node name="waypoint" pkg="ass1" type="waypoint" output="screen" />
+    <node name="odom" pkg="ass1" type="odom" output="screen" />
     <!--<node name="beacon_finder" pkg="ass1" type="beacon_finder" output="screen" />-->
     <node name="exploration" pkg="ass1" type="exploration" output="screen" />
 </launch>
