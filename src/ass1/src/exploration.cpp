@@ -10,7 +10,9 @@
 #include <tf/transform_datatypes.h>
 #include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Odometry.h"
+#include <cmath>
 #include "geometry_msgs/TwistStamped.h"
+#include <random>
 
 typedef message_filters::sync_policies::ApproximateTime<nav_msgs::OccupancyGrid, nav_msgs::Odometry> ApproxPolicy;
 
@@ -55,14 +57,55 @@ const vector<pair<int,int>> ExplorationState::DIRECTIONS =
 
 class Exploration {
 public:
-    Exploration(ros::NodeHandle n) : n(n),
+    Exploration(ros::NodeHandle n) : n(n), dis(-2,2), gen(rd()) /*,
         map_sub(n, "/map", 1), 
         odom_sub(n, "/ass1/odom", 1), 
-        sync(ApproxPolicy(10), map_sub, odom_sub)   
+        sync(ApproxPolicy(10), map_sub, odom_sub)   */
     {
+        /*
         sync.registerCallback(boost::bind(&Exploration::map_callback, this, _1, _2)); 
+        */
         movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
 
+        // set odom and make random target
+        odom_sub = n.subscribe("ass1/odom", 1, &Exploration::odom_callback, this);
+        target = make_pair(1, 1);
+        
+    }
+
+    void odom_callback(const nav_msgs::Odometry::ConstPtr &odom) {
+        this->bot.update(odom);
+
+        geometry_msgs::TwistStamped move;
+        move.header = odom->header;
+        move.twist.linear.y = move.twist.linear.z = 0;
+        move.twist.angular.x = move.twist.angular.y = 0;
+
+        auto displacement = this->bot.get_displacement(target.first, target.second);
+        
+        // We have reached our destination - make a new one.
+        while (displacement.first < 0.1) {
+            // generate random location
+            ROS_INFO_STREAM("reached target " << target.first << "," << target.second); 
+            target = make_pair(dis(gen), dis(gen));
+            displacement = this->bot.get_displacement(target.first, target.second);
+        }
+
+        // We must rotate!
+        ROS_INFO_STREAM("target of " << target.first << "," << target.second);
+        ROS_INFO_STREAM("we are at " << this->bot.get_position().first << "," 
+                << this->bot.get_position().second);
+        ROS_INFO_STREAM("angle change of " << displacement.second << " required.");
+        ROS_INFO_STREAM("displacement from target is " << displacement.first);
+
+        if (fabs(displacement.second) > 0.05) {
+            move.twist.angular.z = displacement.second;
+        } else {
+            // Otherwise, move towards our destination.
+            move.twist.linear.x = displacement.first;
+        }
+
+        movement_pub.publish(move);
     }
 
     void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og, 
@@ -89,14 +132,21 @@ private:
     ros::NodeHandle n;
     ros::Publisher movement_pub;
     
-    message_filters::Subscriber<nav_msgs::OccupancyGrid> map_sub;
+    /*message_filters::Subscriber<nav_msgs::OccupancyGrid> map_sub;
     message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
-    message_filters::Synchronizer<ApproxPolicy> sync;
+    message_filters::Synchronizer<ApproxPolicy> sync;*/
+
+    ros::Subscriber odom_sub;
+    std::uniform_real_distribution<> dis;
+    std::random_device rd;
+    std::mt19937 gen;
 };
 
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "exploration");
     ros::NodeHandle n;
+
+    srand(0);
 
     Exploration exploration(n);
     ros::spin();
