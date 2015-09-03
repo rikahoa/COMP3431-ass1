@@ -66,7 +66,11 @@ public:
     void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og, 
             const nav_msgs::Odometry::ConstPtr &odom) {
         this->maze.set_occupancy_grid(*og);
-        //this->bot.update(odom);
+        this->bot.update(odom);
+
+        // TODO: put coordinates in
+        auto path = search(this->maze, new ExplorationState(0, 0, 0));
+
         
         /*auto ogp = this->bot.get_occupancy_grid_coord(og->info.resolution);
         ROS_INFO_STREAM("point: " << ogp.first << "," << ogp.second << ":" << 
@@ -75,7 +79,7 @@ public:
     }
 private:
     Maze maze;
-    //Bot bot;
+    Bot bot;
     pair<double, double> target;
 
     ros::NodeHandle n;
