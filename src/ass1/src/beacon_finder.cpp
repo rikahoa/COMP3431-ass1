@@ -53,23 +53,20 @@ public:
         beacons(beacons),
         img_msg(n, "/camera/rgb/image_color", 1),
         lsr_msg(n, "/scan", 1),
-        odom_msg(n, "/odom", 1),
-        sync(SyncPolicy(10), lsr_msg, img_msg, odom_msg) {
+        sync(SyncPolicy(10), lsr_msg, img_msg) {
 
         odom_sub = n.subscribe("ass1/odom", 1, &BeaconFinder::odom_callback, this);
 
         // Use ApproximateTime message_filter to read both kinect image and laser.
-        sync.registerCallback(boost::bind(&BeaconFinder::image_callback, this, _1, _2, _3) );
+        sync.registerCallback(boost::bind(&BeaconFinder::image_callback, this, _1, _2) );
    }
 
 private:
     ros::NodeHandle n;
     vector<Beacon> beacons;
     Bot bot;
- //   image_transport::ImageTransport it;
- //   image_transport::Subscriber image_sub;
-    message_filters::Subscriber<sensor_msgs::Image> i;
-    message_filters::Subscriber<sensor_msgs::LaserScan> l;
+    message_filters::Subscriber<sensor_msgs::Image> img_msg;
+    message_filters::Subscriber<sensor_msgs::LaserScan> lsr_msg;
     ros::Subscriber odom_sub;
 
     message_filters::Synchronizer<SyncPolicy> sync;
