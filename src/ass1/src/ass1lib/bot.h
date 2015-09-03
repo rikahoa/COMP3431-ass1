@@ -3,31 +3,39 @@
 
 #include <utility>
 #include "nav_msgs/Odometry.h"
+#include "geometry_msgs/Pose.h"
+#include "geometry_msgs/Twist.h"
 #include "maze.h"
 #include <sys/time.h>
+#include <tf/transform_datatypes.h>
 
 using namespace std;
 
 class Bot {
 public:
-    Bot() : x(0), y(0), angle(0) {
+    Bot() {
     }
 
     pair<double, double> get_position() {
-        return make_pair(x, y);
+        return make_pair(this->pose.position.x, this->pose.position.y);
+    }
+
+    double get_yaw() {
+        return tf::getYaw(this->pose.orientation);
     }
 
     void update(const nav_msgs::Odometry::ConstPtr &odom) {
+        this->pose = odom->pose.pose;
     }
 
-    pair<int, int> get_occupancy_grid_coord(double resolution) {
-        return make_pair(static_cast<int>((this->x) / resolution),
-                         static_cast<int>((this->y) / resolution));
+    pair<int, int> get_og_coord(const Maze &m) {
+        auto og = m.get_occupancy_grid();
+        auto origin = og.info.origin.position;
+        return make_pair(static_cast<int>((this->pose.position.x - origin.x) / og.info.resolution),
+                         static_cast<int>((this->pose.position.y - origin.y) / og.info.resolution));
     }
 private:
-    double x;
-    double y;
-    double angle;
+    geometry_msgs::Pose pose;
 };
 
 #endif 
