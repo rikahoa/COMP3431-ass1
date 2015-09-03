@@ -46,7 +46,7 @@ public:
         l(n, "/scan", 1),
         sync(SyncPolicy(10), l, i) {
 
-        odom_sub = n.subscribe("ass1/scan", 1, &BeaconFinder::odom_callback, this);
+        odom_sub = n.subscribe("ass1/odom", 1, &BeaconFinder::odom_callback, this);
 
         // Use ApproximateTime message_filter to read both kinect image and laser.
         sync.registerCallback(boost::bind(&BeaconFinder::image_callback, this, _1, _2) );
