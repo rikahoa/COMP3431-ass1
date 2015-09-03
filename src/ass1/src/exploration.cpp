@@ -55,7 +55,7 @@ class Exploration {
 public:
     Exploration(ros::NodeHandle n) : n(n),
         map_sub(n, "/map", 1), 
-        odom_sub(n, "/odom", 1), 
+        odom_sub(n, "/ass1/odom", 1), 
         sync(ApproxPolicy(10), map_sub, odom_sub)   
     {
         sync.registerCallback(boost::bind(&Exploration::map_callback, this, _1, _2)); 
@@ -68,13 +68,12 @@ public:
         this->maze.set_occupancy_grid(*og);
         this->bot.update(odom);
 
-        // TODO: put coordinates in
-        auto path = search(this->maze, new ExplorationState(0, 0, 0));
-
+        auto og_pos = this->bot.get_og_coord(this->maze);
+        ROS_INFO_STREAM("point: " << og_pos.first << "," << og_pos.second << ":" <<
+                maze.get_data(og_pos.first, og_pos.second));
         
-        /*auto ogp = this->bot.get_occupancy_grid_coord(og->info.resolution);
-        ROS_INFO_STREAM("point: " << ogp.first << "," << ogp.second << ":" << 
-                maze.get_data(ogp.first, ogp.second));*/
+        // Do a A* to the nearest frontier
+        //auto path = search(this->maze, new ExplorationState(og_pos.x, og_pos.y, 0));
 
     }
 private:
