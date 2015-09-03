@@ -26,9 +26,6 @@ private:
             
     void movement_and_laser_callback(const geometry_msgs::TwistStamped::ConstPtr &twistStamped, 
             const sensor_msgs::LaserScan::ConstPtr &laserScan) {
-
-        ROS_DEBUG("Movement callback.");
-    
         bool safe = false;
 
         if (twistStamped->twist.angular.z < laserScan->angle_min || 
@@ -51,7 +48,7 @@ private:
                 ", angle z = " << twistStamped->twist.angular.z);
              navi_pub.publish(twistStamped->twist);
         } else {
-             ROS_INFO_STREAM("Cannot Move x = " << twistStamped->twist.linear.x << 
+             ROS_ERROR_STREAM("Cannot Move x = " << twistStamped->twist.linear.x << 
                     ", angle z = " << twistStamped->twist.angular.z);
         }
     }
@@ -62,7 +59,7 @@ int main(int argc, char *argv[]) {
     ros::NodeHandle n;
     
     Movement movement(n);
-    ROS_DEBUG("Movement setup successfully.");
+    ROS_INFO("Movement setup successfully.");
 
     ros::spin();
 

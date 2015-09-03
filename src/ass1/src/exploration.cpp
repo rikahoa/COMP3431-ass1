@@ -76,10 +76,11 @@ public:
     void odom_callback(const nav_msgs::Odometry::ConstPtr &odom) {
         this->bot.update(odom);
 
+        // Generate me a message.
         geometry_msgs::TwistStamped move;
         move.header = odom->header;
-        move.twist.linear.y = move.twist.linear.z = 0;
-        move.twist.angular.x = move.twist.angular.y = 0;
+        move.twist.linear.x = move.twist.linear.y = move.twist.linear.z = 0;
+        move.twist.angular.x = move.twist.angular.y = move.twist.angular.z = 0;
 
         auto displacement = this->bot.get_displacement(target.first, target.second);
         
@@ -91,7 +92,6 @@ public:
             displacement = this->bot.get_displacement(target.first, target.second);
         }
 
-        // We must rotate!
         ROS_INFO_STREAM("target of " << target.first << "," << target.second);
         ROS_INFO_STREAM("we are at " << this->bot.get_position().first << "," 
                 << this->bot.get_position().second);
@@ -99,6 +99,7 @@ public:
         ROS_INFO_STREAM("displacement from target is " << displacement.first);
 
         if (fabs(displacement.second) > 0.05) {
+            // Rotation required.
             move.twist.angular.z = displacement.second;
         } else {
             // Otherwise, move towards our destination.
@@ -145,8 +146,6 @@ private:
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "exploration");
     ros::NodeHandle n;
-
-    srand(0);
 
     Exploration exploration(n);
     ros::spin();

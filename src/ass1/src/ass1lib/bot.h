@@ -27,7 +27,7 @@ public:
         return tf::getYaw(this->pose.orientation);
     }
 
-    // Returns displacement in [distance, angle]
+    // Returns displacement in (distance, angle)
     pair<double, double> get_displacement(double x, double y) {
         // Get the vector to the robot.
         double vy = y - this->pose.position.y;
@@ -39,13 +39,13 @@ public:
         double target_angle = atan2(vy, vx) - this->get_yaw();
 
         // Clamp angle.
-        while (target_angle > PI) {
-            target_angle -= PI;
-        }
-        while (target_angle < -PI) {
-            target_angle += PI;
+        if (target_angle > PI) {
+            target_angle -= static_cast<int>(target_angle / PI) * PI;
+        } else if (target_angle < -PI) {
+            target_angle += static_cast<int>(-target_angle / PI) * PI;
         }
         
+        // return (distance, angle)
         return make_pair(distance, target_angle);
     }
 
