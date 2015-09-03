@@ -6,6 +6,8 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
+#include <tf/transform_listener.h>
+#include <tf/transform_datatypes.h>
 #include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Odometry.h"
 #include "geometry_msgs/TwistStamped.h"
@@ -66,11 +68,10 @@ public:
             const nav_msgs::Odometry::ConstPtr &odom) {
         this->maze.set_occupancy_grid(*og);
         //this->bot.update(odom);
-        
+
         /*auto ogp = this->bot.get_occupancy_grid_coord(og->info.resolution);
         ROS_INFO_STREAM("point: " << ogp.first << "," << ogp.second << ":" << 
                 maze.get_data(ogp.first, ogp.second));*/
-
     }
 private:
     Maze maze;
@@ -90,7 +91,6 @@ int main(int argc, char *argv[]) {
     ros::NodeHandle n;
 
     Exploration exploration(n);
-
     ros::spin();
 
     return 0;
