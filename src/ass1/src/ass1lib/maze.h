@@ -21,56 +21,52 @@ public:
     }
 
     void set_occupancy_grid(const nav_msgs::OccupancyGrid &og) {
-        //We copy the grid and make a new version with fatter walls
         this->og = og;
-        
-        for(int x = 0;  x < this->og.info.width; ++x) {
-            for(int y = 0;  y < this->og.info.height; ++y) {
-                //Want the original values
-                if( og.data[x * og.info.height + y] > 80) {
-                    //find its neighbours within 5 squares, 
-                    auto neighbours = get_fattened_neighbours(x,y, 5);
-                    for(auto n: neighbours) {
-                        set_data(n.first, n.second,100); 
+
+        // Fatten the grid.
+        for (int y = 0; y < this->og.info.height; ++y) {
+            for (int x = 0; x < this->og.info.width; ++x) {
+                if (og.data[y * og.info.height + x] > 80) {
+                    for (const auto& n: get_fattened_neighbours(x, y, 5)) {
+                        this->set_data(n.first, n.second, 100); 
                     } 
                 }
             }
         }
     }
     
+    // TODO: make more efficient
     vector<pair<int, int>> get_fattened_neighbours(int x, int y, int padding) {
         vector<pair<int, int>> neighbours;
-        for(int i=0; i < padding; ++i) {
+        for (int i = 0; i < padding; ++i) {
             if (x+i < this->og.info.width) {
-                neighbours.push_back(pair<int, int>(x+i, y));
+                neighbours.push_back(make_pair(x+i, y));
             }
             if (y+i < this->og.info.height) {
-                neighbours.push_back(pair<int, int>(x, y+i));
+                neighbours.push_back(make_pair(x, y+i));
             }
             if (y-i >=0) {
-                neighbours.push_back(pair<int, int>(x, y-i));
+                neighbours.push_back(make_pair(x, y-i));
             }
             if (x-i >=0) {
-                neighbours.push_back(pair<int, int>(x-i, y));
+                neighbours.push_back(make_pair(x-i, y));
             }
-            for(int j = 0; j < padding; ++j) {
+            for (int j = 0; j < padding; ++j) {
                 if (x+i < this->og.info.width && y+j < this->og.info.height) {
-                    neighbours.push_back(pair<int, int>(x+i, y+j));
+                    neighbours.push_back(make_pair(x+i, y+j));
                 }
                 if (x+i < this->og.info.width && y-j >=0) {
-                    neighbours.push_back(pair<int, int>(x+i, y-j));
+                    neighbours.push_back(make_pair(x+i, y-j));
                 }
                 if (x-i >=0 && y+j < this->og.info.height) {
-                    neighbours.push_back(pair<int, int>(x-i, y+j));
+                    neighbours.push_back(make_pair(x-i, y+j));
                 }
-                if (x-i >=0 && y-j >=0 ) {
-                    neighbours.push_back(pair<int, int>(x-i, y-j));
+                if (x-i >=0 && y-j >= 0) {
+                    neighbours.push_back(make_pair(x-i, y-j));
                 }
             }
         }
-        
-        
-        return  vector<pair<int, int>>();
+        return neighbours;
     }
 
     vector<pair<int, int>> path_to_grid(const vector<pair<int, int>>& astar_path) {
@@ -92,11 +88,11 @@ public:
     }
     
     void set_data(int x, int y, int value) {
-        this->og.data[x * this->og.info.height + y] = value;
+        this->og.data[y * this->og.info.height + x] = value;
     }
     
     int get_data(int x, int y) {
-        return this->og.data[x * this->og.info.height + y];
+        return this->og.data[y * this->og.info.height + x];
     }
 private:
     nav_msgs::OccupancyGrid og;    
