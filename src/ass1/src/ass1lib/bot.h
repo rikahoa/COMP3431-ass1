@@ -13,7 +13,7 @@ using namespace std;
 
 class Bot {
 public:
-    Bot() {
+    Bot() : _valid(false) {
     }
 
     pair<double, double> get_position() {
@@ -26,6 +26,11 @@ public:
 
     void update(const nav_msgs::Odometry::ConstPtr &odom) {
         this->pose = odom->pose.pose;
+        this->_valid = true;
+    }
+
+    bool valid() {
+        return this->_valid;
     }
 
     pair<int, int> get_og_coord(const Maze &m) {
@@ -36,6 +41,7 @@ public:
     }
 private:
     geometry_msgs::Pose pose;
+    bool _valid;
 };
 
 #endif 
