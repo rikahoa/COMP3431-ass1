@@ -1,0 +1,17 @@
+<launch>
+    <param name="/use_sim_time" value="false"/>
+    <include file="$(find ass1)/beacons.launch"/>
+
+    <node pkg="crosbot_ogmbicp" type="crosbot_ogmbicp" name="icp">
+        <rosparam>
+            odom_frame: /odom
+        </rosparam>
+    </node>
+
+    <node pkg="crosbot_ui" type="gui" name="slam" 
+        args="$(find comp3431)/launch/crosbot-fastslam.gui" >
+    </node>
+
+    <node name="odom" pkg="ass1" type="odom" output="screen" />
+    <node name="beacon_finder" pkg="ass1" type="beacon_finder" output="screen" />
+</launch>

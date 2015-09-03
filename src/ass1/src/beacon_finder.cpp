@@ -12,7 +12,8 @@
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <XmlRpcException.h>
-#include <nav_msgs/Odometry.h>
+#include "ass1lib/bot.h"
+#include "nav_msgs/Odometry.h"
 
 #include <cmath>
 #include <iostream>
@@ -55,6 +56,8 @@ public:
         odom_msg(n, "/odom", 1),
         sync(SyncPolicy(10), lsr_msg, img_msg, odom_msg) {
 
+        odom_sub = n.subscribe("ass1/odom", 1, &BeaconFinder::odom_callback, this);
+
         // Use ApproximateTime message_filter to read both kinect image and laser.
         sync.registerCallback(boost::bind(&BeaconFinder::image_callback, this, _1, _2, _3) );
    }
@@ -62,12 +65,20 @@ public:
 private:
     ros::NodeHandle n;
     vector<Beacon> beacons;
-    message_filters::Subscriber<sensor_msgs::Image> img_msg;
-    message_filters::Subscriber<sensor_msgs::LaserScan> lsr_msg;
-    message_filters::Subscriber<nav_msgs::Odometry> odom_msg;
+    Bot bot;
+ //   image_transport::ImageTransport it;
+ //   image_transport::Subscriber image_sub;
+    message_filters::Subscriber<sensor_msgs::Image> i;
+    message_filters::Subscriber<sensor_msgs::LaserScan> l;
+    ros::Subscriber odom_sub;
+
     message_filters::Synchronizer<SyncPolicy> sync;
 
-    void image_callback(const sensor_msgs::LaserScan::ConstPtr& laser, const sensor_msgs::Image::ConstPtr& image, const nav_msgs::Odometry::ConstPtr& odom) {
+    void odom_callback(const nav_msgs::Odometry::ConstPtr& msg) {
+        this->bot.update(msg);
+    }
+
+    void image_callback(const sensor_msgs::LaserScan::ConstPtr& laser, const sensor_msgs::Image::ConstPtr& image) {
         try {
             // Convert from ROS image msg to OpenCV matrix images
             cv_bridge::CvImagePtr cv_ptr;
