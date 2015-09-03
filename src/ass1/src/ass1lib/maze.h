@@ -21,8 +21,56 @@ public:
     }
 
     void set_occupancy_grid(const nav_msgs::OccupancyGrid &og) {
-        // make a copy of the grid
+        //We copy the grid and make a new version with fatter walls
         this->og = og;
+        
+        for(int x = 0;  x < this->og.info.width; ++x) {
+            for(int y = 0;  y < this->og.info.height; ++y) {
+                //Want the original values
+                if( og.data[x * og.info.height + y] > 80) {
+                    //find its neighbours within 5 squares, 
+                    auto neighbours = get_fattened_neighbours(x,y, 5);
+                    for(auto n: neighbours) {
+                        set_data(n.first, n.second,100); 
+                    } 
+                }
+            }
+        }
+    }
+    
+    vector<pair<int, int>> get_fattened_neighbours(int x, int y, int padding) {
+        vector<pair<int, int>> neighbours;
+        for(int i=0; i < padding; ++i) {
+            if (x+i < this->og.info.width) {
+                neighbours.push_back(pair<int, int>(x+i, y));
+            }
+            if (y+i < this->og.info.height) {
+                neighbours.push_back(pair<int, int>(x, y+i));
+            }
+            if (y-i >=0) {
+                neighbours.push_back(pair<int, int>(x, y-i));
+            }
+            if (x-i >=0) {
+                neighbours.push_back(pair<int, int>(x-i, y));
+            }
+            for(int j = 0; j < padding; ++j) {
+                if (x+i < this->og.info.width && y+j < this->og.info.height) {
+                    neighbours.push_back(pair<int, int>(x+i, y+j));
+                }
+                if (x+i < this->og.info.width && y-j >=0) {
+                    neighbours.push_back(pair<int, int>(x+i, y-j));
+                }
+                if (x-i >=0 && y+j < this->og.info.height) {
+                    neighbours.push_back(pair<int, int>(x-i, y+j));
+                }
+                if (x-i >=0 && y-j >=0 ) {
+                    neighbours.push_back(pair<int, int>(x-i, y-j));
+                }
+            }
+        }
+        
+        
+        return  vector<pair<int, int>>();
     }
 
     vector<pair<int, int>> path_to_grid(const vector<pair<int, int>>& astar_path) {
@@ -41,6 +89,10 @@ public:
         }
 
         return grid_path;
+    }
+    
+    void set_data(int x, int y, int value) {
+        this->og.data[x * this->og.info.height + y] = value;
     }
     
     int get_data(int x, int y) {
