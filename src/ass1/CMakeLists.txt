@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_msgs
   image_transport
   cv_bridge
+  tf
 )
 
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
@@ -128,6 +129,9 @@ include_directories(
 
 add_library(ass1lib src/ass1lib/astar.cpp src/ass1lib/maze.cpp src/ass1lib/bot.cpp)
 
+add_executable(simple_laser src/simple_laser.cpp)
+target_link_libraries(simple_laser ${catkin_LIBRARIES} ass1lib)
+
 add_executable(movement src/movement.cpp)
 target_link_libraries(movement ${catkin_LIBRARIES} ass1lib)
 
@@ -146,6 +150,8 @@ target_link_libraries(planner ${catkin_LIBRARIES} ass1lib)
 add_executable(follower src/follower.cpp)
 target_link_libraries(follower ${catkin_LIBRARIES} ass1lib)
 
+add_executable(odom src/odom.cpp)
+target_link_libraries(odom ${catkin_LIBRARIES} ass1lib)
 ## Declare a C++ library
 # add_library(ass1
 #   src/${PROJECT_NAME}/ass1.cpp
