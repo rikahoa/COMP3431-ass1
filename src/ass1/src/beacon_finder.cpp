@@ -184,7 +184,7 @@ private:
                 }
             }
 
-            ROS_INFO("Found %d/%d beacons", count, beacons.size() );
+            ROS_INFO_STREAM("Found %d " << count << " of " << beacons.size() << " beacons.");
             if( found_all ) {
                 ROS_INFO("Found all beacons");
             }

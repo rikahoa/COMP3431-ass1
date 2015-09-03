@@ -8,8 +8,11 @@
 #include "maze.h"
 #include <sys/time.h>
 #include <tf/transform_datatypes.h>
+#include <cmath>
 
 using namespace std;
+
+constexpr float PI = acos(-1);
 
 class Bot {
 public:
@@ -22,6 +25,28 @@ public:
 
     double get_yaw() {
         return tf::getYaw(this->pose.orientation);
+    }
+
+    // Returns displacement in [distance, angle]
+    pair<double, double> get_displacement(double x, double y) {
+        // Get the vector to the robot.
+        double vy = y - this->pose.position.y;
+        double vx = x - this->pose.position.x;
+        
+        double distance = sqrt(vx*vx + vy*vy);
+
+        // Find the angle.
+        double target_angle = atan2(vy, vx) - this->get_yaw();
+
+        // Clamp angle.
+        while (target_angle > PI) {
+            target_angle -= PI;
+        }
+        while (target_angle < -PI) {
+            target_angle += PI;
+        }
+        
+        return make_pair(distance, target_angle);
     }
 
     void update(const nav_msgs::Odometry::ConstPtr &odom) {
