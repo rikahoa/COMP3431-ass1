@@ -91,13 +91,26 @@ public:
         this->og.data[y * this->og.info.height + x] = value;
     }
     
-    int get_data(int x, int y) {
+    int get_data(int x, int y) const {
         return this->og.data[y * this->og.info.height + x];
     }
     
-     pair<double, double> get_world_coord(pair<int,int> coord) {
-        return make_pair(coord.first*og.info.resolution + og.info.origin.position.x, coord.second*og.info.resolution + og.info.origin.position.y);
-     }
+    double get_resolution() const {
+        return this->og.info.resolution;
+    }
+
+    int get_height() const {
+        return this->og.info.height;
+    }
+
+    int get_width() const {
+        return this->og.info.width;
+    }
+
+    pair<double, double> get_world_coord(pair<int,int> coord) {
+       return make_pair(coord.first*og.info.resolution + og.info.origin.position.x, 
+               coord.second*og.info.resolution + og.info.origin.position.y);
+    }
 private:
     nav_msgs::OccupancyGrid og;    
 };

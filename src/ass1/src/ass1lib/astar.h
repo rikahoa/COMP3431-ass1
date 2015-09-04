@@ -48,10 +48,15 @@ protected:
     double cost;
     pair<int, int> parent;
     double heuristic;
+    
+    static const vector<pair<int, int>> DIRECTIONS;
 
     State(int x, int y, int cost, pair<int, int> parent, double heuristic) : 
         x(x), y(y), cost(cost), parent(parent), heuristic(heuristic) {};
 };
+
+const vector<pair<int,int>> State::DIRECTIONS = 
+    vector<pair<int, int>>{make_pair(-1,0),make_pair(1,0),make_pair(0,-1),make_pair(0,1)};
 
 // warning: initial_state gets deleted!
 vector<pair<int, int>> search(

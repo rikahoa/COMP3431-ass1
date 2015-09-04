@@ -14,6 +14,8 @@
 #include "geometry_msgs/TwistStamped.h"
 #include <random>
 
+#define EXPLORE_THRESHOLD 1.0
+
 typedef message_filters::sync_policies::ApproximateTime<nav_msgs::OccupancyGrid, nav_msgs::Odometry> ApproxPolicy;
 
 class ExplorationState : public State {
@@ -22,38 +24,33 @@ public:
         ExplorationState(x, y, cost, make_pair(-1, -1)) {};
 
     virtual bool is_goal(const Maze& maze) const override {
-        return maze.get_occupancy_grid().data[y * maze.get_occupancy_grid().info.height + x] == -1;
+        return maze.get_occupancy_grid().data[y * maze.get_occupancy_grid().info.height + x] == -1 &&
+            this->cost > EXPLORE_THRESHOLD;
     }
 
     virtual vector<State*> explore(const Maze& maze, 
             std::function<bool(pair<int,int>)> check) const override {
         vector<State*> new_states;
         
-        for (const auto &p : ExplorationState::DIRECTIONS) {
+        for (const auto &p : State::DIRECTIONS) {
             int x = this->x + p.first;
             int y = this->y + p.second;
-            if (x >= 0 && x < maze.get_occupancy_grid().info.width && 
-                    y >= 0 && y < maze.get_occupancy_grid().info.height && 
+            if (x >= 0 && x < maze.get_width() && 
+                    y >= 0 && y < maze.get_height() && 
                     check(make_pair(x, y)) &&
-                    maze.get_occupancy_grid().
-                        data[y * maze.get_occupancy_grid().info.height + x] <= 0) {
+                    maze.get_data(x, y) <= 0) {
                 new_states.push_back(
-                        new ExplorationState(x, y, this->get_cost() + 1, 
-                            this->get_position()));
+                        new ExplorationState(x, y, 
+                            this->cost + maze.get_resolution(), this->get_position()));
             }
         }
         return new_states;
     }
 private:
-    // for speed ups
-    static const vector<pair<int, int>> DIRECTIONS;
-
     ExplorationState(int x, int y, int cost, pair<int, int> parent) :
         State(x, y, cost, parent, 0) {};
 };
 
-const vector<pair<int,int>> ExplorationState::DIRECTIONS = 
-    vector<pair<int, int>>{make_pair(-1,0),make_pair(1,0),make_pair(0,-1),make_pair(0,1)};
 
 class Exploration {
 public:
