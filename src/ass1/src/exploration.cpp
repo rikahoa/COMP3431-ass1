@@ -84,30 +84,22 @@ public:
 
         auto displacement = this->bot.get_displacement(target.first, target.second);
         
-        // We have reached our destination - make a new one.
-        while (fabs(displacement.first) < 0.1) {
-            // generate random location
-            ROS_INFO_STREAM("reached target " << target.first << "," << target.second);
-            target.first += 1;
-            //target.second += 1;
-            displacement = this->bot.get_displacement(target.first, target.second);
-        }
-
         ROS_INFO_STREAM("target of " << target.first << "," << target.second);
         ROS_INFO_STREAM("we are at " << this->bot.get_position().first << "," 
                 << this->bot.get_position().second);
         ROS_INFO_STREAM("angle change of " << displacement.second << " required.");
         ROS_INFO_STREAM("distance from target is " << displacement.first);
 
-        if (displacement.first > 0.1) {
-            move.twist.linear.x = 0.1;
-        }
-        if (displacement.second > 0.1) {
-            move.twist.angular.z = 0.1; 
-        }
-        if (displacement.second < -0.1) {
-            move.twist.angular.z = -0.1;
-        }
+
+        if (displacement.second > 0.1 || displacement.second < -0.1) {
+            //TODO Make this better
+            move.twist.angular.z = 2*displacement.second; 
+        } else {
+           if (displacement.first > 0.1) {
+             move.twist.linear.x = 0.4;
+           }
+        } 
+
 
         movement_pub.publish(move);
     }

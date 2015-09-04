@@ -36,21 +36,14 @@ public:
         double distance = sqrt(vx*vx + vy*vy);
 
         // Find the angle.
-        ROS_INFO_STREAM("atan: " << atan2(vy,vx) << "," "yaw: " << this->get_yaw());
-        double target_angle = atan2(vy, vx) - this->get_yaw();
+        ROS_INFO_STREAM("atan: " << atan2(vx,vy) << "," "yaw: " << this->get_yaw());
+        double target_angle = atan2(vx, vy) - this->get_yaw();
 
-        // Clamp angle.
-        /*if (target_angle > PI) {
-            target_angle -= static_cast<int>(target_angle / PI) * PI;
-        } else if (target_angle < -PI) {
-            target_angle += static_cast<int>(-target_angle / PI) * PI;
-        }*/
-        
-        // return (distance, angle)
         return make_pair(distance, target_angle);
     }
 
     void update(const nav_msgs::Odometry::ConstPtr &odom) {
+
         this->pose = odom->pose.pose;
         this->_valid = true;
     }

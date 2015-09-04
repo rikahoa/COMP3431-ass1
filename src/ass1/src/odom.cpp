@@ -13,14 +13,13 @@ int main(int argc, char *argv[]) {
     ros::Publisher clean_odom_pub = n.advertise<nav_msgs::Odometry>("/ass1/odom", 1);
     
     // put transforms here
-
-    ros::Rate rate(1.0);
-
     tf::TransformListener listener;
     while (n.ok()) {
         tf::StampedTransform transform;
         try {
-            listener.lookupTransform("/map", "/base_link", ros::Time(0), transform);
+            ros::Time now = ros::Time::now();
+            listener.waitForTransform("/map", "/base_link", now, ros::Duration(0.5));            
+            listener.lookupTransform("/map", "/base_link", now, transform);
 
             nav_msgs::Odometry odom;
             odom.header.stamp = transform.stamp_;
@@ -40,7 +39,7 @@ int main(int argc, char *argv[]) {
             ROS_ERROR("Error! %s", ex.what());
         }
         ros::spinOnce();
-        rate.sleep();
+
     }
 
     return 0;
