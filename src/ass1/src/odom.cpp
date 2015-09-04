@@ -15,20 +15,23 @@ int main(int argc, char *argv[]) {
     // put transforms here
     tf::TransformListener listener;
     tf::StampedTransform transform;
-    
+    bool transformed = false;
+
     while (n.ok()) {
         try {
             nav_msgs::Odometry odom;
-            odom.header.frame_id = transform.frame_id_;
-            odom.child_frame_id = transform.child_frame_id_;
 
             ros::Time now = ros::Time::now();
-            if (listener.waitForTransform("/map", "/base_link", now, ros::Duration(1.0))) {
+            if (listener.waitForTransform("/map", "/base_link", now, ros::Duration(0.5))) {
                 listener.lookupTransform("/map", "/base_link", now, transform);
                 odom.header.stamp = transform.stamp_;
+                transformed = true;
             } else {
                 odom.header.stamp = ros::Time::now();
             }
+
+            odom.header.frame_id = transform.frame_id_;
+            odom.child_frame_id = transform.child_frame_id_;
 
             odom.pose.pose.position.x = transform.getOrigin().x();
             odom.pose.pose.position.y = transform.getOrigin().y();
@@ -38,9 +41,11 @@ int main(int argc, char *argv[]) {
             odom.pose.pose.orientation.z = transform.getRotation().z();
             odom.pose.pose.orientation.w = transform.getRotation().w();
             
-            clean_odom_pub.publish(odom);
+            if (transformed) {
+                clean_odom_pub.publish(odom);
+            }
         } catch (tf::TransformException &ex) {
-            ROS_ERROR("Error! %s", ex.what());
+            ROS_ERROR("Transform Exception: %s", ex.what());
         } 
             
         ros::spinOnce();

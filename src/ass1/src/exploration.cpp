@@ -74,16 +74,15 @@ public:
         this->maze.set_occupancy_grid(*og);
         this->bot.update(odom);
 
+        // Find current position.
         auto og_pos = this->bot.get_og_coord(this->maze);
-        ROS_INFO_STREAM("point: " << og_pos.first << "," << og_pos.second << ":" <<
-                maze.get_data(og_pos.first, og_pos.second));
+        ROS_INFO_STREAM("og point: " << og_pos.first << "," << og_pos.second);
         
         // Do a A* to the nearest frontier
         auto path = search(this->maze, new ExplorationState(og_pos.first, og_pos.second, 0));
         
         auto targetingrid = *(path.begin() + 3);
         auto target = this->maze.get_world_coord(targetingrid);
-        
 
         // Generate me a message.
         geometry_msgs::TwistStamped move;
@@ -99,16 +98,14 @@ public:
         ROS_INFO_STREAM("angle change of " << displacement.second << " required.");
         ROS_INFO_STREAM("distance from target is " << displacement.first);
 
-
         if (displacement.second > 0.1 || displacement.second < -0.1) {
-            //TODO Make this better
+            // TODO: Make this better
             move.twist.angular.z = 2*displacement.second; 
         } else {
-           if (displacement.first > 0.1) {
-             move.twist.linear.x = 0.4;
-           }
+            if (displacement.first > 0.1) {
+                move.twist.linear.x = 0.4;
+            }
         } 
-
 
         movement_pub.publish(move);
 
