@@ -57,7 +57,7 @@ const vector<pair<int,int>> ExplorationState::DIRECTIONS =
 
 class Exploration {
 public:
-    Exploration(ros::NodeHandle n) : n(n), dis(-2,2), gen(rd()) /*,
+    Exploration(ros::NodeHandle n) : n(n) /*,
         map_sub(n, "/map", 1), 
         odom_sub(n, "/ass1/odom", 1), 
         sync(ApproxPolicy(10), map_sub, odom_sub)   */
@@ -69,7 +69,7 @@ public:
 
         // set odom and make random target
         odom_sub = n.subscribe("ass1/odom", 1, &Exploration::odom_callback, this);
-        target = make_pair(1, 1);
+        target = make_pair(1,1);
         
     }
 
@@ -85,10 +85,11 @@ public:
         auto displacement = this->bot.get_displacement(target.first, target.second);
         
         // We have reached our destination - make a new one.
-        while (displacement.first < 0.1) {
+        while (fabs(displacement.first) < 0.1) {
             // generate random location
-            ROS_INFO_STREAM("reached target " << target.first << "," << target.second); 
-            target = make_pair(dis(gen), dis(gen));
+            ROS_INFO_STREAM("reached target " << target.first << "," << target.second);
+            target.first += 1;
+            //target.second += 1;
             displacement = this->bot.get_displacement(target.first, target.second);
         }
 
@@ -96,14 +97,16 @@ public:
         ROS_INFO_STREAM("we are at " << this->bot.get_position().first << "," 
                 << this->bot.get_position().second);
         ROS_INFO_STREAM("angle change of " << displacement.second << " required.");
-        ROS_INFO_STREAM("displacement from target is " << displacement.first);
+        ROS_INFO_STREAM("distance from target is " << displacement.first);
 
-        if (fabs(displacement.second) > 0.05) {
-            // Rotation required.
-            move.twist.angular.z = displacement.second;
-        } else {
-            // Otherwise, move towards our destination.
-            move.twist.linear.x = displacement.first;
+        if (displacement.first > 0.1) {
+            move.twist.linear.x = 0.1;
+        }
+        if (displacement.second > 0.1) {
+            move.twist.angular.z = 0.1; 
+        }
+        if (displacement.second < -0.1) {
+            move.twist.angular.z = -0.1;
         }
 
         movement_pub.publish(move);

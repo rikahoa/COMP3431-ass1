@@ -44,7 +44,7 @@ private:
         }
 
         if (safe) {
-             ROS_DEBUG_STREAM("Moving: x = " << twistStamped->twist.linear.x << 
+             ROS_INFO_STREAM("Moving: x = " << twistStamped->twist.linear.x << 
                 ", angle z = " << twistStamped->twist.angular.z);
              navi_pub.publish(twistStamped->twist);
         } else {

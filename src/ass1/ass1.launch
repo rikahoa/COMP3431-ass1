@@ -6,12 +6,10 @@
         <rosparam>
             odom_frame: /odom
         </rosparam>
-        <remap from="scan" to="ass1/scan"/>
     </node>
 
     <node pkg="crosbot_ui" type="gui" name="slam" 
         args="$(find comp3431)/launch/crosbot-fastslam.gui" >
-        <remap from="scan" to="ass1/scan"/>
     </node>
 
     <node name="planner" pkg="ass1" type="planner" output="screen" />
@@ -20,5 +18,4 @@
     <node name="odom" pkg="ass1" type="odom" output="screen" />
     <!--<node name="beacon_finder" pkg="ass1" type="beacon_finder" output="screen" />-->
     <node name="exploration" pkg="ass1" type="exploration" output="screen" />    
-    <node name="simple_laser" pkg="ass1" type="simple_laser" output="screen" />
 </launch>

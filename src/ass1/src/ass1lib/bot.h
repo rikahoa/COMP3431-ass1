@@ -36,6 +36,7 @@ public:
         double distance = sqrt(vx*vx + vy*vy);
 
         // Find the angle.
+        ROS_INFO_STREAM("atan: " << atan2(vy,vx) << "," "yaw: " << this->get_yaw());
         double target_angle = atan2(vy, vx) - this->get_yaw();
 
         // Clamp angle.
