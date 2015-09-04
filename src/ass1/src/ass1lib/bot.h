@@ -58,6 +58,7 @@ public:
         return make_pair(static_cast<int>((this->pose.position.x - origin.x) / og.info.resolution),
                          static_cast<int>((this->pose.position.y - origin.y) / og.info.resolution));
     }
+    
 private:
     geometry_msgs::Pose pose;
     bool _valid;

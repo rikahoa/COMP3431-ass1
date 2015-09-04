@@ -57,24 +57,33 @@ const vector<pair<int,int>> ExplorationState::DIRECTIONS =
 
 class Exploration {
 public:
-    Exploration(ros::NodeHandle n) : n(n) /*,
+    Exploration(ros::NodeHandle n) : n(n),
         map_sub(n, "/map", 1), 
         odom_sub(n, "/ass1/odom", 1), 
-        sync(ApproxPolicy(10), map_sub, odom_sub)   */
+        sync(ApproxPolicy(10), map_sub, odom_sub)  
     {
-        /*
+        
         sync.registerCallback(boost::bind(&Exploration::map_callback, this, _1, _2)); 
-        */
+        
         movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
 
-        // set odom and make random target
-        odom_sub = n.subscribe("ass1/odom", 1, &Exploration::odom_callback, this);
-        target = make_pair(1,1);
-        
     }
 
-    void odom_callback(const nav_msgs::Odometry::ConstPtr &odom) {
+    void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og, 
+            const nav_msgs::Odometry::ConstPtr &odom) {
+        this->maze.set_occupancy_grid(*og);
         this->bot.update(odom);
+
+        auto og_pos = this->bot.get_og_coord(this->maze);
+        ROS_INFO_STREAM("point: " << og_pos.first << "," << og_pos.second << ":" <<
+                maze.get_data(og_pos.first, og_pos.second));
+        
+        // Do a A* to the nearest frontier
+        auto path = search(this->maze, new ExplorationState(og_pos.first, og_pos.second, 0));
+        
+        auto targetingrid = *(path.begin() + 3);
+        auto target = this->maze.get_world_coord(targetingrid);
+        
 
         // Generate me a message.
         geometry_msgs::TwistStamped move;
@@ -102,40 +111,18 @@ public:
 
 
         movement_pub.publish(move);
-    }
 
-    void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og, 
-            const nav_msgs::Odometry::ConstPtr &odom) {
-        this->maze.set_occupancy_grid(*og);
-        this->bot.update(odom);
-
-        auto og_pos = this->bot.get_og_coord(this->maze);
-        ROS_INFO_STREAM("point: " << og_pos.first << "," << og_pos.second << ":" <<
-                maze.get_data(og_pos.first, og_pos.second));
-        
-        // Do a A* to the nearest frontier
-        //auto path = search(this->maze, new ExplorationState(og_pos.x, og_pos.y, 0));
-
-        /*auto ogp = this->bot.get_occupancy_grid_coord(og->info.resolution);
-        ROS_INFO_STREAM("point: " << ogp.first << "," << ogp.second << ":" << 
-                maze.get_data(ogp.first, ogp.second));*/
     }
 private:
     Maze maze;
     Bot bot;
-    pair<double, double> target;
 
     ros::NodeHandle n;
     ros::Publisher movement_pub;
     
-    /*message_filters::Subscriber<nav_msgs::OccupancyGrid> map_sub;
+    message_filters::Subscriber<nav_msgs::OccupancyGrid> map_sub;
     message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
-    message_filters::Synchronizer<ApproxPolicy> sync;*/
-
-    ros::Subscriber odom_sub;
-    std::uniform_real_distribution<> dis;
-    std::random_device rd;
-    std::mt19937 gen;
+    message_filters::Synchronizer<ApproxPolicy> sync;
 };
 
 int main(int argc, char *argv[]) {
