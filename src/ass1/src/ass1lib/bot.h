@@ -40,11 +40,11 @@ public:
         double target_angle = atan2(vy, vx) - this->get_yaw();
 
         // Clamp angle.
-        if (target_angle > PI) {
+        /*if (target_angle > PI) {
             target_angle -= static_cast<int>(target_angle / PI) * PI;
         } else if (target_angle < -PI) {
             target_angle += static_cast<int>(-target_angle / PI) * PI;
-        }
+        }*/
         
         // return (distance, angle)
         return make_pair(distance, target_angle);
