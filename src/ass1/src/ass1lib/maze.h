@@ -82,6 +82,7 @@ public:
         return real_path;
     }
 
+    // RIP Aneita
     vector<pair<int, int>> path_to_grid(const vector<pair<int, int>>& astar_path) {
         vector<pair<int, int>> grid_path;
 

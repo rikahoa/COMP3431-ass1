@@ -99,6 +99,9 @@ public:
             return;
         }
         
+        ROS_INFO_STREAM("We need to know " << og_target.first << "," << og_target.second << 
+                "( world coord" << path.back().first << "," << path.back().second << ")");
+        
         // Generate me a move message to target.
         geometry_msgs::TwistStamped move;
         move.header = odom->header;
