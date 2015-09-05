@@ -45,9 +45,9 @@ class BeaconFinder {
 public:
     BeaconFinder(ros::NodeHandle n, vector<Beacon> beacons) : n(n),
         beacons(beacons),
-        img_msg(n, "/camera/rgb/image_color", 1),
-        lsr_msg(n, "/scan", 1),
-        sync(SyncPolicy(10), lsr_msg, img_msg) {
+        img_sub(n, "/camera/rgb/image_color", 1),
+        laser_sub(n, "/scan", 1),
+        sync(SyncPolicy(10), laser_sub, img_sub) {
 
         odom_sub = n.subscribe("ass1/odom", 1, &BeaconFinder::odom_callback, this);
         beacons_pub = n.advertise<ass1::FoundBeacons>("/ass1/beacons", 1);
@@ -61,8 +61,8 @@ private:
     vector<Beacon> beacons;
     Bot bot;
 
-    message_filters::Subscriber<sensor_msgs::Image> img_msg;
-    message_filters::Subscriber<sensor_msgs::LaserScan> lsr_msg;
+    message_filters::Subscriber<sensor_msgs::Image> img_sub;
+    message_filters::Subscriber<sensor_msgs::LaserScan> laser_sub;
 
     ros::Publisher beacons_pub;
     ros::Subscriber odom_sub;
@@ -197,8 +197,14 @@ private:
                     point.z = 0;
                     msg.positions.push_back(point);
                 }
+                beacons_pub.publish(msg);
 
+                // shutdown subscriptions
+                img_sub.unsubscribe();
+                laser_sub.unsubscribe();
+                odom_sub.shutdown();
             }
+
             // gui display
             imshow("blobs", blobs);
 
