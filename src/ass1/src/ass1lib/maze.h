@@ -121,7 +121,7 @@ public:
         return this->og.info.width;
     }
 
-    pair<double, double> get_world_pos(pair<int,int> coord) {
+    pair<double, double> get_world_pos(pair<int,int> coord) const {
        return make_pair(coord.first*og.info.resolution + og.info.origin.position.x, 
                coord.second*og.info.resolution + og.info.origin.position.y);
     }

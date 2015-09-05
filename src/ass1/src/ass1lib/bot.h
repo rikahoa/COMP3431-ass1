@@ -69,9 +69,9 @@ public:
     }
 
     double distance(const pair<double, double>& target) {
-        auto x = target.first - this->pose.position.x;
-        auto y = target.second - this->pose.position.y;
-        return sqrt(x*x + y*y);
+        auto vx = target.first - this->pose.position.x;
+        auto vy = target.second - this->pose.position.y;
+        return sqrt(vx*vx + vy*vy);
     }
 
     pair<int, int> get_og_coord(const Maze &m) {
