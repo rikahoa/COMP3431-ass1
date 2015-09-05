@@ -1,5 +1,6 @@
 #include "ros/ros.h"
 #include <utility>
+#include "ass1/FoundBeacons.h"
 #include "geometry_msgs/Twist.h"
 #include "geometry_msgs/TwistStamped.h"
 #include <message_filters/subscriber.h>
@@ -67,13 +68,21 @@ public:
         odom_sub(n, "/ass1/odom", 1), 
         sync(ApproxPolicy(10), map_sub, odom_sub)
     {    
+        beacons_sub = n.subscribe("ass1/beacons", 1, &Waypoint::beacon_callback, this);
     }
 
 private:
-    void beacon_callback(/* TODO: message */) {
+    void beacon_callback(const ass1::FoundBeacons::ConstPtr& msg) {
+        ROS_INFO_STREAM("beacons found!");
+
         // start this shizzle up!
         sync.registerCallback(boost::bind(&Waypoint::map_callback, this, _1, _2)); 
         movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
+
+        for (auto it = msg->positions.begin(); it != msg->positions.end(); ++it) {
+            ROS_INFO_STREAM("beacon: " << it->x << "," << it->y);
+            to_visit.push(make_pair(it->x, it->y));
+        }
     }
 
     void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og, 
@@ -122,6 +131,7 @@ private:
 
     ros::NodeHandle n;
     ros::Publisher movement_pub;
+    ros::Subscriber beacons_sub;
     
     message_filters::Subscriber<nav_msgs::OccupancyGrid> map_sub;
     message_filters::Subscriber<nav_msgs::Odometry> odom_sub;

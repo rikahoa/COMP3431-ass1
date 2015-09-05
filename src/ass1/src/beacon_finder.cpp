@@ -6,6 +6,7 @@
 #include <message_filters/sync_policies/approximate_time.h>
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/LaserScan.h>
+#include <geometry_msgs/Point.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
@@ -14,6 +15,7 @@
 #include <XmlRpcException.h>
 #include "ass1lib/bot.h"
 #include "nav_msgs/Odometry.h"
+#include "ass1/FoundBeacons.h"
 
 #include <cmath>
 #include <iostream>
@@ -21,27 +23,20 @@
 
 using namespace std;
 
-typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, sensor_msgs::Image, nav_msgs::Odometry> SyncPolicy;
+typedef message_filters::sync_policies::
+    ApproximateTime<sensor_msgs::LaserScan, sensor_msgs::Image> SyncPolicy;
 
 class Beacon {
 public:
     Beacon(string top, string bottom) : 
-        x(0), y(0), known_location(false), top(top), bottom(bottom), count(0) {
+        x(0), y(0), known_location(false), top(top), bottom(bottom) {
         ROS_INFO_STREAM("Looking for beacon top=" << top << ",bottom=" << bottom);
     }
-    void found_location() {
-        count++;
-        if( count >= 4 ) {
-            known_location = true;
-        }
-    }
-    bool is_found() { return known_location; }
+    bool found() { return known_location; }
 
     double x, y;
     bool known_location;
     string top, bottom;
-private:
-    int count;
     // COLOURS
 };
 
@@ -55,6 +50,7 @@ public:
         sync(SyncPolicy(10), lsr_msg, img_msg) {
 
         odom_sub = n.subscribe("ass1/odom", 1, &BeaconFinder::odom_callback, this);
+        beacons_pub = n.advertise<ass1::FoundBeacons>("/ass1/beacons", 1);
 
         // Use ApproximateTime message_filter to read both kinect image and laser.
         sync.registerCallback(boost::bind(&BeaconFinder::image_callback, this, _1, _2) );
@@ -64,8 +60,11 @@ private:
     ros::NodeHandle n;
     vector<Beacon> beacons;
     Bot bot;
+
     message_filters::Subscriber<sensor_msgs::Image> img_msg;
     message_filters::Subscriber<sensor_msgs::LaserScan> lsr_msg;
+
+    ros::Publisher beacons_pub;
     ros::Subscriber odom_sub;
 
     message_filters::Synchronizer<SyncPolicy> sync;
@@ -74,7 +73,8 @@ private:
         this->bot.update(msg);
     }
 
-    void image_callback(const sensor_msgs::LaserScan::ConstPtr& laser, const sensor_msgs::Image::ConstPtr& image) {
+    void image_callback(const sensor_msgs::LaserScan::ConstPtr& laser, 
+                        const sensor_msgs::Image::ConstPtr& image) {
         try {
             // Convert from ROS image msg to OpenCV matrix images
             cv_bridge::CvImagePtr cv_ptr;
@@ -176,7 +176,7 @@ private:
             bool found_all = true; 
             int count = 0;
             for(auto it = beacons.begin(); it != beacons.end(); ++it) {
-                if( !it->is_found() ) {
+                if( !it->found() ) {
                     found_all = false;
                 } else {
                     count++;
@@ -184,8 +184,20 @@ private:
             }
 
             ROS_INFO_STREAM("Found %d " << count << " of " << beacons.size() << " beacons.");
-            if( found_all ) {
+            if (found_all) {
                 ROS_INFO("Found all beacons");
+                
+                // Send beacon message
+                ass1::FoundBeacons msg;
+                msg.n = beacons.size();
+                for (int i = 0; i < beacons.size(); ++i) {
+                    geometry_msgs::Point point;
+                    point.x = beacons[i].x;
+                    point.y = beacons[i].y;
+                    point.z = 0;
+                    msg.positions.push_back(point);
+                }
+
             }
             // gui display
             imshow("blobs", blobs);
@@ -199,7 +211,8 @@ private:
     void found_beacon(string top, string bottom) {
         for( auto it = beacons.begin(); it != beacons.end(); ++it ) {
             if( it->top == top && it->bottom == bottom ) {
-                it->found_location();
+                it->known_location = true;
+                // TODO: calculate
             }
         }
     }

@@ -54,8 +54,15 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
+add_message_files(
+   FILES
+   FoundBeacons.msg
+)
+
+generate_messages(
+    DEPENDENCIES
+    std_msgs geometry_msgs
+)
 #   Message1.msg
 #   Message2.msg
 # )
@@ -112,7 +119,7 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES ass1
-#  CATKIN_DEPENDS geometry_msgs message_generation nav_msgs roscpp sensor_msgs std_msgs tf2_msgs
+   CATKIN_DEPENDS message_runtime
 #  DEPENDS system_lib
 )
 
@@ -128,9 +135,6 @@ include_directories(
 )
 
 add_library(ass1lib src/ass1lib/astar.cpp src/ass1lib/maze.cpp src/ass1lib/bot.cpp)
-
-add_executable(simple_laser src/simple_laser.cpp)
-target_link_libraries(simple_laser ${catkin_LIBRARIES} ass1lib)
 
 add_executable(movement src/movement.cpp)
 target_link_libraries(movement ${catkin_LIBRARIES} ass1lib)
