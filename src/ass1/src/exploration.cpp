@@ -54,7 +54,9 @@ private:
 
 class Exploration {
 public:
-    Exploration(ros::NodeHandle n) : n(n),
+    Exploration(ros::NodeHandle n) : 
+        started(false),
+        n(n),
         map_sub(n, "/map", 1), 
         odom_sub(n, "/ass1/odom", 1), 
         sync(ApproxPolicy(10), map_sub, odom_sub)  
@@ -70,13 +72,14 @@ private:
         this->maze.set_occupancy_grid(*og);
         this->bot.update(odom);
 
-        // Find current position.
-        auto og_pos = this->bot.get_og_coord(this->maze);
-        ROS_INFO_STREAM("position: " << bot.get_position().first << "," << bot.get_position().second);
-        ROS_INFO_STREAM("og point: " << og_pos.first << "," << og_pos.second);
-        
         // Continue while the goal is unknown.
-        if (this->maze.get_data(og_target.first, og_target.second) == -1) {
+        if (!started || this->maze.get_data(og_target.first, og_target.second) == -1) {
+            // Find current position.
+            auto og_pos = this->bot.get_og_coord(this->maze);
+            ROS_INFO_STREAM("position: " << bot.get_position().first << "," 
+                    << bot.get_position().second);
+            ROS_INFO_STREAM("og point: " << og_pos.first << "," << og_pos.second);
+        
             ROS_INFO_STREAM("Target probability found. Commencing astar.");
             // Do a A* to the nearest frontier
             auto og_path = search(this->maze, new ExplorationState(og_pos.first, og_pos.second, 0));
@@ -100,6 +103,8 @@ private:
             ROS_ERROR_STREAM("Path empty! Cannot move anywhere...");
             return;
         }
+
+        this->started = true;
         
         ROS_INFO_STREAM("We need to know " << og_target.first << "," << og_target.second << 
                 "( world coord" << path.back().first << "," << path.back().second << ")");
@@ -111,6 +116,7 @@ private:
         movement_pub.publish(move);
     }
 
+    bool started;
     Maze maze;
     Bot bot;
 
