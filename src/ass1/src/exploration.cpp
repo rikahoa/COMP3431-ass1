@@ -10,9 +10,8 @@
 #include <tf/transform_datatypes.h>
 #include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Odometry.h"
-#include <cmath>
 #include "geometry_msgs/TwistStamped.h"
-#include <random>
+#include <cmath>
 
 // Must travel at least this far.
 #define EXPLORE_THRESHOLD 0.5
@@ -89,26 +88,7 @@ public:
         // Generate me a message.
         geometry_msgs::TwistStamped move;
         move.header = odom->header;
-        move.twist.linear.x = move.twist.linear.y = move.twist.linear.z = 0;
-        move.twist.angular.x = move.twist.angular.y = move.twist.angular.z = 0;
-
-        auto displacement = this->bot.get_displacement(target.first, target.second);
-        
-        ROS_INFO_STREAM("target of " << target.first << "," << target.second);
-        ROS_INFO_STREAM("we are at " << this->bot.get_position().first << "," 
-                << this->bot.get_position().second);
-        ROS_INFO_STREAM("angle change of " << displacement.second << " required.");
-        ROS_INFO_STREAM("distance from target is " << displacement.first);
-
-        if (displacement.second > 0.1 || displacement.second < -0.1) {
-            // TODO: Make this better
-            move.twist.angular.z = 2*displacement.second; 
-        } else {
-            if (displacement.first > 0.1) {
-                move.twist.linear.x = 0.4;
-            }
-        } 
-
+        this->bot.setup_movement(target, move.twist);
         movement_pub.publish(move);
 
     }

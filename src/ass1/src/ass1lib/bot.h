@@ -43,13 +43,35 @@ public:
     }
 
     void update(const nav_msgs::Odometry::ConstPtr &odom) {
-
         this->pose = odom->pose.pose;
         this->_valid = true;
     }
 
     bool valid() {
         return this->_valid;
+    }
+
+    // Sets up a valid movement twist.
+    void setup_movement(const pair<double,double>& target, geometry_msgs::Twist& move) {
+        move.linear.x = move.linear.y = move.linear.z = 0;
+        move.angular.x = move.angular.y = move.angular.z = 0;
+
+        auto displacement = this->get_displacement(target.first, target.second);
+        
+        ROS_INFO_STREAM("target of " << target.first << "," << target.second);
+        ROS_INFO_STREAM("we are at " << this->get_position().first << "," 
+                << this->get_position().second);
+        ROS_INFO_STREAM("angle change of " << displacement.second << " required.");
+        ROS_INFO_STREAM("distance from target is " << displacement.first);
+
+        if (displacement.second > 0.1 || displacement.second < -0.1) {
+            // TODO: Make this better
+            move.angular.z = 2*displacement.second; 
+        } else {
+            if (displacement.first > 0.1) {
+                move.linear.x = 0.4;
+            }
+        } 
     }
 
     pair<int, int> get_og_coord(const Maze &m) {
