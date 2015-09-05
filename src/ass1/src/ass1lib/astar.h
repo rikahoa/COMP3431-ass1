@@ -11,7 +11,7 @@ using namespace std;
 
 class State {
 public:
-    State(int x, int y, int cost, double heuristic) : 
+    State(int x, int y, double cost, double heuristic) : 
         State(x, y, cost, make_pair(-1, -1), heuristic) {};
     virtual ~State() {};
 

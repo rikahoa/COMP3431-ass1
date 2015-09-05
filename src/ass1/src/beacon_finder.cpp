@@ -40,7 +40,6 @@ public:
     double x, y;
     bool known_location;
     string top, bottom;
-
 private:
     int count;
     // COLOURS

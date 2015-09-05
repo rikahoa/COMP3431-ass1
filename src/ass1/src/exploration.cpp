@@ -20,7 +20,7 @@ typedef message_filters::sync_policies::ApproximateTime<nav_msgs::OccupancyGrid,
 
 class ExplorationState : public State {
 public:
-    ExplorationState(int x, int y, int cost) : 
+    ExplorationState(int x, int y, double cost) : 
         ExplorationState(x, y, cost, make_pair(-1, -1)) {};
 
     virtual bool is_goal(const Maze& maze) const override {
@@ -47,7 +47,7 @@ public:
         return new_states;
     }
 private:
-    ExplorationState(int x, int y, int cost, pair<int, int> parent) :
+    ExplorationState(int x, int y, double  cost, pair<int, int> parent) :
         State(x, y, cost, parent, 0) {};
 };
 
@@ -77,12 +77,14 @@ public:
         
         // Continue while the goal is unknown.
         if (this->maze.get_data(og_target.first, og_target.second) == -1) {
+            ROS_INFO_STREAM("Target probability found. Commencing astar.");
             // Do a A* to the nearest frontier
             auto og_path = search(this->maze, new ExplorationState(og_pos.first, og_pos.second, 0));
             if (og_path.empty()) {
                 ROS_ERROR_STREAM("Empty path to target.");
                 return;
             }
+            ROS_INFO_STREAM("Converting into path data.");
             // Target the frontier in real coordinates.
             this->og_target = og_path.back();
             this->path = this->maze.og_to_real_path(og_path);

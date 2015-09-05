@@ -1,6 +1,21 @@
 #include "ros/ros.h"
 #include "geometry_msgs/Twist.h"
 
+/*class WaypointState : public State {
+public:
+    WaypointState(int x, int y, double cost, pair<int,int> goal) : 
+        WaypointState(x, y, cost, make_pair(-1, -1), goal) {
+        
+    }
+private:
+    WaypointState(int x, int y, double cost, pair<int, int> parent, pair<int, int> goal) :
+        State(x, y, cost, parent, 0), goal(goal) {
+        
+    };
+
+    pair<int, int> goal;
+}*/
+
 class Waypoint {
 public:
     Waypoint(ros::NodeHandle n) : n(n) {
