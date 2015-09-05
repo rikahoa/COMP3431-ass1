@@ -75,7 +75,7 @@ private:
         // Continue while the goal is unknown.
         if (!started || this->maze.get_data(og_target.first, og_target.second) == -1) {
             // Find current position.
-            auto og_pos = this->bot.get_og_coord(this->maze);
+            auto og_pos = this->bot.get_og_pos(this->maze);
             ROS_INFO_STREAM("position: " << bot.get_position().first << "," 
                     << bot.get_position().second);
             ROS_INFO_STREAM("og point: " << og_pos.first << "," << og_pos.second);
@@ -88,9 +88,10 @@ private:
                 return;
             }
             ROS_INFO_STREAM("Converting into path data.");
-            // Target the frontier in real coordinates.
+            // Target the frontier in real posinates.
             this->og_target = og_path.back();
             this->path = this->maze.og_to_real_path(og_path);
+            this->started = true;
         }
 
         // Populate until next path is found.
@@ -100,14 +101,12 @@ private:
 
         // Error checking
         if (path.empty()) {
-            ROS_ERROR_STREAM("Path empty! Cannot move anywhere...");
+            ROS_ERROR_STREAM("Exploration path empty! Cannot move anywhere...");
             return;
         }
 
-        this->started = true;
-        
         ROS_INFO_STREAM("We need to know " << og_target.first << "," << og_target.second << 
-                "( world coord" << path.back().first << "," << path.back().second << ")");
+                "( world pos" << path.back().first << "," << path.back().second << ")");
         
         // Generate me a move message to target.
         geometry_msgs::TwistStamped move;

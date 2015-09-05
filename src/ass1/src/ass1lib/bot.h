@@ -19,11 +19,11 @@ public:
     Bot() : _valid(false) {
     }
 
-    pair<double, double> get_position() {
+    pair<double, double> get_position() const {
         return make_pair(this->pose.position.x, this->pose.position.y);
     }
 
-    double get_yaw() {
+    double get_yaw() const {
         return tf::getYaw(this->pose.orientation);
     }
 
@@ -32,7 +32,7 @@ public:
         this->_valid = true;
     }
 
-    bool valid() {
+    bool valid() const {
         return this->_valid;
     }
 
@@ -68,17 +68,14 @@ public:
         } 
     }
 
-    double distance(const pair<double, double>& target) {
+    double distance(const pair<double, double>& target) const {
         auto vx = target.first - this->pose.position.x;
         auto vy = target.second - this->pose.position.y;
         return sqrt(vx*vx + vy*vy);
     }
 
-    pair<int, int> get_og_coord(const Maze &m) {
-        auto og = m.get_occupancy_grid();
-        auto origin = og.info.origin.position;
-        return make_pair(static_cast<int>((this->pose.position.x - origin.x) / og.info.resolution),
-                         static_cast<int>((this->pose.position.y - origin.y) / og.info.resolution));
+    pair<int, int> get_og_pos(const Maze &m) const {
+        return m.get_og_pos(make_pair(this->pose.position.x, this->pose.position.y));
     }
     
 private:

@@ -121,9 +121,15 @@ public:
         return this->og.info.width;
     }
 
-    pair<double, double> get_world_pos(pair<int,int> coord) const {
-       return make_pair(coord.first*og.info.resolution + og.info.origin.position.x, 
-               coord.second*og.info.resolution + og.info.origin.position.y);
+    pair<double, double> get_world_pos(pair<int,int> pos) const {
+       return make_pair(pos.first*og.info.resolution + og.info.origin.position.x, 
+               pos.second*og.info.resolution + og.info.origin.position.y);
+    }
+    
+    pair<int, int> get_og_pos(pair<double,double> pos) const {
+        auto origin = this->og.info.origin.position;
+        return make_pair(static_cast<int>((pos.first - origin.x) / this->og.info.resolution),
+                         static_cast<int>((pos.second - origin.y) / this->og.info.resolution));
     }
 private:
     nav_msgs::OccupancyGrid og;   
