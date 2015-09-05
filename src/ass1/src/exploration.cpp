@@ -78,7 +78,11 @@ public:
         
         // Do a A* to the nearest frontier
         auto path = search(this->maze, new ExplorationState(og_pos.first, og_pos.second, 0));
-        
+        if (path.empty()) {
+            ROS_ERROR_STREAM("A* Path is Empty!");
+            return;
+        }
+
         auto targetingrid = *(path.begin() + 3);
         auto target = this->maze.get_world_coord(targetingrid);
 

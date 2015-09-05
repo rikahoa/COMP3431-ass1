@@ -74,6 +74,12 @@ public:
         }
     }
 
+    vector<pair<double, double>> astar_to_real_path(const vector<pair<int, int>>& astar_path) {
+        vector<pair<double, double>> real_path;
+
+        return real_path;
+    }
+
     vector<pair<int, int>> path_to_grid(const vector<pair<int, int>>& astar_path) {
         vector<pair<int, int>> grid_path;
 
