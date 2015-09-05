@@ -6,17 +6,17 @@
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
-#include <tf/transform_listener.h>
-#include <tf/transform_datatypes.h>
 #include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Odometry.h"
-#include "geometry_msgs/TwistStamped.h"
-#include <cmath>
 
 // Must travel at least this far.
 #define EXPLORE_THRESHOLD 0.5
+#define CLOSE_ENOUGH 0.1
 
-typedef message_filters::sync_policies::ApproximateTime<nav_msgs::OccupancyGrid, nav_msgs::Odometry> ApproxPolicy;
+using namespace std;
+
+typedef message_filters::sync_policies::ApproximateTime<
+    nav_msgs::OccupancyGrid, nav_msgs::Odometry> ApproxPolicy;
 
 class ExplorationState : public State {
 public:
@@ -64,7 +64,7 @@ public:
 
     }
 
-    #define CLOSE_ENOUGH 0.1
+private:
     void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og, 
             const nav_msgs::Odometry::ConstPtr &odom) {
         this->maze.set_occupancy_grid(*og);
@@ -110,7 +110,7 @@ public:
         this->bot.setup_movement(path.front(), move.twist);
         movement_pub.publish(move);
     }
-private:
+
     Maze maze;
     Bot bot;
 
