@@ -54,11 +54,11 @@ public:
             auto y = info.first.second;
             auto distance = info.second;
            
-            // mark data
             if (seen[y][x] || distance > FATTEN) {
                 continue;
             }
 
+            // Mark data
             seen[y][x] = true;
             set_data(y, x, 100);
 
@@ -74,9 +74,11 @@ public:
         }
     }
 
-    vector<pair<double, double>> astar_to_real_path(const vector<pair<int, int>>& astar_path) {
-        vector<pair<double, double>> real_path;
-
+    queue<pair<double, double>> og_to_real_path(const vector<pair<int, int>>& astar_path) {
+        queue<pair<double, double>> real_path;
+        for (const auto &point : astar_path) {
+            real_path.push(this->get_world_pos(point));
+        }
         return real_path;
     }
 
@@ -118,7 +120,7 @@ public:
         return this->og.info.width;
     }
 
-    pair<double, double> get_world_coord(pair<int,int> coord) {
+    pair<double, double> get_world_pos(pair<int,int> coord) {
        return make_pair(coord.first*og.info.resolution + og.info.origin.position.x, 
                coord.second*og.info.resolution + og.info.origin.position.y);
     }

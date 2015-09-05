@@ -27,21 +27,6 @@ public:
         return tf::getYaw(this->pose.orientation);
     }
 
-    // Returns displacement in (distance, angle)
-    pair<double, double> get_displacement(double x, double y) {
-        // Get the vector to the robot.
-        double vy = y - this->pose.position.y;
-        double vx = x - this->pose.position.x;
-        
-        double distance = sqrt(vx*vx + vy*vy);
-
-        // Find the angle.
-        ROS_INFO_STREAM("atan: " << atan2(vx,vy) << "," "yaw: " << this->get_yaw());
-        double target_angle = atan2(vx, vy) - this->get_yaw();
-
-        return make_pair(distance, target_angle);
-    }
-
     void update(const nav_msgs::Odometry::ConstPtr &odom) {
         this->pose = odom->pose.pose;
         this->_valid = true;
@@ -55,23 +40,38 @@ public:
     void setup_movement(const pair<double,double>& target, geometry_msgs::Twist& move) {
         move.linear.x = move.linear.y = move.linear.z = 0;
         move.angular.x = move.angular.y = move.angular.z = 0;
-
-        auto displacement = this->get_displacement(target.first, target.second);
         
         ROS_INFO_STREAM("target of " << target.first << "," << target.second);
+
+        // Get the vector to the robot.
+        double vy = target.first - this->pose.position.y;
+        double vx = target.second - this->pose.position.x;
+        
+        double distance = sqrt(vx*vx + vy*vy);
+
+        // Find the angle to target.
+        double target_angle = atan2(vx, vy) - this->get_yaw();
+
+        ROS_INFO_STREAM("atan: " << atan2(vx,vy) << "," "yaw: " << this->get_yaw());
         ROS_INFO_STREAM("we are at " << this->get_position().first << "," 
                 << this->get_position().second);
-        ROS_INFO_STREAM("angle change of " << displacement.second << " required.");
-        ROS_INFO_STREAM("distance from target is " << displacement.first);
+        ROS_INFO_STREAM("angle change of " << distance << " required.");
+        ROS_INFO_STREAM("distance from target is " << distance);
 
-        if (displacement.second > 0.1 || displacement.second < -0.1) {
+        if (fabs(target_angle) > 0.1) {
             // TODO: Make this better
-            move.angular.z = 2*displacement.second; 
+            move.angular.z = 2 * target_angle; 
         } else {
-            if (displacement.first > 0.1) {
+            if (distance > 0.1) {
                 move.linear.x = 0.4;
             }
         } 
+    }
+
+    double distance(const pair<double, double>& target) {
+        auto x = target.first - this->pose.position.x;
+        auto y = target.second - this->pose.position.y;
+        return sqrt(x*x + y*y);
     }
 
     pair<int, int> get_og_coord(const Maze &m) {

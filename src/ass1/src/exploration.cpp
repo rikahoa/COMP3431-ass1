@@ -59,13 +59,12 @@ public:
         odom_sub(n, "/ass1/odom", 1), 
         sync(ApproxPolicy(10), map_sub, odom_sub)  
     {
-        
         sync.registerCallback(boost::bind(&Exploration::map_callback, this, _1, _2)); 
-        
         movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
 
     }
 
+    #define CLOSE_ENOUGH 0.1
     void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og, 
             const nav_msgs::Odometry::ConstPtr &odom) {
         this->maze.set_occupancy_grid(*og);
@@ -73,24 +72,38 @@ public:
 
         // Find current position.
         auto og_pos = this->bot.get_og_coord(this->maze);
+        ROS_INFO_STREAM("position: " << bot.get_position().first << "," << bot.get_position().second);
         ROS_INFO_STREAM("og point: " << og_pos.first << "," << og_pos.second);
         
-        // Do a A* to the nearest frontier
-        auto path = search(this->maze, new ExplorationState(og_pos.first, og_pos.second, 0));
-        if (path.empty()) {
-            ROS_ERROR_STREAM("A* Path is Empty!");
-            return;
+        // Continue while the goal is unknown.
+        if (this->maze.get_data(og_target.first, og_target.second) == -1) {
+            // Do a A* to the nearest frontier
+            auto og_path = search(this->maze, new ExplorationState(og_pos.first, og_pos.second, 0));
+            if (og_path.empty()) {
+                ROS_ERROR_STREAM("Empty path to target.");
+                return;
+            }
+            // Target the frontier in real coordinates.
+            this->og_target = og_path.back();
+            this->path = this->maze.og_to_real_path(og_path);
         }
 
-        auto targetingrid = *(path.begin() + 3);
-        auto target = this->maze.get_world_coord(targetingrid);
+        // Populate until next path is found.
+        while (!this->path.empty() && this->bot.distance(path.front()) < CLOSE_ENOUGH) {
+            path.pop();
+        }
 
-        // Generate me a message.
+        // Error checking
+        if (path.empty()) {
+            ROS_ERROR_STREAM("Path empty! Cannot move anywhere...");
+            return;
+        }
+        
+        // Generate me a move message to target.
         geometry_msgs::TwistStamped move;
         move.header = odom->header;
-        this->bot.setup_movement(target, move.twist);
+        this->bot.setup_movement(path.front(), move.twist);
         movement_pub.publish(move);
-
     }
 private:
     Maze maze;
@@ -102,6 +115,9 @@ private:
     message_filters::Subscriber<nav_msgs::OccupancyGrid> map_sub;
     message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
     message_filters::Synchronizer<ApproxPolicy> sync;
+
+    pair<int, int> og_target;
+    queue<pair<double, double>> path;
 };
 
 int main(int argc, char *argv[]) {
