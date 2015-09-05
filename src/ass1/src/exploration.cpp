@@ -14,7 +14,8 @@
 #include "geometry_msgs/TwistStamped.h"
 #include <random>
 
-#define EXPLORE_THRESHOLD 1.0
+// Must travel at least this far.
+#define EXPLORE_THRESHOLD 0.5
 
 typedef message_filters::sync_policies::ApproximateTime<nav_msgs::OccupancyGrid, nav_msgs::Odometry> ApproxPolicy;
 
@@ -24,8 +25,8 @@ public:
         ExplorationState(x, y, cost, make_pair(-1, -1)) {};
 
     virtual bool is_goal(const Maze& maze) const override {
-        return maze.get_occupancy_grid().data[y * maze.get_occupancy_grid().info.height + x] == -1 &&
-            this->cost > EXPLORE_THRESHOLD;
+        return maze.get_data(this->x, this->y) == -1 &&
+            this->cost >= EXPLORE_THRESHOLD;
     }
 
     virtual vector<State*> explore(const Maze& maze, 

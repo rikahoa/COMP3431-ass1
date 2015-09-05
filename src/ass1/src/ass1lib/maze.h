@@ -7,6 +7,7 @@
 #include <utility>
 #include "ros/ros.h"
 #include "nav_msgs/OccupancyGrid.h"
+#include <queue>
 
 using namespace std;
 
@@ -23,50 +24,54 @@ public:
     void set_occupancy_grid(const nav_msgs::OccupancyGrid &og) {
         this->og = og;
 
-        // Fatten the grid.
+        fatten_neighbours(og);
+    }
+
+    #define FATTEN 4
+    #define MIN_PROB 80
+    void fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
+        vector<vector<bool>> seen;
+        for (int y = 0; y < og.info.height; ++y) {
+            seen.push_back(vector<bool>(og.info.width));
+        }
+
+        queue<pair<pair<int, int>, int>> bfs;
         for (int y = 0; y < this->og.info.height; ++y) {
             for (int x = 0; x < this->og.info.width; ++x) {
-                if (og.data[y * og.info.height + x] > 80) {
-                    for (const auto& n: get_fattened_neighbours(x, y, 5)) {
-                        this->set_data(n.first, n.second, 100); 
-                    } 
+                if (og.data[y * og.info.height + x] >= 50) {
+                    bfs.push(make_pair(make_pair(x, y), 0));
                 }
             }
         }
-    }
-    
-    // TODO: make more efficient
-    vector<pair<int, int>> get_fattened_neighbours(int x, int y, int padding) {
-        vector<pair<int, int>> neighbours;
-        for (int i = 0; i < padding; ++i) {
-            if (x+i < this->og.info.width) {
-                neighbours.push_back(make_pair(x+i, y));
+
+        // run through all possible positions.
+        while (!bfs.empty()) {
+            auto info = bfs.front();
+            bfs.pop();
+            
+            // Find information.
+            auto x = info.first.first;
+            auto y = info.first.second;
+            auto distance = info.second;
+           
+            // mark data
+            if (seen[y][x] || distance > FATTEN) {
+                continue;
             }
-            if (y+i < this->og.info.height) {
-                neighbours.push_back(make_pair(x, y+i));
-            }
-            if (y-i >=0) {
-                neighbours.push_back(make_pair(x, y-i));
-            }
-            if (x-i >=0) {
-                neighbours.push_back(make_pair(x-i, y));
-            }
-            for (int j = 0; j < padding; ++j) {
-                if (x+i < this->og.info.width && y+j < this->og.info.height) {
-                    neighbours.push_back(make_pair(x+i, y+j));
-                }
-                if (x+i < this->og.info.width && y-j >=0) {
-                    neighbours.push_back(make_pair(x+i, y-j));
-                }
-                if (x-i >=0 && y+j < this->og.info.height) {
-                    neighbours.push_back(make_pair(x-i, y+j));
-                }
-                if (x-i >=0 && y-j >= 0) {
-                    neighbours.push_back(make_pair(x-i, y-j));
+
+            seen[y][x] = true;
+            set_data(y, x, 100);
+
+            // search all directions
+            for (const auto& dir : Maze::DIRECTIONS) {
+                auto newX = x + dir.first;
+                auto newY = y + dir.second;
+                if (newX >= 0 && newX < og.info.width && newY >= 0 && newY < og.info.height &&
+                        !seen[newY][newX] && distance < FATTEN) {
+                    bfs.push(make_pair(make_pair(newX, newY), distance + 1));
                 }
             }
         }
-        return neighbours;
     }
 
     vector<pair<int, int>> path_to_grid(const vector<pair<int, int>>& astar_path) {
@@ -112,7 +117,8 @@ public:
                coord.second*og.info.resolution + og.info.origin.position.y);
     }
 private:
-    nav_msgs::OccupancyGrid og;    
+    nav_msgs::OccupancyGrid og;   
+    static const vector<pair<int, int>> DIRECTIONS;
 };
 
 #endif
