@@ -24,7 +24,10 @@ public:
     }
 
     double get_yaw() const {
-        return tf::getYaw(this->pose.orientation);
+        tf::Quaternion q(this->pose.orientation.x, this->pose.orientation.y,
+                this->pose.orientation.z, this->pose.orientation.w);
+        q.normalize();
+        return tf::getYaw(q);
     }
 
     void update(const nav_msgs::Odometry::ConstPtr &odom) {
