@@ -14,7 +14,7 @@ void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
     queue<pair<pair<int, int>, int>> bfs;
     for (int y = 0; y < og.info.height; ++y) {
         for (int x = 0; x < og.info.width; ++x) {
-            if (og.data[y * og.info.height + x] >= 80) {
+            if (og.data[y * og.info.width + x] >= 80) {
                 bfs.push(make_pair(make_pair(x, y), 0));
             }
         }

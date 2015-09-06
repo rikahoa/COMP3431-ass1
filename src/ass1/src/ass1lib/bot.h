@@ -39,6 +39,20 @@ public:
         return this->_valid;
     }
 
+    pair<double, double> get_displacement(const pair<double,double>& target) const {
+        // Get the vector to the robot.
+        double vy = target.first - this->pose.position.y;
+        double vx = target.second - this->pose.position.x;
+        
+        double distance = sqrt(vx*vx + vy*vy);
+
+        // Find the angle to target.
+        double target_angle = -atan2(vy, vx) - this->get_yaw();
+        target_angle -= static_cast<int>(target_angle / PI) * PI;
+
+        return make_pair(distance, target_angle);
+    }
+
     // Sets up a valid movement twist.
     void setup_movement(const pair<double,double>& target, geometry_msgs::Twist& move) {
         move.linear.x = move.linear.y = move.linear.z = 0;
@@ -48,17 +62,11 @@ public:
                 << this->get_position().second);
         ROS_INFO_STREAM("** target of " << target.first << "," << target.second);
 
-        // Get the vector to the robot.
-        double vy = target.first - this->pose.position.y;
-        double vx = target.second - this->pose.position.x;
-        
-        double distance = sqrt(vx*vx + vy*vy);
+        auto displacement = get_displacement(target);
+        double distance = displacement.first;
+        double target_angle = displacement.second;
 
-        // Find the angle to target.
-        double target_angle = atan2(vx, vy) - this->get_yaw();
-        target_angle -= static_cast<int>(target_angle / PI) * PI;
-
-        ROS_INFO_STREAM("** atan: " << atan2(vx,vy) << "," "yaw: " << this->get_yaw());
+        ROS_INFO_STREAM("** yaw: " << this->get_yaw());
         ROS_INFO_STREAM("** angle change of " << target_angle << " required.");
         ROS_INFO_STREAM("** distance from target is " << distance);
 
@@ -69,7 +77,7 @@ public:
             move.angular.z = -0.4;
         } else {
             if (distance > 0.1) {
-                move.linear.x = 0.1;
+                move.linear.x = 0.25;
             }
         }
         ROS_INFO_STREAM("** movement set to " << move.linear.x << "," << move.angular.z);
@@ -86,13 +94,8 @@ public:
     }
    
     bool close_enough(const pair<double, double>& target) {
-        double vy = target.first - this->pose.position.y;
-        double vx = target.second - this->pose.position.x;
-        
-        double distance = sqrt(vx*vx + vy*vy);
-        double target_angle = atan2(vx, vy) - this->get_yaw();
-        target_angle -= static_cast<int>(target_angle / PI) * PI;
-        return distance < 0.1 && fabs(target_angle) < 0.1;
+        auto displacement = get_displacement(target);
+        return displacement.first < 0.1 && fabs(displacement.second) < 0.1;
     }
 private:
     geometry_msgs::Pose pose;

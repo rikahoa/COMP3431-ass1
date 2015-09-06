@@ -78,11 +78,11 @@ public:
     }
     
     void set_data(int x, int y, int value) {
-        this->og.data[y * this->og.info.height + x] = value;
+        this->og.data[y * this->og.info.width + x] = value;
     }
     
     int get_data(int x, int y) const {
-        return this->og.data[y * this->og.info.height + x];
+        return this->og.data[y * this->og.info.width + x];
     }
     
     double get_resolution() const {
