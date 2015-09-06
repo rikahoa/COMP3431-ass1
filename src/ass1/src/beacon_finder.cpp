@@ -132,7 +132,8 @@ private:
                 double xCo = pink_pt->pt.x;
                 xCo = xCo - 320;
                 // TODO: you might want atan2
-                double theta = atan(xCo*tan(27.5)/320.0);
+                double theta = atan2(xCo*tan(27.5), 320.0);
+		ROS_INFO_STREAM("theta: " << theta);
                 double lTheta = theta - laser->angle_min;
                 int distance_index = lTheta / laser->angle_increment;
                 double distance = laser->ranges[distance_index];
@@ -190,7 +191,7 @@ private:
         double beacon_yaw = bot.get_yaw() + theta;
         double b_x = bot_pos.first + d*cos(beacon_yaw);
         double b_y = bot_pos.second + d*sin(beacon_yaw);
-        ROS_INFO_STREAM("BOT POS: " << b_x << "," << b_y << " yaw: " << beacon_yaw << " d: " << d);
+        ROS_INFO_STREAM("BOT POS: " << b_x << "," << b_y << "beacon_yaw: " << beacon_yaw << " d: " << d << "robot_yaw " << bot.get_yaw() << "theta: " << theta);
         for (auto it = beacons.begin(); it != beacons.end(); ++it) {
             if (it->top == top && it->bottom == bottom) {
                 it->known_location = true;
