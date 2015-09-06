@@ -51,7 +51,7 @@ protected:
     
     static const vector<pair<int, int>> DIRECTIONS;
 
-    State(int x, int y, int cost, pair<int, int> parent, double heuristic) : 
+    State(int x, int y, double cost, pair<int, int> parent, double heuristic) : 
         x(x), y(y), cost(cost), parent(parent), heuristic(heuristic) {};
 };
 

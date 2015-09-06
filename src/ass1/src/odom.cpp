@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
                 clean_odom_pub.publish(odom);
             }
         } catch (tf::TransformException &ex) {
-            ROS_ERROR("Transform Exception: %s", ex.what());
+            ROS_ERROR("Clean Odom Transform Exception: %s", ex.what());
         } 
             
         ros::spinOnce();

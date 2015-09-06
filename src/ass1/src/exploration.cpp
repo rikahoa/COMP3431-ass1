@@ -47,7 +47,7 @@ public:
         return new_states;
     }
 private:
-    ExplorationState(int x, int y, double  cost, pair<int, int> parent) :
+    ExplorationState(int x, int y, double cost, pair<int, int> parent) :
         State(x, y, cost, parent, 0) {};
 };
 
