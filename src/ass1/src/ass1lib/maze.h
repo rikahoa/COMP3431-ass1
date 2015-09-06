@@ -29,9 +29,27 @@ public:
 
     queue<pair<double, double>> og_to_real_path(const vector<pair<int, int>>& astar_path) const {
         queue<pair<double, double>> real_path;
-        for (const auto &point : astar_path) {
-            real_path.push(this->get_world_pos(point));
+        
+        if (astar_path.size() > 0) {
+            // push out the start one.
+            pair<int, int> start = astar_path.front();
+            real_path.push(this->get_world_pos(start));
+
+            // push in similar elements.
+            for (auto it = ++astar_path.begin(); it != astar_path.end(); ++it) {
+                // as long as one of them matches the previous, we take this path.
+                if (start.first != it->first && start.second != it->second) {
+                    real_path.push(this->get_world_pos(*it));
+                }
+                start = *it;
+            }
+           
+            // flush out the back
+            if (start != astar_path.back()) {
+                real_path.push(this->get_world_pos(astar_path.back()));
+            }
         }
+
         return real_path;
     }
 
