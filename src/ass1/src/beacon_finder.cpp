@@ -53,7 +53,7 @@ public:
         beacons_pub = n.advertise<ass1::FoundBeacons>("/ass1/beacons", 1);
 
         // Use ApproximateTime message_filter to read both kinect image and laser.
-        sync.registerCallback(boost::bind(&BeaconFinder::image_callback, this, _1, _2) );
+        sync.registerCallback(boost::bind(&BeaconFinder::image_callback, this, _1, _2));
    }
 
 private:
@@ -105,6 +105,7 @@ private:
             params.filterByInertia = true;
             params.minInertiaRatio = 0.65;
             
+            // find keypoints
             std::vector<cv::KeyPoint> pink_keypoints, yellow_keypoints, blue_keypoints, green_keypoints;
 
             cv::SimpleBlobDetector detector(params);
@@ -114,69 +115,40 @@ private:
             detector.detect(green_threshold, green_keypoints);
             
             cv::Mat blobs;
-            cv::drawKeypoints( src, pink_keypoints, blobs, 
-                    cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+            cv::drawKeypoints (src, pink_keypoints, blobs, 
+                    cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
-            cv::drawKeypoints( blobs, blue_keypoints, blobs, 
-                    cv::Scalar(255,0,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+            cv::drawKeypoints (blobs, blue_keypoints, blobs, 
+                    cv::Scalar(255,0,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
-            cv::drawKeypoints( blobs, green_keypoints, blobs, 
-                    cv::Scalar(0,255,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+            cv::drawKeypoints (blobs, green_keypoints, blobs, 
+                    cv::Scalar(0,255,0), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
-            cv::drawKeypoints( blobs, yellow_keypoints, blobs, 
-                    cv::Scalar(125,125,125), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS );
+            cv::drawKeypoints (blobs, yellow_keypoints, blobs, 
+                    cv::Scalar(125,125,125), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
             // acceptable horizontal distance between the 2 colours on a pillar
-            double pillar_threshold = 20;
-
-            for( std::vector<cv::KeyPoint>::iterator pink_pt = pink_keypoints.begin(); pink_pt != pink_keypoints.end(); pink_pt++ ) {
-
+            for (auto pink_pt = pink_keypoints.begin(); pink_pt != pink_keypoints.end(); pink_pt++) {
                 double xCo = pink_pt->pt.x;
                 xCo = xCo - 320;
+                // TODO: you might want atan2
                 double theta = atan(xCo*tan(27.5)/320.0);
                 double lTheta = theta - laser->angle_min;
                 int distance_index = lTheta / laser->angle_increment;
                 double distance = laser->ranges[distance_index];
 
-
-                for(std::vector<cv::KeyPoint>::iterator blue_pt = blue_keypoints.begin(); blue_pt != blue_keypoints.end(); blue_pt++ ) {
-                    if( std::abs(pink_pt->pt.x - blue_pt->pt.x) < pillar_threshold ) {
-                        if( pink_pt->pt.y < blue_pt->pt.y ) {
-                            ROS_INFO("T: pink, B: blue, dist(%f), angle(%f)", distance, lTheta );
-                            found_beacon("pink", "blue");
-                        } else {
-                            ROS_INFO("T: blue, B: pink, dist(%f), angle(%f)", distance, lTheta );
-                            found_beacon("blue", "pink");
-                        }
-                    }
-                }
-                for(std::vector<cv::KeyPoint>::iterator yellow_pt = yellow_keypoints.begin(); yellow_pt!= yellow_keypoints.end(); yellow_pt++ ) {
-                    if( std::abs(pink_pt->pt.x - yellow_pt->pt.x) < pillar_threshold ) {
-                        if( pink_pt->pt.y < yellow_pt->pt.y ) {
-                            ROS_INFO("T: pink, B: yellow, dist(%f), angle(%f)", distance, lTheta );
-                            found_beacon("pink", "yellow");
-                        } else {
-                            ROS_INFO("T: yellow, B: pink, dist(%f), angle(%f)", distance, lTheta );
-                            found_beacon("yellow", "pink");
-                        }
-                    }
-                }
-                for(std::vector<cv::KeyPoint>::iterator green_pt = green_keypoints.begin(); green_pt!= green_keypoints.end(); green_pt++ ) {
-                    if( std::abs(pink_pt->pt.x - green_pt->pt.x) < pillar_threshold ) {
-                        if( pink_pt->pt.y < green_pt->pt.y ) {
-                            ROS_INFO("T: pink, B: green, dist(%f), angle(%f)", distance, lTheta );
-                            found_beacon("pink", "green");
-                        } else {
-                            ROS_INFO("T: green, B: pink, dist(%f), angle(%f)", distance, lTheta );
-                            found_beacon("green", "pink");
-                        }
-                    }
-                }
+                search_for_match(blue_keypoints.begin(), blue_keypoints.end(), pink_pt, "blue", make_pair(0, 0));
+                search_for_match(yellow_keypoints.begin(), yellow_keypoints.end(), pink_pt, "yellow", make_pair(0, 0));
+                search_for_match(green_keypoints.begin(), green_keypoints.end(), pink_pt, "green", make_pair(0, 0));
             }
+
+            // gui display
+            imshow("blobs", blobs);
+
             bool found_all = true; 
             int count = 0;
-            for(auto it = beacons.begin(); it != beacons.end(); ++it) {
-                if( !it->found() ) {
+            for (auto it = beacons.begin(); it != beacons.end(); ++it) {
+                if (!it->found()) {
                     found_all = false;
                 } else {
                     count++;
@@ -205,20 +177,37 @@ private:
                 odom_sub.shutdown();
             }
 
-            // gui display
-            imshow("blobs", blobs);
-
             cv::waitKey(30);
         } catch (cv_bridge::Exception& e) {
             ROS_ERROR("Could not convert from '%s' to 'bgr8'.", image->encoding.c_str());
         }
     }
 
-    void found_beacon(string top, string bottom) {
-        for( auto it = beacons.begin(); it != beacons.end(); ++it ) {
-            if( it->top == top && it->bottom == bottom ) {
+    void found_beacon(string top, string bottom, pair<double, double> position) {
+        for (auto it = beacons.begin(); it != beacons.end(); ++it) {
+            if (it->top == top && it->bottom == bottom) {
                 it->known_location = true;
-                // TODO: calculate
+                it->x = position.first;
+                it->y = position.second;
+            }
+        }
+    }
+
+    #define PILLAR_THRESHOLD 20
+    void search_for_match(
+            std::vector<cv::KeyPoint>::iterator begin, 
+            std::vector<cv::KeyPoint>::iterator end, 
+            std::vector<cv::KeyPoint>::iterator pink, 
+            string colour,
+            pair<double, double> position) 
+    {
+        for (auto it = begin; it != end; ++it) {
+            if (std::abs(pink->pt.x - it->pt.y) < PILLAR_THRESHOLD) {
+                if (pink->pt.y < it->pt.y) {
+                    found_beacon("pink", colour, position); 
+                } else {
+                    found_beacon(colour, "pink", position);
+                }
             }
         }
     }
