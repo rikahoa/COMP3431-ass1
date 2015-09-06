@@ -108,13 +108,14 @@ private:
                 ROS_INFO_STREAM("Let's find " << og_target.first << "," << og_target.second);
             }
 
-            // REMOVE WHEN DONE
+            // == REMOVE WHEN DONE
             queue<pair<double,double>> p(this->path);
             while (!p.empty()) {
                 auto s = p.front();
                 p.pop();
                 ROS_INFO_STREAM("* path: " << s.first << "," << s.second);
             }
+            // ==
 
             // Populate until next path is found.
             while (!this->path.empty() && this->bot.close_enough(path.front())) {

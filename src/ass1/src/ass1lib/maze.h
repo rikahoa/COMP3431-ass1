@@ -23,7 +23,7 @@ public:
 
     void set_occupancy_grid(const nav_msgs::OccupancyGrid &og) {
         this->og = og;
-        //fatten_neighbours(og);
+        fatten_neighbours(og);
 
         this->_valid = true;
     }

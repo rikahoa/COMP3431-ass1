@@ -3,7 +3,7 @@
 const vector<pair<int,int>> Maze::DIRECTIONS = 
     vector<pair<int, int>>{make_pair(-1,0),make_pair(1,0),make_pair(0,-1),make_pair(0,1)};
 
-#define FATTEN 4
+#define FATTEN 2
 #define MIN_PROB 80
 void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
     vector<vector<bool>> seen;
@@ -36,7 +36,7 @@ void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
 
         // Mark data
         seen[y][x] = true;
-        set_data(y, x, 100);
+        set_data(x, y, 100);
 
         // search all directions
         for (const auto& dir : Maze::DIRECTIONS) {

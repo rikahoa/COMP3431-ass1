@@ -148,9 +148,6 @@ target_link_libraries(beacon_finder ${catkin_LIBRARIES} ass1lib)
 add_executable(waypoint src/waypoint.cpp)
 target_link_libraries(waypoint ${catkin_LIBRARIES} ass1lib)
 
-add_executable(planner src/planner.cpp)
-target_link_libraries(planner ${catkin_LIBRARIES} ass1lib)
-
 add_executable(follower src/follower.cpp)
 target_link_libraries(follower ${catkin_LIBRARIES} ass1lib)
 

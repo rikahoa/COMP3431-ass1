@@ -53,14 +53,17 @@ public:
 
         // Find the angle to target.
         double target_angle = atan2(vx, vy) - this->get_yaw();
+        target_angle -= static_cast<int>(target_angle / PI) * PI;
 
         ROS_INFO_STREAM("** atan: " << atan2(vx,vy) << "," "yaw: " << this->get_yaw());
         ROS_INFO_STREAM("** angle change of " << target_angle << " required.");
         ROS_INFO_STREAM("** distance from target is " << distance);
 
-        if (fabs(target_angle) > 0.1) {
+        if (target_angle > 0.1) {
             // TODO: Make this better
-            move.angular.z = 0.2; 
+            move.angular.z = 0.4; 
+        } else if (target_angle < -0.1) {
+            move.angular.z = -0.4;
         } else {
             if (distance > 0.1) {
                 move.linear.x = 0.1;
@@ -85,6 +88,7 @@ public:
         
         double distance = sqrt(vx*vx + vy*vy);
         double target_angle = atan2(vx, vy) - this->get_yaw();
+        target_angle -= static_cast<int>(target_angle / PI) * PI;
         return distance < 0.1 && fabs(target_angle) < 0.1;
     }
 private:
