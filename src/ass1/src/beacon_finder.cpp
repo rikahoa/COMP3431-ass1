@@ -137,9 +137,9 @@ private:
                 int distance_index = lTheta / laser->angle_increment;
                 double distance = laser->ranges[distance_index];
 
-                search_for_match(blue_keypoints.begin(), blue_keypoints.end(), pink_pt, "blue", make_pair(distance, theta));
-                search_for_match(yellow_keypoints.begin(), yellow_keypoints.end(), pink_pt, "yellow", make_pair(distance, theta));
-                search_for_match(green_keypoints.begin(), green_keypoints.end(), pink_pt, "green", make_pair(distance, theta));
+                search_for_match(blue_keypoints.begin(), blue_keypoints.end(), pink_pt, "blue", make_pair(distance, -theta));
+                search_for_match(yellow_keypoints.begin(), yellow_keypoints.end(), pink_pt, "yellow", make_pair(distance, -theta));
+                search_for_match(green_keypoints.begin(), green_keypoints.end(), pink_pt, "green", make_pair(distance, -theta));
             }
 
             // gui display
