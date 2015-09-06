@@ -8,6 +8,7 @@
 #include <message_filters/sync_policies/approximate_time.h>
 #include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Odometry.h"
+#include "ass1/FoundBeacons.h"
 
 // Must travel at least this far.
 #define EXPLORE_THRESHOLD 0.5
@@ -63,14 +64,21 @@ public:
     {
         sync.registerCallback(boost::bind(&Exploration::map_callback, this, _1, _2)); 
         movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
-
+        beacons_sub = n.subscribe("ass1/beacons", 1, &Exploration::beacon_callback, this);
     }
 
 private:
+    void beacon_callback(const ass1::FoundBeacons::ConstPtr& msg) {
+        ROS_INFO_STREAM("beacons found on exploration!");
+        ros::shutdown();
+    }
+
     void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og, 
             const nav_msgs::Odometry::ConstPtr &odom) {
         this->maze.set_occupancy_grid(*og);
         this->bot.update(odom);
+
+        ROS_INFO_STREAM("Map callback found!");
 
         // Continue while the goal is unknown.
         if (!started || this->maze.get_data(og_target.first, og_target.second) == -1) {
@@ -121,6 +129,7 @@ private:
 
     ros::NodeHandle n;
     ros::Publisher movement_pub;
+    ros::Subscriber beacons_sub;
     
     message_filters::Subscriber<nav_msgs::OccupancyGrid> map_sub;
     message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
