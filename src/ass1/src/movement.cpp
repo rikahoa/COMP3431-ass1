@@ -26,8 +26,7 @@ private:
             
     void movement_and_laser_callback(const geometry_msgs::TwistStamped::ConstPtr &twistStamped, 
             const sensor_msgs::LaserScan::ConstPtr &laserScan) {
-        // TODO: don't do this!
-        bool safe = true;
+        bool safe = false;
 
         if (twistStamped->twist.angular.z < laserScan->angle_min || 
                 twistStamped->twist.angular.z > laserScan->angle_max) {
@@ -45,7 +44,7 @@ private:
         }
 
         if (safe) {
-             ROS_INFO_STREAM("Moving: x = " << twistStamped->twist.linear.x << 
+             ROS_INFO_STREAM("MOVEMENT: x = " << twistStamped->twist.linear.x << 
                 ", angle z = " << twistStamped->twist.angular.z);
              navi_pub.publish(twistStamped->twist);
         } else {
