@@ -26,7 +26,8 @@ private:
             
     void movement_and_laser_callback(const geometry_msgs::TwistStamped::ConstPtr &twistStamped, 
             const sensor_msgs::LaserScan::ConstPtr &laserScan) {
-        bool safe = false;
+        // TODO: don't do this!
+        bool safe = true;
 
         if (twistStamped->twist.angular.z < laserScan->angle_min || 
                 twistStamped->twist.angular.z > laserScan->angle_max) {

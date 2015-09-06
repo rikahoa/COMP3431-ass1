@@ -41,7 +41,9 @@ public:
         move.linear.x = move.linear.y = move.linear.z = 0;
         move.angular.x = move.angular.y = move.angular.z = 0;
         
-        ROS_INFO_STREAM("target of " << target.first << "," << target.second);
+        ROS_INFO_STREAM("** we are at " << this->get_position().first << "," 
+                << this->get_position().second);
+        ROS_INFO_STREAM("** target of " << target.first << "," << target.second);
 
         // Get the vector to the robot.
         double vy = target.first - this->pose.position.y;
@@ -52,20 +54,19 @@ public:
         // Find the angle to target.
         double target_angle = atan2(vx, vy) - this->get_yaw();
 
-        ROS_INFO_STREAM("atan: " << atan2(vx,vy) << "," "yaw: " << this->get_yaw());
-        ROS_INFO_STREAM("we are at " << this->get_position().first << "," 
-                << this->get_position().second);
-        ROS_INFO_STREAM("angle change of " << distance << " required.");
-        ROS_INFO_STREAM("distance from target is " << distance);
+        ROS_INFO_STREAM("** atan: " << atan2(vx,vy) << "," "yaw: " << this->get_yaw());
+        ROS_INFO_STREAM("** angle change of " << target_angle << " required.");
+        ROS_INFO_STREAM("** distance from target is " << distance);
 
         if (fabs(target_angle) > 0.1) {
             // TODO: Make this better
-            move.angular.z = 2 * target_angle; 
+            move.angular.z = 0.2; 
         } else {
             if (distance > 0.1) {
-                move.linear.x = 0.4;
+                move.linear.x = 0.1;
             }
-        } 
+        }
+        ROS_INFO_STREAM("** movement set to " << move.linear.x << "," << move.angular.z);
     }
 
     double distance(const pair<double, double>& target) const {
@@ -84,7 +85,7 @@ public:
         
         double distance = sqrt(vx*vx + vy*vy);
         double target_angle = atan2(vx, vy) - this->get_yaw();
-        return distance < 0.2 && fabs(target_angle) < 0.1;
+        return distance < 0.1 && fabs(target_angle) < 0.1;
     }
 private:
     geometry_msgs::Pose pose;

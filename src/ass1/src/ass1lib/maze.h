@@ -23,7 +23,7 @@ public:
 
     void set_occupancy_grid(const nav_msgs::OccupancyGrid &og) {
         this->og = og;
-        fatten_neighbours(og);
+        //fatten_neighbours(og);
 
         this->_valid = true;
     }
@@ -45,8 +45,8 @@ public:
                 // as long as one of them matches the previous, we take this path.
                 if (start.first != it->first && start.second != it->second) {
                     real_path.push(this->get_world_pos(*it));
+                    start = *it;
                 }
-                start = *it;
             }
            
             // flush out the back
