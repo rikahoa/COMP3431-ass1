@@ -66,7 +66,7 @@ public:
         double distance = displacement.first;
         double target_angle = displacement.second;
 
-        ROS_INFO_STREAM("** yaw: " << this->get_yaw());
+        ROS_INFO_STREAM("** angle: " << (target_angle + this->get_yaw()) << "yaw: " << this->get_yaw());
         ROS_INFO_STREAM("** angle change of " << target_angle << " required.");
         ROS_INFO_STREAM("** distance from target is " << distance);
 
