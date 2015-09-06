@@ -85,7 +85,7 @@ private:
             cv::Mat hsv, pink_threshold, yellow_threshold, blue_threshold, green_threshold;
             cv::cvtColor(src, hsv, CV_BGR2HSV);
             cv::inRange(hsv, cv::Scalar(130,90,90), cv::Scalar(170,255,255), pink_threshold);
-            cv::inRange(hsv, cv::Scalar(15,50,50), cv::Scalar(30,255,255), yellow_threshold);
+            cv::inRange(hsv, cv::Scalar(20,120,50), cv::Scalar(40,255,255), yellow_threshold);
             cv::inRange(hsv, cv::Scalar(91,50,50), cv::Scalar(120,255,255), blue_threshold);
             cv::inRange(hsv, cv::Scalar(70,20,20), cv::Scalar(90,255,255), green_threshold);
             
@@ -132,14 +132,15 @@ private:
                 double xCo = pink_pt->pt.x;
                 xCo = xCo - 320;
                 // TODO: you might want atan2
-                double theta = atan(xCo*tan(27.5)/320.0);
+                double theta = atan2(xCo*tan(27.5), 320.0);
+		ROS_INFO_STREAM("theta: " << theta);
                 double lTheta = theta - laser->angle_min;
                 int distance_index = lTheta / laser->angle_increment;
                 double distance = laser->ranges[distance_index];
 
-                search_for_match(blue_keypoints.begin(), blue_keypoints.end(), pink_pt, "blue", make_pair(0, 0));
-                search_for_match(yellow_keypoints.begin(), yellow_keypoints.end(), pink_pt, "yellow", make_pair(0, 0));
-                search_for_match(green_keypoints.begin(), green_keypoints.end(), pink_pt, "green", make_pair(0, 0));
+                search_for_match(blue_keypoints.begin(), blue_keypoints.end(), pink_pt, "blue", make_pair(distance, -theta));
+                search_for_match(yellow_keypoints.begin(), yellow_keypoints.end(), pink_pt, "yellow", make_pair(distance, -theta));
+                search_for_match(green_keypoints.begin(), green_keypoints.end(), pink_pt, "green", make_pair(distance, -theta));
             }
 
             // gui display
@@ -155,8 +156,8 @@ private:
                 }
             }
 
-            ROS_INFO_STREAM("Found %d " << count << " of " << beacons.size() << " beacons.");
-            if (found_all) {
+            ROS_INFO_STREAM("Found  " << count << " of " << beacons.size() << " beacons.");
+            if (found_all && this->bot.valid()) {
                 ROS_INFO("Found all beacons");
                 
                 // Send beacon message
@@ -171,7 +172,7 @@ private:
                 }
                 beacons_pub.publish(msg);
 
-                // shutdown subscriptions
+                //shutdown subscriptions
                 img_sub.unsubscribe();
                 laser_sub.unsubscribe();
                 odom_sub.shutdown();
@@ -184,11 +185,18 @@ private:
     }
 
     void found_beacon(string top, string bottom, pair<double, double> position) {
+        double d = position.first;
+        double theta = position.second;
+        pair<double, double> bot_pos = bot.get_position();
+        double beacon_yaw = bot.get_yaw() + theta;
+        double b_x = bot_pos.first + d*cos(beacon_yaw);
+        double b_y = bot_pos.second + d*sin(beacon_yaw);
+        ROS_INFO_STREAM("BOT POS: " << b_x << "," << b_y << "beacon_yaw: " << beacon_yaw << " d: " << d << "robot_yaw " << bot.get_yaw() << "theta: " << theta);
         for (auto it = beacons.begin(); it != beacons.end(); ++it) {
             if (it->top == top && it->bottom == bottom) {
                 it->known_location = true;
-                it->x = position.first;
-                it->y = position.second;
+                it->x = b_x;
+                it->y = b_y;
             }
         }
     }
@@ -202,7 +210,7 @@ private:
             pair<double, double> position) 
     {
         for (auto it = begin; it != end; ++it) {
-            if (std::abs(pink->pt.x - it->pt.y) < PILLAR_THRESHOLD) {
+            if (std::abs(pink->pt.x - it->pt.x) < PILLAR_THRESHOLD) {
                 if (pink->pt.y < it->pt.y) {
                     found_beacon("pink", colour, position); 
                 } else {
