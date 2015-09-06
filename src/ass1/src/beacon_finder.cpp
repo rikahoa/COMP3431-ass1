@@ -132,7 +132,7 @@ private:
                 double xCo = pink_pt->pt.x;
                 xCo = xCo - 320;
                 // TODO: you might want atan2
-                double theta = atan2(xCo*tan(27.5), 320.0);
+                double theta = atan2(xCo*tan(0.48), 320.0);
 		ROS_INFO_STREAM("theta: " << theta);
                 double lTheta = theta - laser->angle_min;
                 int distance_index = lTheta / laser->angle_increment;
