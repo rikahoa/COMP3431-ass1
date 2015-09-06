@@ -77,7 +77,15 @@ public:
     pair<int, int> get_og_pos(const Maze &m) const {
         return m.get_og_pos(make_pair(this->pose.position.x, this->pose.position.y));
     }
-    
+   
+    bool close_enough(const pair<double, double>& target) {
+        double vy = target.first - this->pose.position.y;
+        double vx = target.second - this->pose.position.x;
+        
+        double distance = sqrt(vx*vx + vy*vy);
+        double target_angle = atan2(vx, vy) - this->get_yaw();
+        return distance < 0.2 && fabs(target_angle) < 0.1;
+    }
 private:
     geometry_msgs::Pose pose;
     bool _valid;

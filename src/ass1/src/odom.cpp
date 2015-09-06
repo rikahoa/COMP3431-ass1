@@ -20,9 +20,9 @@ int main(int argc, char *argv[]) {
     while (n.ok()) {
         try {
             nav_msgs::Odometry odom;
-
+            
             ros::Time now = ros::Time::now();
-            if (listener.waitForTransform("/map", "/base_link", now, ros::Duration(0.5))) {
+            if (listener.waitForTransform("/map", "/base_link", now, ros::Duration(1.0))) {
                 listener.lookupTransform("/map", "/base_link", now, transform);
                 odom.header.stamp = transform.stamp_;
                 transformed = true;
@@ -46,9 +46,7 @@ int main(int argc, char *argv[]) {
             }
         } catch (tf::TransformException &ex) {
             // first few attempts will fail...
-            if (transformed) {
-                ROS_ERROR("Clean Odom Transform Exception: %s", ex.what());
-            }
+            ROS_ERROR("Clean Odom Transform Exception: %s", ex.what());
         } 
             
         ros::spinOnce();

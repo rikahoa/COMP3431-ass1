@@ -13,7 +13,7 @@ using namespace std;
 
 class Maze {
 public:
-    Maze() {
+    Maze() : _valid(false) {
     
     }
 
@@ -23,8 +23,13 @@ public:
 
     void set_occupancy_grid(const nav_msgs::OccupancyGrid &og) {
         this->og = og;
-
         fatten_neighbours(og);
+
+        this->_valid = true;
+    }
+
+    bool valid() {
+        return this->_valid;
     }
 
     queue<pair<double, double>> og_to_real_path(const vector<pair<int, int>>& astar_path) const {
@@ -107,6 +112,7 @@ private:
     
     nav_msgs::OccupancyGrid og;   
     static const vector<pair<int, int>> DIRECTIONS;
+    bool _valid;
 };
 
 #endif
