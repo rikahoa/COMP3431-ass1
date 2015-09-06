@@ -12,8 +12,8 @@ void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
     }
 
     queue<pair<pair<int, int>, int>> bfs;
-    for (int y = 0; y < this->og.info.height; ++y) {
-        for (int x = 0; x < this->og.info.width; ++x) {
+    for (int y = 0; y < og.info.height; ++y) {
+        for (int x = 0; x < og.info.width; ++x) {
             if (og.data[y * og.info.height + x] >= 80) {
                 bfs.push(make_pair(make_pair(x, y), 0));
             }
@@ -38,13 +38,15 @@ void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
         seen[y][x] = true;
         set_data(x, y, 100);
 
-        // search all directions
-        for (const auto& dir : Maze::DIRECTIONS) {
-            auto newX = x + dir.first;
-            auto newY = y + dir.second;
-            if (newX >= 0 && newX < og.info.width && newY >= 0 && newY < og.info.height &&
-                    !seen[newY][newX] && distance < FATTEN) {
-                bfs.push(make_pair(make_pair(newX, newY), distance + 1));
+        // Search all directions if not too fat.
+        if (distance < FATTEN) {
+            for (const auto& dir : Maze::DIRECTIONS) {
+                auto newX = x + dir.first;
+                auto newY = y + dir.second;
+                if (newX >= 0 && newX < og.info.width && newY >= 0 && newY < og.info.height &&
+                        !seen[newY][newX]) {
+                    bfs.push(make_pair(make_pair(newX, newY), distance + 1));
+                }
             }
         }
     }
