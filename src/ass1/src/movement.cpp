@@ -33,11 +33,11 @@ private:
         if (twistStamped->twist.linear.x == 0) {
             safe = true;
         } else {
-            double angle_delta = 0.6 - laserScan->angle_min;
-            int delta = angle_delta / laserScan->angle_increment;
+
+
             safe = true;           
-            for (int i = delta; i < delta + 1.2*laserScan->angle_increment;++i) {
-              if (laserScan->ranges[i] < 0.2) {
+            for (auto i = laserScan->ranges.begin(); i!= laserScan->ranges.end(); i++ ) {
+              if (*i < 0.2) {
                 safe = false;            
               }  
             }   
