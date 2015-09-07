@@ -10,7 +10,6 @@
 #include "nav_msgs/Odometry.h"
 #include "ass1/FoundBeacons.h"
 
-// Must travel at least this far.
 #define EXPLORE_THRESHOLD 0.3
 #define CLOSE_ENOUGH 0.1
 

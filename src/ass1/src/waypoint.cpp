@@ -12,10 +12,6 @@
 #include "ass1lib/maze.h"
 #include "ass1lib/bot.h"
 
-// Must travel at least this far.
-#define EXPLORE_THRESHOLD 0.5
-#define CLOSE_ENOUGH 0.1
-
 using namespace std;
 
 typedef message_filters::sync_policies::ApproximateTime<
@@ -108,7 +104,10 @@ private:
                 this->started = true;
             }
 
-            while (!this->path.empty() && this->bot.distance(path.front()) < CLOSE_ENOUGH) {
+            // Populate until next path is found.
+            while (!this->path.empty() && this->bot.close_enough(path.front())) {
+                ROS_INFO_STREAM("close enough to " << path.front().first << "," << 
+                        path.front().second << " ... popping");
                 path.pop();
             }
             
