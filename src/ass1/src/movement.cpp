@@ -30,17 +30,13 @@ private:
             const sensor_msgs::LaserScan::ConstPtr &laserScan) {
         bool safe = false;
 
-        if (twistStamped->twist.angular.z < laserScan->angle_min || 
-                twistStamped->twist.angular.z > laserScan->angle_max) {
+        if (twistStamped->twist.linear.x == 0) {
             safe = true;
         } else {
             double angle_delta = twistStamped->twist.angular.z - laserScan->angle_min;
             int delta = angle_delta / laserScan->angle_increment;
             
-            ROS_DEBUG_STREAM("LaserScan Distance delta: " << delta);
-            ROS_DEBUG_STREAM("LaserScan Distance range[delta]: " << laserScan->ranges[delta]);
-            
-            if (laserScan->ranges[delta] > 0.1) {
+            if (laserScan->ranges[delta] > 0.2) {
                 safe = true;            
             }
         }

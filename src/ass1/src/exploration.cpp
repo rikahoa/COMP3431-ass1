@@ -76,7 +76,12 @@ private:
 
     void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og) {
         this->maze.set_occupancy_grid(*og);
-        map_fatten_pub.publish(this->maze.get_occupancy_grid());
+        // publish for debugging...
+        nav_msgs::OccupancyGrid copy = this->maze.get_occupancy_grid();
+        for (const auto& p : this->og_path) {
+            copy.data[p.second * copy.info.width + p.first] = 100; 
+        }
+        map_fatten_pub.publish(copy);
     }
 
     void recalculate_astar() {
@@ -95,8 +100,10 @@ private:
         }
 
         ROS_INFO_STREAM("Converting into path data.");
-        // Target the frontier in real posinates.
+
+        // Target the frontier in real position.
         this->og_target = og_path.back();
+        this->og_path = og_path; // TODO: remove
         this->path = this->maze.og_to_real_path(og_path);
         this->started = true;
         ROS_INFO_STREAM("Let's find " << og_target.first << "," << og_target.second);
@@ -168,6 +175,7 @@ private:
 
     pair<int, int> og_target;
     queue<pair<double, double>> path;
+    vector<pair<int, int>> og_path;
 };
 
 int main(int argc, char *argv[]) {
