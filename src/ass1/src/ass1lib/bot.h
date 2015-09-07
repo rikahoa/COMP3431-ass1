@@ -41,8 +41,8 @@ public:
 
     pair<double, double> get_displacement(const pair<double,double>& target) const {
         // Get the vector to the robot.
-        double vy = target.first - this->pose.position.y;
-        double vx = target.second - this->pose.position.x;
+        double vy = target.second - this->pose.position.y;
+        double vx = target.first - this->pose.position.x;
         
         double distance = sqrt(vx*vx + vy*vy);
 
