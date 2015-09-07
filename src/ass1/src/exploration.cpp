@@ -9,9 +9,8 @@
 #include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Odometry.h"
 #include "ass1/FoundBeacons.h"
+#include <std_msgs/String.h>
 
-#define EXPLORE_THRESHOLD 0.15
-#define CLOSE_ENOUGH 0.1
 
 using namespace std;
 
@@ -20,38 +19,38 @@ typedef message_filters::sync_policies::ApproximateTime<
 
 class ExplorationState : public State {
 public:
-    ExplorationState(int x, int y, double cost) : 
-        ExplorationState(x, y, cost, make_pair(-1, -1)) {};
+    ExplorationState(int x, int y, double cost, Bot* bot) : 
+        ExplorationState(x, y, cost, make_pair(-1, -1), bot) {};
 
     virtual bool is_goal(const Maze& maze) const override {
         return maze.get_data(this->x, this->y) == -1 &&
-            this->cost >= EXPLORE_THRESHOLD;
+            this->bot->astar_okay(maze.get_world_pos(make_pair(this->x, this->y)));
     }
 
     virtual vector<State*> explore(const Maze& maze, 
             std::function<bool(pair<int,int>)> check) const override {
         vector<State*> new_states;
-        ROS_INFO_STREAM("*** ASTAR EXPLORING " << this->x << "," << this->y << ": " << 
-                maze.get_data(this->x, this->y)); 
         for (const auto &p : State::DIRECTIONS) {
             int x = this->x + p.first;
             int y = this->y + p.second;
-            if (x >= 0 && x < maze.get_width() && 
-                    y >= 0 && y < maze.get_height() && 
-                    check(make_pair(x, y)) &&
-                    maze.get_data(x, y) <= 50) {
-                ROS_INFO_STREAM("*** ASTAR DEBUG " << x << "," << y << " : " 
-                        << this->cost << "," << maze.get_data(x, y));
-                new_states.push_back(
-                        new ExplorationState(x, y, 
-                            this->cost + maze.get_resolution(), this->get_position()));
+
+            // try move places.
+            if (maze.get_data(this->x, this->y) < 80) {
+                if (x >= 0 && x < maze.get_width() && 
+                        y >= 0 && y < maze.get_height() && 
+                        check(make_pair(x, y))) {
+                    new_states.push_back(
+                            new ExplorationState(x, y, 
+                                this->cost + maze.get_resolution(), this->get_position(), this->bot));
+                }
             }
         }
         return new_states;
     }
 private:
-    ExplorationState(int x, int y, double cost, pair<int, int> parent) :
-        State(x, y, cost, parent, 0) {};
+    ExplorationState(int x, int y, double cost, pair<int, int> parent, Bot* bot) :
+        State(x, y, cost, parent, 0), bot(bot) {};
+    Bot* bot;
 };
 
 
@@ -64,6 +63,7 @@ public:
         movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
         beacons_sub = n.subscribe("ass1/beacons", 1, &Exploration::beacon_callback, this);
         odom_sub = n.subscribe("ass1/odom", 1, &Exploration::odom_callback, this);
+        recalc_sub = n.subscribe("ass1/recalc", 1, &Exploration::recalc_callback, this);
         map_sub = n.subscribe("map", 1, &Exploration::map_callback, this);
         map_fatten_pub = n.advertise<nav_msgs::OccupancyGrid>("/ass1/fatten_map", 1);
     }
@@ -78,7 +78,35 @@ private:
         this->maze.set_occupancy_grid(*og);
         map_fatten_pub.publish(this->maze.get_occupancy_grid());
     }
+
+    void recalculate_astar() {
+        // Find current position.
+        auto og_pos = this->bot.get_og_pos(this->maze);
     
+        ROS_INFO_STREAM("Commencing astar.");
+        // Do a A* to the nearest frontier
+        auto og_path = search(this->maze, 
+                new ExplorationState(og_pos.first, og_pos.second, 0, &this->bot));
+        
+        // can't find path!
+        if (og_path.empty()) {
+            ROS_ERROR_STREAM("Empty path to target.");
+            return;
+        }
+
+        ROS_INFO_STREAM("Converting into path data.");
+        // Target the frontier in real posinates.
+        this->og_target = og_path.back();
+        this->path = this->maze.og_to_real_path(og_path);
+        this->started = true;
+        ROS_INFO_STREAM("Let's find " << og_target.first << "," << og_target.second);
+    }
+
+    void recalc_callback(const std_msgs::String::ConstPtr &msg) {
+        ROS_INFO_STREAM("Recalculate whores!");
+        recalculate_astar();
+    }
+
     void odom_callback(const nav_msgs::Odometry::ConstPtr &odom) {
         this->bot.update(odom);
 
@@ -86,27 +114,10 @@ private:
             ROS_INFO_STREAM("~~~~~~~~~~~ move fat bastard! ~~~~~~~~~~");
         
             // Continue while the goal is unknown.
+            ROS_INFO_STREAM("maze getting " << og_target.first << "," << og_target.second 
+                    << ":" << this->maze.get_data(og_target.first, og_target.second));
             if (!started || this->maze.get_data(og_target.first, og_target.second) > -1) {
-                // Find current position.
-                auto og_pos = this->bot.get_og_pos(this->maze);
-            
-                ROS_INFO_STREAM("Commencing astar.");
-                // Do a A* to the nearest frontier
-                auto og_path = search(this->maze, 
-                        new ExplorationState(og_pos.first, og_pos.second, 0));
-                
-                // can't find path!
-                if (og_path.empty()) {
-                    ROS_ERROR_STREAM("Empty path to target.");
-                    return;
-                }
-
-                ROS_INFO_STREAM("Converting into path data.");
-                // Target the frontier in real posinates.
-                this->og_target = og_path.back();
-                this->path = this->maze.og_to_real_path(og_path);
-                this->started = true;
-                ROS_INFO_STREAM("Let's find " << og_target.first << "," << og_target.second);
+                recalculate_astar();
             }
 
             // == REMOVE WHEN DONE
@@ -128,6 +139,7 @@ private:
             // Error checking
             if (path.empty()) {
                 ROS_ERROR_STREAM("Exploration path empty! Cannot move anywhere...");
+                recalculate_astar();
                 return;
             }
 
@@ -138,7 +150,7 @@ private:
             geometry_msgs::TwistStamped move;
             move.header = odom->header;
             this->bot.setup_movement(path.front(), move.twist);
-            //movement_pub.publish(move);
+            movement_pub.publish(move);
         }
     }
 
@@ -150,6 +162,7 @@ private:
     ros::Publisher movement_pub;    
     ros::Publisher map_fatten_pub;
     ros::Subscriber map_sub;
+    ros::Subscriber recalc_sub;
     ros::Subscriber odom_sub;
     ros::Subscriber beacons_sub;
 

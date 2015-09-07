@@ -95,7 +95,13 @@ public:
    
     bool close_enough(const pair<double, double>& target) {
         auto displacement = get_displacement(target);
-        return displacement.first < 0.1 && fabs(displacement.second) < 0.1;
+        return displacement.first < 0.2 && fabs(displacement.second) < 0.1;
+    }
+    
+    bool astar_okay(const pair<double, double>& target) {
+        auto displacement = get_displacement(target);
+        ROS_INFO_STREAM("MY A* CLOSE: " << displacement.first);
+        return displacement.first > 0.3;
     }
 private:
     geometry_msgs::Pose pose;
