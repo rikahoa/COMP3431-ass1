@@ -87,7 +87,7 @@ private:
         this->bot.update(odom);
 
         if (this->maze.valid()) {
-            while (!started || this->bot.distance(to_visit.front()) < CLOSE_ENOUGH) {
+            while (!started || this->bot.close_enough(to_visit.front())) {
                 if (started) {
                     this->to_visit.pop();
                     if (this->to_visit.empty()) {
