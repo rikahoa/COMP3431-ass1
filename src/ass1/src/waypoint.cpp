@@ -12,10 +12,6 @@
 #include "ass1lib/maze.h"
 #include "ass1lib/bot.h"
 
-// Must travel at least this far.
-#define EXPLORE_THRESHOLD 0.5
-#define CLOSE_ENOUGH 0.1
-
 using namespace std;
 
 typedef message_filters::sync_policies::ApproximateTime<
@@ -63,10 +59,7 @@ private:
 
 class Waypoint {
 public:
-    Waypoint(ros::NodeHandle n) : n(n),
-        map_sub(n, "/map", 1), 
-        odom_sub(n, "/ass1/odom", 1), 
-        sync(ApproxPolicy(10), map_sub, odom_sub)
+    Waypoint(ros::NodeHandle n) : n(n), started(false)
     {    
         beacons_sub = n.subscribe("ass1/beacons", 1, &Waypoint::beacon_callback, this);
     }
@@ -76,8 +69,9 @@ private:
         ROS_INFO_STREAM("beacons found!");
 
         // start this shizzle up!
-        sync.registerCallback(boost::bind(&Waypoint::map_callback, this, _1, _2)); 
         movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
+        odom_sub = n.subscribe("ass1/odom", 1, &Waypoint::odom_callback, this);
+        map_sub = n.subscribe("map", 1, &Waypoint::map_callback, this);
 
         for (auto it = msg->positions.begin(); it != msg->positions.end(); ++it) {
             ROS_INFO_STREAM("beacon: " << it->x << "," << it->y);
@@ -85,57 +79,65 @@ private:
         }
     }
 
-    void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og, 
-            const nav_msgs::Odometry::ConstPtr &odom) {
+    void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og) {
         this->maze.set_occupancy_grid(*og);
-        this->bot.update(odom);
-
-        while (!started || this->bot.distance(to_visit.front()) < CLOSE_ENOUGH) {
-            if (started) {
-                this->to_visit.pop();
-                if (this->to_visit.empty()) {
-                    ROS_INFO_STREAM("Waypoint targets found. Shutting down...");
-                    ros::shutdown();
-                }
-            }
-            // recalculate position
-            auto og_pos = this->bot.get_og_pos(this->maze);
-            auto og_path = search(this->maze, 
-                    new WaypointState(og_pos.first, og_pos.second, 0, 0, 
-                        this->maze.get_og_pos(to_visit.front())));
-            this->path = this->maze.og_to_real_path(og_path);
-            this->started = true;
-        }
-
-        while (!this->path.empty() && this->bot.distance(path.front()) < CLOSE_ENOUGH) {
-            path.pop();
-        }
-        
-        if (path.empty()) {
-            ROS_ERROR_STREAM("Exploration path empty! Cannot move anywhere...");
-            return;
-        }
-        
-        ROS_INFO_STREAM("We want to reach " << to_visit.front().first << "," << 
-                to_visit.front().second);
-        // Generate me a move message to target.
-        geometry_msgs::TwistStamped move;
-        move.header = odom->header;
-        this->bot.setup_movement(path.front(), move.twist);
-        movement_pub.publish(move);
     }
 
-    bool started;
+    void odom_callback(const nav_msgs::Odometry::ConstPtr &odom) {
+        this->bot.update(odom);
+
+        if (this->maze.valid()) {
+            while (!started || this->bot.distance(to_visit.front()) < CLOSE_ENOUGH) {
+                if (started) {
+                    this->to_visit.pop();
+                    if (this->to_visit.empty()) {
+                        ROS_INFO_STREAM("Waypoint targets found. Shutting down...");
+                        ros::shutdown();
+                    }
+                }
+                // recalculate position
+                auto og_pos = this->bot.get_og_pos(this->maze);
+                auto og_path = search(this->maze, 
+                        new WaypointState(og_pos.first, og_pos.second, 0, 0, 
+                            this->maze.get_og_pos(to_visit.front())));
+                this->path = this->maze.og_to_real_path(og_path);
+                this->started = true;
+            }
+
+            // Populate until next path is found.
+            while (!this->path.empty() && this->bot.close_enough(path.front())) {
+                ROS_INFO_STREAM("close enough to " << path.front().first << "," << 
+                        path.front().second << " ... popping");
+                path.pop();
+            }
+            
+            if (path.empty()) {
+                ROS_ERROR_STREAM("Exploration path empty! Cannot move anywhere...");
+                return;
+            }
+            
+            ROS_INFO_STREAM("We want to reach " << to_visit.front().first << "," << 
+                    to_visit.front().second);
+
+            // Generate me a move message to target.
+            geometry_msgs::TwistStamped move;
+            move.header = odom->header;
+            this->bot.setup_movement(path.front(), move.twist);
+            movement_pub.publish(move);
+        }
+    }
+
     Maze maze;
     Bot bot;
 
     ros::NodeHandle n;
     ros::Publisher movement_pub;
     ros::Subscriber beacons_sub;
+
+    ros::Subscriber map_sub;
+    ros::Subscriber odom_sub;
     
-    message_filters::Subscriber<nav_msgs::OccupancyGrid> map_sub;
-    message_filters::Subscriber<nav_msgs::Odometry> odom_sub;
-    message_filters::Synchronizer<ApproxPolicy> sync;
+    bool started;
 
     queue<pair<double, double>> to_visit;
     queue<pair<double, double>> path;
