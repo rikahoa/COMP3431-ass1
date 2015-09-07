@@ -79,7 +79,7 @@ private:
         // publish for debugging...
         nav_msgs::OccupancyGrid copy = this->maze.get_occupancy_grid();
         for (const auto& p : this->og_path) {
-            copy.data[p.second * copy.info.width + p.first] = 100; 
+            copy.data[p.second * copy.info.width + p.first] = 50; 
         }
         map_fatten_pub.publish(copy);
     }
@@ -129,6 +129,10 @@ private:
 
             // == REMOVE WHEN DONE
             queue<pair<double,double>> p(this->path);
+            int popCount = 5;
+            while(p.size() > 1 && popCount > 0) {
+                p.pop();
+            }
             while (!p.empty()) {
                 auto s = p.front();
                 p.pop();
