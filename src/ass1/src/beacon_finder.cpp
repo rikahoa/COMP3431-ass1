@@ -130,17 +130,18 @@ private:
             // acceptable horizontal distance between the 2 colours on a pillar
             for (auto pink_pt = pink_keypoints.begin(); pink_pt != pink_keypoints.end(); pink_pt++) {
                 double xCo = pink_pt->pt.x;
-                xCo = xCo - 320;
+                xCo = 320 - xCo;
                 // TODO: you might want atan2
-                double theta = atan2(xCo*tan(0.48), 320.0);
-		ROS_INFO_STREAM("theta: " << theta);
+                double theta = atan2(xCo*tan(29 * M_PI / 180), 320.0);
+		//ROS_INFO_STREAM("theta: " << (theta * 180 / M_PI));
                 double lTheta = theta - laser->angle_min;
                 int distance_index = lTheta / laser->angle_increment;
                 double distance = laser->ranges[distance_index];
-
-                search_for_match(blue_keypoints.begin(), blue_keypoints.end(), pink_pt, "blue", make_pair(distance, -theta));
-                search_for_match(yellow_keypoints.begin(), yellow_keypoints.end(), pink_pt, "yellow", make_pair(distance, -theta));
-                search_for_match(green_keypoints.begin(), green_keypoints.end(), pink_pt, "green", make_pair(distance, -theta));
+                distance = distance - 0.1;
+		//ROS_INFO_STREAM("theta " << (theta * 180 / M_PI) << " distance " << distance);
+                search_for_match(blue_keypoints.begin(), blue_keypoints.end(), pink_pt, "blue", make_pair(distance, theta));
+                search_for_match(yellow_keypoints.begin(), yellow_keypoints.end(), pink_pt, "yellow", make_pair(distance, theta));
+                search_for_match(green_keypoints.begin(), green_keypoints.end(), pink_pt, "green", make_pair(distance, theta));
             }
 
             // gui display
@@ -228,6 +229,7 @@ int main(int argc, char *argv[]) {
     XmlRpc::XmlRpcValue beacons_cfg;
     n.getParam("/beacons", beacons_cfg);
     std::vector<Beacon> beacons;
+    ROS_INFO_STREAM("SPINNING");
 
     try {
         int i = 0;
