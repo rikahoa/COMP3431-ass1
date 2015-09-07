@@ -47,7 +47,7 @@ public:
         double distance = sqrt(vx*vx + vy*vy);
 
         // Find the angle to target.
-        double target_angle = -atan2(vy, vx) - this->get_yaw();
+        double target_angle = atan2(vy, vx) - this->get_yaw();
         target_angle -= static_cast<int>(target_angle / PI) * PI;
 
         return make_pair(distance, target_angle);
@@ -66,15 +66,13 @@ public:
         double distance = displacement.first;
         double target_angle = displacement.second;
 
-        ROS_INFO_STREAM("** angle: " << (target_angle + this->get_yaw()) << "yaw: " << this->get_yaw());
+        ROS_INFO_STREAM("** angle: " << (target_angle + this->get_yaw()) << " yaw: " << this->get_yaw());
         ROS_INFO_STREAM("** angle change of " << target_angle << " required.");
         ROS_INFO_STREAM("** distance from target is " << distance);
 
-        if (target_angle > 0.1) {
+        if (fabs(target_angle) > 0.1) {
             // TODO: Make this better
-            move.angular.z = 0.4; 
-        } else if (target_angle < -0.1) {
-            move.angular.z = -0.4;
+            move.angular.z = 3*target_angle; 
         } else {
             if (distance > 0.1) {
                 move.linear.x = 0.25;
