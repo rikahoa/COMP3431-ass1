@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2015.3.19)  7 SEP 2015 00:06
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2015.3.19)  7 SEP 2015 23:41
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -354,6 +354,40 @@ Package: tabto 2013/03/25  v 1.3  Another tabbing mechanism
 (/usr/local/texlive/2014/texmf-dist/tex/latex/was/gensymb.sty
 Package: gensymb 2003/07/02 v1.0 (WaS)
 )
+(/usr/local/texlive/2014/texmf-dist/tex/latex/listings/listings.sty
+\lst@mode=\count127
+\lst@gtempboxa=\box29
+\lst@token=\toks23
+\lst@length=\count128
+\lst@currlwidth=\dimen137
+\lst@column=\count129
+\lst@pos=\count130
+\lst@lostspace=\dimen138
+\lst@width=\dimen139
+\lst@newlines=\count131
+\lst@lineno=\count132
+\lst@maxwidth=\dimen140
+
+(/usr/local/texlive/2014/texmf-dist/tex/latex/listings/lstmisc.sty
+File: lstmisc.sty 2014/03/04 1.5c (Carsten Heinz)
+\c@lstnumber=\count133
+\lst@skipnumbers=\count134
+\lst@framebox=\box30
+)
+(/usr/local/texlive/2014/texmf-dist/tex/latex/listings/listings.cfg
+File: listings.cfg 2014/03/04 1.5c listings configuration
+))
+Package: listings 2014/03/04 1.5c (Carsten Heinz)
+
+(/usr/local/texlive/2014/texmf-dist/tex/latex/sidecap/sidecap.sty
+Package: sidecap 2003/06/06 v1.6f SideCap Package (RN/HjG)
+\SC@BOXWD=\dimen141
+\SC@CAPWD=\dimen142
+\SC@tempdima=\dimen143
+\SC@tempdimb=\dimen144
+\c@SC@C=\count135
+\SC@BOX=\box31
+)
 (/usr/local/texlive/2014/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
 \fancy@headwidth=\skip52
 \f@ncyO@elh=\skip53
@@ -371,20 +405,20 @@ Package csquotes Info: ... none found.
 (./cs3431_report.aux)
 \openout1 = `cs3431_report.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 24.
-LaTeX Font Info:    ... okay on input line 24.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 24.
-LaTeX Font Info:    ... okay on input line 24.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 24.
-LaTeX Font Info:    ... okay on input line 24.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 24.
-LaTeX Font Info:    ... okay on input line 24.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 24.
-LaTeX Font Info:    ... okay on input line 24.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 24.
-LaTeX Font Info:    ... okay on input line 24.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 24.
-LaTeX Font Info:    ... okay on input line 24.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -422,17 +456,17 @@ LaTeX Font Info:    ... okay on input line 24.
 
 (/usr/local/texlive/2014/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count127
-\scratchdimen=\dimen137
-\scratchbox=\box29
-\nofMPsegments=\count128
-\nofMParguments=\count129
-\everyMPshowfont=\toks23
-\MPscratchCnt=\count130
-\MPscratchDim=\dimen138
-\MPnumerator=\count131
-\makeMPintoPDFobject=\count132
-\everyMPtoPDFconversion=\toks24
+\scratchcounter=\count136
+\scratchdimen=\dimen145
+\scratchbox=\box32
+\nofMPsegments=\count137
+\nofMParguments=\count138
+\everyMPshowfont=\toks24
+\MPscratchCnt=\count139
+\MPscratchDim=\dimen146
+\MPnumerator=\count140
+\makeMPintoPDFobject=\count141
+\everyMPtoPDFconversion=\toks25
 ) (/usr/local/texlive/2014/texmf-dist/tex/latex/oberdiek/epstopdf-base.sty
 Package: epstopdf-base 2010/02/09 v2.5 Base part for package epstopdf
 
@@ -448,8 +482,8 @@ G,.JBIG2,.JB2,.eps]
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-\AtBeginShipoutBox=\box30
-Package hyperref Info: Link coloring OFF on input line 24.
+\AtBeginShipoutBox=\box33
+Package hyperref Info: Link coloring OFF on input line 26.
 
 (/usr/local/texlive/2014/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2012/10/27 v2.43 Cross-referencing by name of section
@@ -457,121 +491,221 @@ Package: nameref 2012/10/27 v2.43 Cross-referencing by name of section
 (/usr/local/texlive/2014/texmf-dist/tex/generic/oberdiek/gettitlestring.sty
 Package: gettitlestring 2010/12/03 v1.4 Cleanup title references (HO)
 )
-\c@section@level=\count133
+\c@section@level=\count142
 )
-LaTeX Info: Redefining \ref on input line 24.
-LaTeX Info: Redefining \pageref on input line 24.
-LaTeX Info: Redefining \nameref on input line 24.
+LaTeX Info: Redefining \ref on input line 26.
+LaTeX Info: Redefining \pageref on input line 26.
+LaTeX Info: Redefining \nameref on input line 26.
 
 (./cs3431_report.out) (./cs3431_report.out)
 \@outlinefile=\write3
 \openout3 = `cs3431_report.out'.
 
-LaTeX Info: Redefining \celsius on input line 24.
-Package gensymb Info: Faking symbols for \degree and \celsius on input line 24.
+LaTeX Info: Redefining \celsius on input line 26.
+Package gensymb Info: Faking symbols for \degree and \celsius on input line 26.
 
 
 
 Package gensymb Warning: Not defining \perthousand.
 
-LaTeX Info: Redefining \ohm on input line 24.
-Package gensymb Info: Using \Omega for \ohm on input line 24.
+LaTeX Info: Redefining \ohm on input line 26.
+Package gensymb Info: Using \Omega for \ohm on input line 26.
 
 Package gensymb Warning: Not defining \micro.
 
-[1
+\c@lstlisting=\count143
+(/usr/local/texlive/2014/texmf-dist/tex/latex/ms/ragged2e.sty
+Package: ragged2e 2009/05/21 v2.1 ragged2e Package (MS)
+
+(/usr/local/texlive/2014/texmf-dist/tex/latex/ms/everysel.sty
+Package: everysel 2011/10/28 v1.2 EverySelectfont Package (MS)
+
+ABD: EverySelectfont initializing macros
+LaTeX Info: Redefining \selectfont on input line 126.
+)
+\CenteringLeftskip=\skip61
+\RaggedLeftLeftskip=\skip62
+\RaggedRightLeftskip=\skip63
+\CenteringRightskip=\skip64
+\RaggedLeftRightskip=\skip65
+\RaggedRightRightskip=\skip66
+\CenteringParfillskip=\skip67
+\RaggedLeftParfillskip=\skip68
+\RaggedRightParfillskip=\skip69
+\JustifyingParfillskip=\skip70
+\CenteringParindent=\skip71
+\RaggedLeftParindent=\skip72
+\RaggedRightParindent=\skip73
+\JustifyingParindent=\skip74
+) [1
 
 {/usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-Underfull \hbox (badness 10000) in paragraph at lines 64--69
+<wallfatten.jpg, id=12, 1480.53125pt x 986.68625pt>
+File: wallfatten.jpg Graphic file (type jpg)
+ <use wallfatten.jpg>
+Package pdftex.def Info: wallfatten.jpg used on input line 73.
+(pdftex.def)             Requested size: 444.16281pt x 296.00815pt.
+
+Overfull \hbox (25.90913pt too wide) in paragraph at lines 73--74
+ [][] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 64--78
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 64--69
+Underfull \hbox (badness 10000) in paragraph at lines 64--78
 
  []
 
+
+Underfull \hbox (badness 10000) in paragraph at lines 64--78
+
+ []
+
+<wallfollowpath.jpg, id=13, 421.575pt x 417.56pt>
+File: wallfollowpath.jpg Graphic file (type jpg)
+ <use wallfollowpath.jpg>
+Package pdftex.def Info: wallfollowpath.jpg used on input line 81.
+(pdftex.def)             Requested size: 168.627pt x 167.02103pt.
+
+<searchpath.jpg, id=14, 421.575pt x 417.56pt>
+File: searchpath.jpg Graphic file (type jpg)
+ <use searchpath.jpg>
+Package pdftex.def Info: searchpath.jpg used on input line 87.
+(pdftex.def)             Requested size: 168.627pt x 167.02103pt.
 pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.72 
-      [1]
-Underfull \hbox (badness 10000) in paragraph at lines 76--79
+l.92 
+      [1] [2 <./wallfatten.jpg> <./wallfollowpath.jpg>]
+Underfull \hbox (badness 10000) in paragraph at lines 96--102
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 83--84
+Underfull \hbox (badness 10000) in paragraph at lines 96--102
 
  []
 
-LaTeX Font Info:    Try loading font information for U+msa on input line 91.
+
+Underfull \hbox (badness 10000) in paragraph at lines 106--107
+
+ []
+
+LaTeX Font Info:    Try loading font information for U+msa on input line 117.
 (/usr/local/texlive/2014/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 91.
+LaTeX Font Info:    Try loading font information for U+msb on input line 117.
 
 (/usr/local/texlive/2014/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-<beacon.jpg, id=16, 1480.53125pt x 986.68625pt>
+<beacon.jpg, id=25, 1480.53125pt x 986.68625pt>
 File: beacon.jpg Graphic file (type jpg)
  <use beacon.jpg>
-Package pdftex.def Info: beacon.jpg used on input line 93.
+Package pdftex.def Info: beacon.jpg used on input line 119.
 (pdftex.def)             Requested size: 444.16281pt x 296.00815pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 86--94
+Underfull \hbox (badness 10000) in paragraph at lines 109--120
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 86--94
+Underfull \hbox (badness 10000) in paragraph at lines 109--120
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 86--94
+Underfull \hbox (badness 10000) in paragraph at lines 109--120
 
  []
 
 
-Overfull \hbox (25.90913pt too wide) in paragraph at lines 86--94
+Underfull \hbox (badness 10000) in paragraph at lines 109--120
+
+ []
+
+
+Overfull \hbox (25.90913pt too wide) in paragraph at lines 109--120
 [] 
  []
 
-[2]
-Underfull \hbox (badness 10000) in paragraph at lines 120--129
+[3 <./searchpath.jpg>] [4 <./beacon.jpg>]
+Underfull \hbox (badness 10000) in paragraph at lines 129--135
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 120--129
+Underfull \hbox (badness 10000) in paragraph at lines 129--135
 
  []
 
-[3 <./beacon.jpg>]
-Underfull \hbox (badness 10000) in paragraph at lines 133--136
+
+Underfull \hbox (badness 10000) in paragraph at lines 129--135
 
  []
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 143.
-[4]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 143.
+[5] (/usr/local/texlive/2014/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2014/03/04 1.5c listings language file
+)
+(/usr/local/texlive/2014/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2014/03/04 1.5c listings language file
+)
+(/usr/local/texlive/2014/texmf-dist/tex/latex/listings/lstmisc.sty
+File: lstmisc.sty 2014/03/04 1.5c (Carsten Heinz)
+)
+Underfull \hbox (badness 10000) in paragraph at lines 150--157
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 150--157
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 150--157
+
+ []
+
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 159.
+
+(/usr/local/texlive/2014/texmf-dist/tex/latex/base/omscmr.fd
+File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <12> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 159.
+ [6]
+Underfull \hbox (badness 10000) in paragraph at lines 189--192
+
+ []
+
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 199.
+[7]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 199.
  (./cs3431_report.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 143.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 143.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 199.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 199.
 Package rerunfilecheck Info: File `cs3431_report.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
  ) 
 Here is how much of TeX's memory you used:
- 8404 strings out of 493117
- 123281 string characters out of 6135433
- 232822 words of memory out of 5000000
- 11734 multiletter control sequences out of 15000+600000
- 9497 words of font info for 36 fonts, out of 8000000 for 9000
+ 10011 strings out of 493117
+ 147152 string characters out of 6135433
+ 280394 words of memory out of 5000000
+ 13278 multiletter control sequences out of 15000+600000
+ 10409 words of font info for 39 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 37i,16n,43p,823b,397s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 37i,11n,60p,823b,1279s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb
 ></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb>
 </usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></
@@ -580,10 +714,10 @@ r/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/l
 ocal/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/lo
 cal/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/loca
 l/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb>
-Output written on cs3431_report.pdf (5 pages, 168474 bytes).
+Output written on cs3431_report.pdf (8 pages, 526994 bytes).
 PDF statistics:
- 70 PDF objects out of 1000 (max. 8388607)
- 53 compressed objects within 1 object stream
- 12 named destinations out of 1000 (max. 500000)
- 6 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 117 PDF objects out of 1000 (max. 8388607)
+ 94 compressed objects within 1 object stream
+ 38 named destinations out of 1000 (max. 500000)
+ 21 words of extra memory for PDF output out of 10000 (max. 10000000)
 
