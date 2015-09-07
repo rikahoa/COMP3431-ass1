@@ -10,7 +10,7 @@
 #include "nav_msgs/Odometry.h"
 #include "ass1/FoundBeacons.h"
 
-#define EXPLORE_THRESHOLD 0.3
+#define EXPLORE_THRESHOLD 0.15
 #define CLOSE_ENOUGH 0.1
 
 using namespace std;
@@ -136,7 +136,7 @@ private:
             geometry_msgs::TwistStamped move;
             move.header = odom->header;
             this->bot.setup_movement(path.front(), move.twist);
-            movement_pub.publish(move);
+            //movement_pub.publish(move);
         }
     }
 
