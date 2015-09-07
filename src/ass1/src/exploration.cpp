@@ -65,6 +65,7 @@ public:
         beacons_sub = n.subscribe("ass1/beacons", 1, &Exploration::beacon_callback, this);
         odom_sub = n.subscribe("ass1/odom", 1, &Exploration::odom_callback, this);
         map_sub = n.subscribe("map", 1, &Exploration::map_callback, this);
+        map_fatten_pub = n.advertise<nav_msgs::OccupancyGrid>("/ass1/fatten_map", 1);
     }
 
 private:
@@ -75,6 +76,7 @@ private:
 
     void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og) {
         this->maze.set_occupancy_grid(*og);
+        map_fatten_pub.publish(this->maze.get_occupancy_grid());
     }
     
     void odom_callback(const nav_msgs::Odometry::ConstPtr &odom) {
@@ -145,7 +147,8 @@ private:
     Bot bot;
 
     ros::NodeHandle n;
-    ros::Publisher movement_pub;
+    ros::Publisher movement_pub;    
+    ros::Publisher map_fatten_pub;
     ros::Subscriber map_sub;
     ros::Subscriber odom_sub;
     ros::Subscriber beacons_sub;
