@@ -100,7 +100,6 @@ public:
     
     bool astar_okay(const pair<double, double>& target) {
         auto displacement = get_displacement(target);
-        ROS_INFO_STREAM("MY A* CLOSE: " << displacement.first);
         return displacement.first > 0.3;
     }
 private:

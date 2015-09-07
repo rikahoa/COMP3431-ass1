@@ -40,7 +40,7 @@ private:
             ROS_DEBUG_STREAM("LaserScan Distance delta: " << delta);
             ROS_DEBUG_STREAM("LaserScan Distance range[delta]: " << laserScan->ranges[delta]);
             
-            if (laserScan->ranges[delta] > 0.25) {
+            if (laserScan->ranges[delta] > 0.1) {
                 safe = true;            
             }
         }
