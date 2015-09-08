@@ -70,6 +70,8 @@ public:
         recalc_sub = n.subscribe("ass1/recalc", 1, &Exploration::recalc_callback, this);
         map_sub = n.subscribe("map", 1, &Exploration::map_callback, this);
         map_fatten_pub = n.advertise<nav_msgs::OccupancyGrid>("/ass1/map", 1);
+
+        n.getParam("fatten", fatten_value);
     }
 
 private:
@@ -181,7 +183,8 @@ private:
     bool started;
     bool spin;
     double spin_yaw;
-    Maze maze;
+    int fatten_value;
+    Maze maze{fatten_value};
     Bot bot;
 
     ros::NodeHandle n;
