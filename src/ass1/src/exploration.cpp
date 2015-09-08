@@ -137,7 +137,8 @@ private:
                     << ":" << this->maze.get_data(og_target.first, og_target.second));
             
             // Continue while the goal is unknown.
-            if (!started || this->maze.get_data(og_target.first, og_target.second) > -1) {
+            //if (!started || this->maze.get_data(og_target.first, og_target.second) > -1) {
+            if (!started || path.empty() || this->bot.close_enough(path.back())) {
                 if (!recalculate_astar()) {
                     unstuck_pub.publish(move);
                 }
