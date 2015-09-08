@@ -124,7 +124,6 @@ private:
             cv::inRange(hsv, cv::Scalar(yellow_ranges[0],yellow_ranges[2],yellow_ranges[3]), cv::Scalar(yellow_ranges[1],355,355), yellow_threshold);
             cv::inRange(hsv, cv::Scalar(blue_ranges[0],blue_ranges[2],blue_ranges[3]), cv::Scalar(blue_ranges[1],355,355), blue_threshold);
             cv::inRange(hsv, cv::Scalar(green_ranges[0],green_ranges[2],green_ranges[3]), cv::Scalar(green_ranges[1],355,355), green_threshold);
-
             blue_threshold = cv::Scalar::all(255) - blue_threshold;
             pink_threshold = cv::Scalar::all(255) - pink_threshold;
             yellow_threshold = cv::Scalar::all(255) - yellow_threshold;
@@ -173,7 +172,7 @@ private:
                 double lTheta = theta - laser->angle_min;
                 int distance_index = lTheta / laser->angle_increment;
                 double distance = laser->ranges[distance_index];
-                if( !std::isfinite(distance) && !std::isfinite(theta) ) { 
+                if( std::isfinite(distance) && std::isfinite(theta) ) { 
                     distance = distance - 0.1;
             //ROS_INFO_STREAM("theta " << (theta * 180 / M_PI) << " distance " << distance);
                     search_for_match(blue_keypoints.begin(), blue_keypoints.end(), pink_pt, "blue", make_pair(distance, theta));
