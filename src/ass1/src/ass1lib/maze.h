@@ -13,9 +13,9 @@ using namespace std;
 
 class Maze {
 public:
-    Maze() : _valid(false) {
-    
-    }
+    Maze() : _valid(false) {}
+
+    Maze(int fatten_value) : fatten_value(fatten_value), _valid(false) {}
 
     const nav_msgs::OccupancyGrid& get_occupancy_grid() const {
         return this->og;
@@ -173,6 +173,7 @@ private:
     nav_msgs::OccupancyGrid og;   
     static const vector<pair<int, int>> DIRECTIONS;
     bool _valid;
+    int fatten_value;
 };
 
 #endif
