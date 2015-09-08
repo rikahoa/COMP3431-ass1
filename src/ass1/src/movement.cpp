@@ -111,7 +111,7 @@ private:
 
         geometry_msgs::Twist move;
         move.linear.y = 0;        
-        move.linear.x = this->unstuck_x_movement;
+        move.linear.x = 0;
         move.linear.z = 0;
 
         move.angular.x = 0;
@@ -120,7 +120,9 @@ private:
         
         if (fabs(minangle) > this->unstuck_angle_threshold) {
             move.angular.z = std::max(-0.6, std::min(0.6, -this->unstuck_angle_multiplier*minangle));
-        } 
+        } else {
+            move.linear.x = this->unstuck_x_movement;
+        }
             
         ROS_INFO_STREAM("UNSTUCK: moving " << move.linear.x << "," << move.angular.z << "...");
         navi_pub.publish(move);
