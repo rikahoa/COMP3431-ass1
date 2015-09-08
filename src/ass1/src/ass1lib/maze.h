@@ -56,78 +56,83 @@ public:
       
     }
     
-    static double distance_line_point(pair<pair<double,double>,pair<double,double>> line, pair<double,double> p0) {
+    static double distance_line_point(
+            pair<pair<double,double>, pair<double,double>> line, 
+            pair<double,double> p0) 
+    {
         pair<double,double> p1 = line.first;
+        double x1 = p1.first;
+        double y1 = p1.second;
         pair<double,double> p2 = line.second;
+        double x2 = p2.first;
+        double y2 = p2.second;
+        double x0 = p0.first;
+        double y0 = p0.second;
 
-        return  fabs((p2.second - p1.second)*p0.first - (p2.first - p1.first)*p0.second + p2.first*p1.second - p2.second*p1.first)/sqrt((p2.second-p1.second)*(p2.second-p1.second) - (p2.first-p1.first)*(p2.first-p1.first));
+        return fabs((y2-y1) * x0 - (x2-x1)*y0 + x2*y1 - y2*x1) / 
+            sqrt((y2-y1)*(y2-y1) + (x2-x1)*(x2-x1));
     }
     
-    static vector<pair<double,double>> rdp_simplify(vector<pair<double, double>> in, double threshold) {
+    static vector<pair<double,double>> rdp_simplify(
+            vector<pair<double, double>> in, 
+            double threshold) 
+    {
         vector<pair<double, double>> out;
         if (in.size() > 2) {
-            //
-            //  Find the vertex farthest from the line defined by the start and and of the path
-            //
+            // Find the vertex farthest from the line defined by the start and and of the path
+            double max_dist = 0;
+            size_t max_dist_i = 0;      
 
-            double maxDist = 0;
-            size_t maxDistIndex = 0;      
-            pair<pair<double,double>,pair<double,double>> line = make_pair( *in.begin(), *(in.end()-1));
-
-            for ( size_t i = 0;i < in.size(); i++ )
-            {
+            pair<pair<double,double>,pair<double,double>> line = make_pair(in.front(), in.back());
+    
+            for (size_t i = 0; i < in.size(); i++) {
                 double dist = distance_line_point(line, in[i]);
-                if ( dist > maxDist )
-                {
-                    maxDist = dist;
-                    maxDistIndex = i;
+                if (dist > max_dist) {
+                    max_dist = dist;
+                    max_dist_i = i;
                 }
             }
 
-
-            //
-            //  If the farthest vertex is greater than our threshold, we need to
-            //  partition and optimize left and right separately
-            //
-
-            if ( maxDist > threshold ) {
-                //
-                //  Partition 'in' into left and right subvectors, and optimize them
-                //
-
+            // If the farthest vertex is greater than our threshold, we need to
+            // partition and optimize left and right separately
+            if (max_dist > threshold) {
+                // Partition 'in' into left and right subvectors, and optimize them
                 vector<pair<double, double>> left;
                 vector<pair<double, double>> right;
                 
-                for ( size_t i = 0; i < maxDistIndex + 1; i++ ) left.push_back( in[i] );
-                for ( size_t i = maxDistIndex; i < in.size(); i++ ) right.push_back( in[i] );
+                for (size_t i = 0; i < max_dist_i + 1; i++) {
+                    left.push_back(in[i]);
+                }
+                for (size_t i = max_dist_i; i < in.size(); i++) { 
+                    right.push_back(in[i]);
+                }
 
-
-                vector<pair<double, double>> leftSimplified = rdp_simplify(left, threshold );
+                vector<pair<double, double>> leftSimplified = rdp_simplify(left, threshold);
                 vector<pair<double, double>> rightSimplified = rdp_simplify(right, threshold);
 
-                //
-                //  Stitch optimized left and right into 'out'
-                //
-
+                // Stitch optimized left and right into 'out'
                 out.clear();
-                for ( size_t i = 0; i < leftSimplified.size(); i++ ) out.push_back(leftSimplified[i]);
-                for ( size_t i = 1; i < rightSimplified.size(); i++ ) out.push_back( rightSimplified[i] );
+                for (size_t i = 0; i < leftSimplified.size(); i++) {
+                    out.push_back(leftSimplified[i]);
+                }
+                for (size_t i = 1; i < rightSimplified.size(); i++) {
+                    out.push_back(rightSimplified[i]);
+                }
             } else  {
-                out.push_back( line.first );
-                out.push_back( line.second );
+                out.push_back(line.first);
+                out.push_back(line.second);
             }
             return out;
         } else {
             return in;
         }
-
     }    
     
-
     void rviz(
             ros::Publisher& pub, 
             const vector<pair<int,int>>& points, 
-            const vector<pair<double,double>>& real_points) {
+            const vector<pair<double,double>>& real_points) 
+    {
         nav_msgs::OccupancyGrid copy = this->og;
         for (const auto& p : points) {
             copy.data[p.second * copy.info.width + p.first] = 50; 

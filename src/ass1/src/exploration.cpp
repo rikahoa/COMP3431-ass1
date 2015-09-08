@@ -130,7 +130,7 @@ private:
             move.header = odom->header;
 
             // check for spinning
-            if (this->spin) {
+            /*if (this->spin) {
                 if (fabs(this->bot.get_yaw() - spin_yaw) > 0.1) {
                     ROS_INFO_STREAM("~~~~~~~~~~~ spin fat bastard! ~~~~~~~~~~");
                     this->bot.setup_spin(move.twist, fabs(this->bot.get_yaw() - spin_yaw));
@@ -138,7 +138,7 @@ private:
                     return;
                 }
                 this->spin = false;
-            }
+            }*/
 
             ROS_INFO_STREAM("~~~~~~~~~~~ move fat bastard! ~~~~~~~~~~");
             ROS_DEBUG_STREAM("maze getting " << og_target.first << "," << og_target.second 
