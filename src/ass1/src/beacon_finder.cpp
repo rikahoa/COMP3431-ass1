@@ -87,7 +87,7 @@ private:
             cv::inRange(hsv, cv::Scalar(130,90,90), cv::Scalar(170,255,255), pink_threshold);
             cv::inRange(hsv, cv::Scalar(20,120,50), cv::Scalar(40,255,255), yellow_threshold);
             cv::inRange(hsv, cv::Scalar(91,50,50), cv::Scalar(120,255,255), blue_threshold);
-            cv::inRange(hsv, cv::Scalar(70,20,20), cv::Scalar(90,255,255), green_threshold);
+            cv::inRange(hsv, cv::Scalar(70,140,80), cv::Scalar(100,255,255), green_threshold);
             
             blue_threshold = cv::Scalar::all(255) - blue_threshold;
             pink_threshold = cv::Scalar::all(255) - pink_threshold;
@@ -137,11 +137,13 @@ private:
                 double lTheta = theta - laser->angle_min;
                 int distance_index = lTheta / laser->angle_increment;
                 double distance = laser->ranges[distance_index];
-                distance = distance - 0.1;
-		//ROS_INFO_STREAM("theta " << (theta * 180 / M_PI) << " distance " << distance);
-                search_for_match(blue_keypoints.begin(), blue_keypoints.end(), pink_pt, "blue", make_pair(distance, theta));
-                search_for_match(yellow_keypoints.begin(), yellow_keypoints.end(), pink_pt, "yellow", make_pair(distance, theta));
-                search_for_match(green_keypoints.begin(), green_keypoints.end(), pink_pt, "green", make_pair(distance, theta));
+                if( !std::isfinite(distance) && !std::isfinite(theta) ) { 
+                    distance = distance - 0.1;
+            //ROS_INFO_STREAM("theta " << (theta * 180 / M_PI) << " distance " << distance);
+                    search_for_match(blue_keypoints.begin(), blue_keypoints.end(), pink_pt, "blue", make_pair(distance, theta));
+                    search_for_match(yellow_keypoints.begin(), yellow_keypoints.end(), pink_pt, "yellow", make_pair(distance, theta));
+                    search_for_match(green_keypoints.begin(), green_keypoints.end(), pink_pt, "green", make_pair(distance, theta));
+                }
             }
 
             // gui display
@@ -153,6 +155,7 @@ private:
                 if (!it->found()) {
                     found_all = false;
                 } else {
+                    ROS_INFO_STREAM("Found T: " << it->top << " B: " << it->bottom << " at " << it->x << " " << it->y);
                     count++;
                 }
             }

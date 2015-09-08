@@ -5,13 +5,8 @@
                 top:    "pink"
                 bottom: "yellow"
             beacon1:
-                top:    "pink"
-                bottom: "green"
-            beacon2:
-                top:    "pink"
-                bottom: "blue"
-            beacon3:
-                top:    "blue"
+                top:    "green"
                 bottom: "pink"
     </rosparam>
+    <node name="beacon_finder" pkg="ass1" type="beacon_finder" output="screen" />
 </launch>
