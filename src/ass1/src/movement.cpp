@@ -7,6 +7,8 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <sensor_msgs/LaserScan.h>
 
+#include <algorithm>
+
 typedef message_filters::sync_policies::ApproximateTime
     <geometry_msgs::TwistStamped, sensor_msgs::LaserScan> ApproxTwistLaserPolicy;
 
@@ -104,7 +106,6 @@ private:
 
         float minangle = msg->angle_min + minindex * msg->angle_increment;
 
-        
         ROS_DEBUG_STREAM("min=" << *it << ",minindex=" << 
                 minindex << ",minangle=" << minangle);
 
@@ -118,9 +119,10 @@ private:
         move.angular.z = 0;
         
         if (fabs(minangle) > this->unstuck_angle_threshold) {
-            move.angular.z = -this->unstuck_angle_multiplier*minangle;
+            move.angular.z = std::max(-0.6, std::min(0.6, -this->unstuck_angle_multiplier*minangle));
         } 
-             
+            
+        ROS_INFO_STREAM("UNSTUCK: moving " << move.linear.x << "," << move.angular.z << "...");
         navi_pub.publish(move);
     }
 };
