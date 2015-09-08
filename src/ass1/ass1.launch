@@ -13,10 +13,10 @@
     </node>
 
     <node name="movement" pkg="ass1" type="movement" output="screen">
-         <rosparam>safe_range: 0.18</rosparam>
-         <rosparam>unstuck_x_movement: -0.15</rosparam>
-         <rosparam>unstuck_angle_threshold: 0.2</rosparam>
-         <rosparam>unstuck_angle_multiplier: 2</rosparam>
+        <param name="safe_range" value="0.18" />
+        <param name="unstuck_x_movement" value="-0.15" />
+        <param name="unstuck_angle_threshold" value="0.2" />
+        <param name="unstuck_angle_multiplier" value="2" />
     </node>
     <!-- <node name="waypoint" pkg="ass1" type="waypoint" output="screen" /> -->
     <node name="odom" pkg="ass1" type="odom" output="screen" />
