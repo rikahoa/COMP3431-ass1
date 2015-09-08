@@ -29,7 +29,7 @@ typedef message_filters::sync_policies::
 class Beacon {
 public:
     Beacon(string top, string bottom) : 
-        x(0), y(0), known_location(false), top(top), bottom(bottom) {
+        x(0), y(0), known_location(false), top(top), bottom(bottom), h_hi(h_hi), h_lo(h_lo), s(s), v(v) {
         ROS_INFO_STREAM("Looking for beacon top=" << top << ",bottom=" << bottom);
     }
     bool found() { return known_location; }
@@ -37,13 +37,16 @@ public:
     double x, y;
     bool known_location;
     string top, bottom;
+    int h_hi, h_lo, s, v;
     // COLOURS
 };
 
 
+
+
 class BeaconFinder {
 public:
-    BeaconFinder(ros::NodeHandle n, vector<Beacon> beacons) : n(n),
+    BeaconFinder(ros::NodeHandle n, vector<Beacon> beacons) : n(n), pnh("~"),
         beacons(beacons),
         img_sub(n, "/camera/rgb/image_color", 1),
         laser_sub(n, "/scan", 1),
@@ -54,13 +57,41 @@ public:
 
         // Use ApproximateTime message_filter to read both kinect image and laser.
         sync.registerCallback(boost::bind(&BeaconFinder::image_callback, this, _1, _2));
+
+        // Get colours from params
+
+        XmlRpc::XmlRpcValue colour_thresholds;
+        n.getParam("/beacon_finder/colour_ranges/pink", colour_thresholds);
+        pink_ranges[0] = (int)colour_thresholds["h_lo"];
+        pink_ranges[1] = (int)colour_thresholds["h_hi"];
+        pink_ranges[2] = (int)colour_thresholds["s"];
+        pink_ranges[3] = (int)colour_thresholds["v"];
+        for( int i=0; i < 4; i++ ) {
+            ROS_INFO("PINK %i = %d", i, pink_ranges[i] );
+        }
+        n.getParam("/beacon_finder/colour_ranges/blue", colour_thresholds);
+        blue_ranges[0] = (int)colour_thresholds["h_lo"];
+        blue_ranges[1] = (int)colour_thresholds["h_hi"];
+        blue_ranges[2] = (int)colour_thresholds["s"];
+        blue_ranges[3] = (int)colour_thresholds["v"];
+        n.getParam("/beacon_finder/colour_ranges/green", colour_thresholds);
+        green_ranges[0] = (int)colour_thresholds["h_lo"];
+        green_ranges[1] = (int)colour_thresholds["h_hi"];
+        green_ranges[2] = (int)colour_thresholds["s"];
+        green_ranges[3] = (int)colour_thresholds["v"];
+        n.getParam("/beacon_finder/colour_ranges/yellow", colour_thresholds);
+        yellow_ranges[0] = (int)colour_thresholds["h_lo"];
+        yellow_ranges[1] = (int)colour_thresholds["h_hi"];
+        yellow_ranges[2] = (int)colour_thresholds["s"];
+        yellow_ranges[3] = (int)colour_thresholds["v"];
+
    }
 
 private:
     ros::NodeHandle n;
+    ros::NodeHandle pnh;
     vector<Beacon> beacons;
     Bot bot;
-
     message_filters::Subscriber<sensor_msgs::Image> img_sub;
     message_filters::Subscriber<sensor_msgs::LaserScan> laser_sub;
 
@@ -68,6 +99,11 @@ private:
     ros::Subscriber odom_sub;
 
     message_filters::Synchronizer<SyncPolicy> sync;
+
+    int pink_ranges[4];
+    int blue_ranges[4];
+    int green_ranges[4];
+    int yellow_ranges[4];
 
     void odom_callback(const nav_msgs::Odometry::ConstPtr& msg) {
         this->bot.update(msg);
@@ -82,20 +118,15 @@ private:
             cv::Mat src = cv_ptr->image;
 
             // Take hsv ranges from launch
-            XmlRpc::XmlRpcValue colour_ranges;
 
             // OpenCV filters to find colours
             cv::Mat hsv, pink_threshold, yellow_threshold, blue_threshold, green_threshold;
             cv::cvtColor(src, hsv, CV_BGR2HSV);
-            n.getParam("/colour_ranges/pink", colour_ranges);
-            cv::inRange(hsv, cv::Scalar(colour_ranges["h_low"],colour_ranges["s"],colour_ranges["v"]), cv::Scalar(colour_ranges["h_hi"],255,255), pink_threshold);
-            n.getParam("/colour_rangess/yellow", colour_ranges);
-            cv::inRange(hsv, cv::Scalar(colour_ranges["h_low"],colour_ranges["s"],colour_ranges["v"]), cv::Scalar(colour_ranges["h_hi"],255,255), yellow_threshold);
-            n.getParam("/colour_rangess/blue", colour_ranges);
-            cv::inRange(hsv, cv::Scalar(colour_ranges["h_low"],colour_ranges["s"],colour_ranges["v"]), cv::Scalar(colour_ranges["h_hi"],255,255), blue_threshold);
-            n.getParam("/colour_rangess/green", colour_ranges);
-            cv::inRange(hsv, cv::Scalar(colour_ranges["h_low"],colour_ranges["s"],colour_ranges["v"]), cv::Scalar(colour_ranges["h_hi"],255,255), green_threshold);
 
+            cv::inRange(hsv, cv::Scalar(pink_ranges[0],pink_ranges[2],pink_ranges[3]), cv::Scalar(pink_ranges[1],355,355), pink_threshold);
+            cv::inRange(hsv, cv::Scalar(yellow_ranges[0],yellow_ranges[2],yellow_ranges[3]), cv::Scalar(yellow_ranges[1],355,355), yellow_threshold);
+            cv::inRange(hsv, cv::Scalar(blue_ranges[0],blue_ranges[2],blue_ranges[3]), cv::Scalar(blue_ranges[1],355,355), blue_threshold);
+            cv::inRange(hsv, cv::Scalar(green_ranges[0],green_ranges[2],green_ranges[3]), cv::Scalar(green_ranges[1],355,355), green_threshold);
             blue_threshold = cv::Scalar::all(255) - blue_threshold;
             pink_threshold = cv::Scalar::all(255) - pink_threshold;
             yellow_threshold = cv::Scalar::all(255) - yellow_threshold;
@@ -144,7 +175,7 @@ private:
                 double lTheta = theta - laser->angle_min;
                 int distance_index = lTheta / laser->angle_increment;
                 double distance = laser->ranges[distance_index];
-                if( !std::isfinite(distance) && !std::isfinite(theta) ) { 
+                if( std::isfinite(distance) && std::isfinite(theta) ) { 
                     distance = distance - 0.1;
             //ROS_INFO_STREAM("theta " << (theta * 180 / M_PI) << " distance " << distance);
                     search_for_match(blue_keypoints.begin(), blue_keypoints.end(), pink_pt, "blue", make_pair(distance, theta));
@@ -242,9 +273,12 @@ int main(int argc, char *argv[]) {
     std::vector<Beacon> beacons;
     ROS_INFO_STREAM("SPINNING");
 
+
+
     try {
         int i = 0;
         do {
+           
             char beacon_name[256];
             sprintf(beacon_name, "beacon%d", i);
             if (!beacons_cfg.hasMember(beacon_name)) {
@@ -255,9 +289,9 @@ int main(int argc, char *argv[]) {
             if (!(beacon_cfg.hasMember("top") && beacon_cfg.hasMember("bottom"))) {
                 continue;
             }
-
             beacons.push_back(Beacon((string) beacon_cfg["top"], (string) beacon_cfg["bottom"]));
         } while ((++i) != 0);
+
     } catch (XmlRpc::XmlRpcException& e) {
         ROS_ERROR("Unable to parse beacon parameter. (%s)", e.getMessage().c_str());
     }

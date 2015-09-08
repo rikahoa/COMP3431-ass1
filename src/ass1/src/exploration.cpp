@@ -65,7 +65,7 @@ public:
         pnh("~")
     {
         movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
-        unstuck_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/unstuck", 1);
+        unstuck_pub = n.advertise<std_msgs::String>("/ass1/stuck", 1);
         beacons_sub = n.subscribe("ass1/beacons", 1, &Exploration::beacon_callback, this);
         odom_sub = n.subscribe("ass1/odom", 1, &Exploration::odom_callback, this);
         recalc_sub = n.subscribe("ass1/recalc", 1, &Exploration::recalc_callback, this);
@@ -148,7 +148,9 @@ private:
             //if (!started || this->maze.get_data(og_target.first, og_target.second) > -1) {
             if (!started || path.empty() || this->bot.close_enough(path.back())) {
                 if (!recalculate_astar()) {
-                    unstuck_pub.publish(move);
+                    std_msgs::String result;
+                    result.data = "Bob";
+                    unstuck_pub.publish(result);
                 }
             }
 
@@ -172,7 +174,9 @@ private:
             if (path.empty()) {
                 ROS_WARN_STREAM("Exploration path empty! Cannot move anywhere...");
                 if (!recalculate_astar()) {
-                    unstuck_pub.publish(move);
+                    std_msgs::String result;
+                    result.data = "Bob";
+                    unstuck_pub.publish(result);
                 }
                 return;
             }
