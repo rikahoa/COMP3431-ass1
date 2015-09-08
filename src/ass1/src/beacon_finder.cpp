@@ -66,6 +66,9 @@ public:
         pink_ranges[1] = (int)colour_thresholds["h_hi"];
         pink_ranges[2] = (int)colour_thresholds["s"];
         pink_ranges[3] = (int)colour_thresholds["v"];
+        for( int i=0; i < 4; i++ ) {
+            ROS_INFO("PINK %i = %d", i, pink_ranges[i] );
+        }
         n.getParam("/beacon_finder/colour_ranges/blue", colour_thresholds);
         blue_ranges[0] = (int)colour_thresholds["h_lo"];
         blue_ranges[1] = (int)colour_thresholds["h_hi"];
