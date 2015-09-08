@@ -77,6 +77,7 @@ public:
         } else {
             ROS_INFO("Got fatten param");
         }
+        maze = Maze{fatten_value};
     }
 
 private:
@@ -189,7 +190,7 @@ private:
     bool spin;
     double spin_yaw;
     int fatten_value;
-    Maze maze{fatten_value};
+    Maze maze;
     Bot bot;
 
     ros::NodeHandle n;
