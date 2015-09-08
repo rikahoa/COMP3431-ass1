@@ -192,7 +192,8 @@ private:
         double beacon_yaw = bot.get_yaw() + theta;
         double b_x = bot_pos.first + d*cos(beacon_yaw);
         double b_y = bot_pos.second + d*sin(beacon_yaw);
-        ROS_INFO_STREAM("BOT POS: " << b_x << "," << b_y << "beacon_yaw: " << beacon_yaw << " d: " << d << "robot_yaw " << bot.get_yaw() << "theta: " << theta);
+        ROS_DEBUG_STREAM("BOT POS: " << b_x << "," << b_y << "beacon_yaw: " << 
+                beacon_yaw << " d: " << d << "robot_yaw " << bot.get_yaw() << "theta: " << theta);
         for (auto it = beacons.begin(); it != beacons.end(); ++it) {
             if (it->top == top && it->bottom == bottom) {
                 it->known_location = true;

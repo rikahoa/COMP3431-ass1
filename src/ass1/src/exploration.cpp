@@ -59,6 +59,8 @@ class Exploration {
 public:
     Exploration(ros::NodeHandle n) : 
         started(false),
+        spin(true),
+        spin_yaw(-0.11),
         n(n)
     {
         movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
@@ -114,12 +116,27 @@ private:
         this->bot.update(odom);
 
         if (this->maze.valid()) {
+            geometry_msgs::TwistStamped move;
+            move.header = odom->header;
+
+            // check for spinning
+            if (this->spin) {
+                if (fabs(this->bot.get_yaw() - spin_yaw) > 0.1) {
+                    ROS_INFO_STREAM("~~~~~~~~~~~ spin fat bastard! ~~~~~~~~~~");
+                    this->bot.setup_spin(move.twist);
+                    movement_pub.publish(move);
+                    return;
+                }
+                this->spin = false;
+            }
+
             ROS_INFO_STREAM("~~~~~~~~~~~ move fat bastard! ~~~~~~~~~~");
         
             // Continue while the goal is unknown.
-            ROS_INFO_STREAM("maze getting " << og_target.first << "," << og_target.second 
+            ROS_DEBUG_STREAM("maze getting " << og_target.first << "," << og_target.second 
                     << ":" << this->maze.get_data(og_target.first, og_target.second));
-            if (!started || this->maze.get_data(og_target.first, og_target.second) > -1) {
+            //if (!started || this->maze.get_data(og_target.first, og_target.second) > -1) {
+            if (!started || this->bot.close_enough(path.back())) {
                 recalculate_astar();
             }
 
@@ -146,18 +163,18 @@ private:
                 return;
             }
 
-            ROS_INFO_STREAM("We need to know " << og_target.first << "," << og_target.second << 
+            ROS_DEBUG_STREAM("We need to know " << og_target.first << "," << og_target.second << 
                     " (world pos " << path.back().first << "," << path.back().second << ")");
             
             // Generate me a move message to target.
-            geometry_msgs::TwistStamped move;
-            move.header = odom->header;
             this->bot.setup_movement(path.front(), move.twist);
             movement_pub.publish(move);
         }
     }
 
     bool started;
+    bool spin;
+    double spin_yaw;
     Maze maze;
     Bot bot;
 

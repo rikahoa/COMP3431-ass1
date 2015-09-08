@@ -54,6 +54,12 @@ public:
     }
 
     // Sets up a valid movement twist.
+    void setup_spin(geometry_msgs::Twist& move) {
+        move.linear.x = move.linear.y = move.linear.z = 0;
+        move.angular.x = move.angular.y = 0;
+        move.angular.z = 0.8;
+    }
+
     void setup_movement(const pair<double,double>& target, geometry_msgs::Twist& move) {
         move.linear.x = move.linear.y = move.linear.z = 0;
         move.angular.x = move.angular.y = move.angular.z = 0;
@@ -78,7 +84,7 @@ public:
             move.angular.z = -0.4;
         } else {
             if (distance > 0.1) {
-                move.linear.x = 0.4;
+                move.linear.x = 0.25;
             }
         }
 
