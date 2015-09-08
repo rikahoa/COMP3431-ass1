@@ -133,12 +133,11 @@ private:
             }
 
             ROS_INFO_STREAM("~~~~~~~~~~~ move fat bastard! ~~~~~~~~~~");
-        
-            // Continue while the goal is unknown.
             ROS_DEBUG_STREAM("maze getting " << og_target.first << "," << og_target.second 
                     << ":" << this->maze.get_data(og_target.first, og_target.second));
-            //if (!started || this->maze.get_data(og_target.first, og_target.second) > -1) {
-            if (!started || this->bot.close_enough(path.back())) {
+            
+            // Continue while the goal is unknown.
+            if (!started || this->maze.get_data(og_target.first, og_target.second) > -1) {
                 if (!recalculate_astar()) {
                     unstuck_pub.publish(move);
                 }
