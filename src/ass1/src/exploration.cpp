@@ -61,7 +61,8 @@ public:
         started(false),
         spin(true),
         spin_yaw(-0.11),
-        n(n)
+        n(n),
+        pnh("~")
     {
         movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
         unstuck_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/unstuck", 1);
@@ -70,6 +71,12 @@ public:
         recalc_sub = n.subscribe("ass1/recalc", 1, &Exploration::recalc_callback, this);
         map_sub = n.subscribe("map", 1, &Exploration::map_callback, this);
         map_fatten_pub = n.advertise<nav_msgs::OccupancyGrid>("/ass1/map", 1);
+
+        if (!pnh.getParam("fatten", fatten_value)) {
+            ROS_INFO("Failed to get fatten param");
+        } else {
+            ROS_INFO("Got fatten param");
+        }
     }
 
 private:
@@ -181,10 +188,12 @@ private:
     bool started;
     bool spin;
     double spin_yaw;
-    Maze maze;
+    int fatten_value;
+    Maze maze{fatten_value};
     Bot bot;
 
     ros::NodeHandle n;
+    ros::NodeHandle pnh;
     ros::Publisher movement_pub;    
     ros::Publisher unstuck_pub;    
     ros::Publisher map_fatten_pub;

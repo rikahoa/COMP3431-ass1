@@ -3,7 +3,6 @@
 const vector<pair<int,int>> Maze::DIRECTIONS = 
     vector<pair<int, int>>{make_pair(-1,0),make_pair(1,0),make_pair(0,-1),make_pair(0,1)};
 
-#define FATTEN 6
 #define MIN_PROB 80
 void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
     vector<vector<bool>> seen;
@@ -30,7 +29,7 @@ void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
         auto y = info.first.second;
         auto distance = info.second;
        
-        if (seen[y][x] || distance > FATTEN) {
+        if (seen[y][x] || distance > fatten_value) {
             continue;
         }
 
@@ -39,7 +38,7 @@ void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
         set_data(x, y, 100);
 
         // Search all directions if not too fat.
-        if (distance < FATTEN) {
+        if (distance < fatten_value) {
             for (const auto& dir : Maze::DIRECTIONS) {
                 auto newX = x + dir.first;
                 auto newY = y + dir.second;
