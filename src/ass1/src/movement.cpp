@@ -89,26 +89,26 @@ private:
         }
         auto minindex = std::distance(msg->ranges.begin(), it);
 
-        float newangle = msg->angle_min + minindex * msg->angle_increment;
-        float rightangle = newangle - PI/2;
+        float minangle = msg->angle_min + minindex * msg->angle_increment;
+
         
         ROS_DEBUG_STREAM("min=" << *it << ",minindex=" << 
-                minindex << ",rightangle=" << rightangle);
+                minindex << ",minangle=" << minangle);
 
         geometry_msgs::Twist move;
-
-        if (rightangle > PI/2 || rightangle < -PI/2) {
-            move.linear.x = 0;
-        } else {
-            move.linear.x = 0.15;
-        }
-
-        move.linear.y = 0;
+        move.linear.y = 0;        
+        move.linear.x = 0;
         move.linear.z = 0;
 
         move.angular.x = 0;
-        move.angular.y = 0;
-        move.angular.z = rightangle;
+        move.angular.y = 0;        
+        move.angular.z = 0;
+        
+        if (fabs(minangle) > 0.2) {
+            move.angular.z = minangle;
+        } else {
+            move.linear.x = -0.15;
+        }
              
         navi_pub.publish(move);
     }
