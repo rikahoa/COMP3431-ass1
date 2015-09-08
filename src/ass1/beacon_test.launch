@@ -13,5 +13,28 @@
     </node>
 
     <node name="odom" pkg="ass1" type="odom" output="screen" />
-    <node name="beacon_finder" pkg="ass1" type="beacon_finder" output="screen" />
+    <node name="beacon_finder" pkg="ass1" type="beacon_finder" output="screen">
+        colour_ranges:
+            pink:
+                h_low: 130
+                h_hi: 170
+                s: 90
+                v: 90
+            blue:
+                h_low: 91 
+                h_hi: 120
+                s: 50
+                v: 50
+            green:
+                h_low: 70
+                h_hi: 100
+                s: 140
+                v: 80
+            yellow:
+                h_low: 20
+                h_hi: 40
+                s: 120
+                v: 50
+    </node>
+
 </launch>

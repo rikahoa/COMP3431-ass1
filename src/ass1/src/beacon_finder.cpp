@@ -81,14 +81,21 @@ private:
             cv_ptr = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::BGR8);
             cv::Mat src = cv_ptr->image;
 
+            // Take hsv ranges from launch
+            XmlRpc::XmlRpcValue colour_ranges;
+
             // OpenCV filters to find colours
             cv::Mat hsv, pink_threshold, yellow_threshold, blue_threshold, green_threshold;
             cv::cvtColor(src, hsv, CV_BGR2HSV);
-            cv::inRange(hsv, cv::Scalar(130,90,90), cv::Scalar(170,255,255), pink_threshold);
-            cv::inRange(hsv, cv::Scalar(20,120,50), cv::Scalar(40,255,255), yellow_threshold);
-            cv::inRange(hsv, cv::Scalar(91,50,50), cv::Scalar(120,255,255), blue_threshold);
-            cv::inRange(hsv, cv::Scalar(70,140,80), cv::Scalar(100,255,255), green_threshold);
-            
+            n.getParam("/colour_ranges/pink", colour_ranges);
+            cv::inRange(hsv, cv::Scalar(colour_ranges["h_low"],colour_ranges["s"],colour_ranges["v"]), cv::Scalar(colour_ranges["h_hi"],255,255), pink_threshold);
+            n.getParam("/colour_rangess/yellow", colour_ranges);
+            cv::inRange(hsv, cv::Scalar(colour_ranges["h_low"],colour_ranges["s"],colour_ranges["v"]), cv::Scalar(colour_ranges["h_hi"],255,255), yellow_threshold);
+            n.getParam("/colour_rangess/blue", colour_ranges);
+            cv::inRange(hsv, cv::Scalar(colour_ranges["h_low"],colour_ranges["s"],colour_ranges["v"]), cv::Scalar(colour_ranges["h_hi"],255,255), blue_threshold);
+            n.getParam("/colour_rangess/green", colour_ranges);
+            cv::inRange(hsv, cv::Scalar(colour_ranges["h_low"],colour_ranges["s"],colour_ranges["v"]), cv::Scalar(colour_ranges["h_hi"],255,255), green_threshold);
+
             blue_threshold = cv::Scalar::all(255) - blue_threshold;
             pink_threshold = cv::Scalar::all(255) - pink_threshold;
             yellow_threshold = cv::Scalar::all(255) - yellow_threshold;
