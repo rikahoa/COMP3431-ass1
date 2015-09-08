@@ -105,7 +105,8 @@ private:
         move.angular.z = 0;
         
         if (fabs(minangle) > 0.2) {
-            move.angular.z = minangle;
+            move.angular.z = 2*minangle;
+            move.linear.x = -0.15;
         } else {
             move.linear.x = -0.15;
         }
