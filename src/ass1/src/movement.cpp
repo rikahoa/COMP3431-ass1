@@ -97,7 +97,7 @@ private:
     }
 
     void laser_unstuck_callback(const sensor_msgs::LaserScan::ConstPtr &laser) {
-        if(safe(laser, 0.3)) {
+        if(safe(laser, this->safe_range)) {
             ROS_INFO("Laser Safe");
             if(this->stuck) {
                 ROS_INFO("UNSTUCK: NOT STUCK ASKING RECALC");
