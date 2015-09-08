@@ -15,6 +15,30 @@
 \usepackage{listings}
 \usepackage{sidecap}
 
+\usepackage{color}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=C++,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=left,
+  numberstyle=\footnotesize,
+  stepnumber=1,
+  numbersep=5pt,
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
 \usepackage{fancyhdr}
 \setlength{\headheight}{15.2pt}
 \pagestyle{fancy}
@@ -134,24 +158,26 @@ To determine the rotation of the beacon from the origin of the map, we consider 
 	\theta_1   &=  \text{TurtleBot's current yaw, relative to start} \\
 	\theta_2   &=  27.5\degree \\
 	\\
-	x 	        &=  \text{vertical pixel in image at which beacon was detected} - 320\text{px} \\
-	d 	        &=  \frac{320}{\tan{27.5\degree}} \\ 
+	a 	        &=  \frac{320}{\tan{27.5\degree}} \\ 
+	b 	        &=  \text{position of beacon given as an offset from centre of image} \\
+			&=  \text{vertical pixel in image at which beacon was detected} - 320\text{px} \\
 	\\
-	\theta_3   &= \tan^{-1}{(\frac{x}{d})}
+	\theta_3   &= \tan^{-1}{(\frac{x}{d})} \\
 \end{align*}
 \\
-$\therefore$ the beacon's orientation from origin of the map is $\theta_1 + \theta_3$. \\
+Therefore, the beacon's yaw from the TurtleBot is $\theta_3$ and the beacon's yaw from the origin of the map is $\theta_1 + \theta_3$. Note that in the above example, $\theta_3$ is negative as tan is negative in the fourth quadrant.\\
 \\
-To determine the beacon's x and y coordinates in the map, we consider the TurtleBot's position, the beacon's angle from the TurtleBot, and the array of ranges gathered from the laser scan. \\
+To determine the beacon's x and y coordinates in the map, we consider the TurtleBot's position, the beacon's angle from the TurtleBot ($\theta_3$), and the array of ranges gathered from the laser scan. \\
 \\
 \begin{align*}
-	\text{beacon.x}		&=		\text{bot.x} + d \cdot \cos{(\text{bot.yaw} + \theta_3)} \\
-	\text{beacon.y} 		&= 		\text{bot.y} + d \cdot \sin{(\text{bot.yaw} + \theta_3)} \\
+	\text{beacon.x}		&=		\text{bot.x} + d \cdot \cos{(\theta_1 + \theta_3)} \\
+	\text{beacon.y} 		&= 		\text{bot.y} + d \cdot \sin{(\theta_1 + \theta_3)} \\
 	\\
-	\text{where } d 		&=		\text{laser.ranges[beacon's angle in laser's range]} 
+	\text{where } d 		&=		\text{beacon's distance from TurtleBot} \\
+					&=		\text{laser.ranges [angle of beacon in laser scan]}  \\
 \end{align*}
 \\
-Using the ranges from the laser scan eliminates the need for the TurtleBot to be next to the beacon to pinpoint its location. Rather, once a beacon is within the camera's view, it's position can be determined. 
+Using the ranges from the laser scan eliminates the need for the TurtleBot to be next to the beacon to pinpoint its location. Rather, once a beacon is within the camera's view, it's position can be determined, speeding up the process of beacon localisation. In turn, the TurtleBot's initial exploration is also sped up.
 
 
 \pagebreak
@@ -166,23 +192,22 @@ As beacons are detected during the exploration phase, their positions are stored
 This essentially allows our TurtleBot to stop exploring the maze once all four beacons have been detected, even if the full map of the maze has not been generated.\\
 \\
 \textbf{Beacon Class:}
-\begin{lstlisting}[language=C++]
+\begin{lstlisting}
+	class Beacon {
+	public:
+    		double x, y;
+    		bool known_location;
+    		string top, bottom;
 
-class Beacon {
-public:
-	double x, y;
-	bool known_location;
-	string top, bottom;
-	
-	Beacon(string top, string bottom) :
-		x(0), y(0),
-		known_location(false),
-		top(top), bottom(bottom) {}
-   
-	bool found() {
-		return known_location;
-	}
-};
+    		Beacon(string top, string bottom) :
+        			x(0), y(0),
+        			known_location(false),
+        			top(top), bottom(bottom) {}
+
+    		bool found() {
+        			return known_location;
+    		}
+	};
 	
 \end{lstlisting}
 
@@ -198,11 +223,12 @@ public:
 
 \section*{Waypoint Traversal}
 
-Once the maze has been successfully mapped and the positions of all beacons has been detected, the TurtleBot's next task is to visit the specified beacons in order. To speed up this process, an A* search is performed on the available data - namely, the OccupancyGrid with beacon locations written into it.\\
+Once the maze has been successfully mapped and the positions of all beacons has been detected, the TurtleBot's next task is to visit the specified beacons in order. To speed up this process, an A* search is performed on the available data - namely, the OccupancyGrid and the FoundBeacons message.\\
 \\
 The A* search returns the path (as cells) from the TurtleBot's current location to it's goal.
-
-- Heuristic: Euclidean distance
+\\
+- Heuristic: Euclidean distance \\
+- RDP algorithm to smooth out path
 
 
 \pagebreak
