@@ -41,7 +41,7 @@ public:
             ROS_INFO_STREAM(get_world_pos(*it).first << "," << get_world_pos(*it).second);
         }
             
-        vector<pair<double,double>> simplified = rdp_simplify(real_path, 0.1);
+        vector<pair<double,double>> simplified = rdp_simplify(real_path, 0.05);
         
         ROS_INFO_STREAM("Simplified PATH");
         for(auto it = simplified.begin(); it!= simplified.end(); ++it) {
