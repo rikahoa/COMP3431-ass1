@@ -127,7 +127,7 @@ private:
             move.angular.z = 0;
             
             if (fabs(minangle) > this->unstuck_angle_threshold) {
-                move.angular.z = std::max(-0.6, std::min(0.6, -this->unstuck_angle_multiplier*minangle));
+                move.angular.z = 0.4;
             } else {
                 move.linear.x = this->unstuck_x_movement;
             }
