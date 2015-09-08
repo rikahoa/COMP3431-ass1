@@ -97,7 +97,7 @@ private:
     }
 
     void laser_unstuck_callback(const sensor_msgs::LaserScan::ConstPtr &laser) {
-        if(safe(laser, 0.4)) {
+        if(safe(laser, 0.3)) {
             ROS_INFO("Laser Safe");
             if(this->stuck) {
                 ROS_INFO("UNSTUCK: NOT STUCK ASKING RECALC");
@@ -127,7 +127,7 @@ private:
             move.angular.z = 0;
             
             if (fabs(minangle) > this->unstuck_angle_threshold) {
-                move.angular.z = 0.4;
+                move.angular.z = minangle*this->unstuck_angle_multiplier;
             } else {
                 move.linear.x = this->unstuck_x_movement;
             }
