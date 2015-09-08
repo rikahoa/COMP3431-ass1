@@ -25,6 +25,11 @@ public:
         recalc_pub = n.advertise<std_msgs::String>("/ass1/recalc", 1);
         sync.registerCallback(boost::bind(&Movement::movement_and_laser_callback, this, _1, _2));
         unstuck_sync.registerCallback(boost::bind(&Movement::unstuck_callback, this, _1, _2));
+        
+        if (n.getParam("safe_range", safe_range)) { ROS_INFO("Got safe_range param"); } else { ROS_ERROR("Failed to get param 'safe_range'");}
+        if (n.getParam("unstuck_x_movement", unstuck_x_movement)) { ROS_INFO("Got unstuck_x_movement param"); } else { ROS_ERROR("Failed to get param 'unstuck_x_movement'");}
+        if (n.getParam("unstuck_angle_threshold", unstuck_angle_threshold)) { ROS_INFO("Got unstuck_angle_threshold param"); } else { ROS_ERROR("Failed to get param 'unstuck_angle_threshold'");}
+        if (n.getParam("unstuck_angle_multiplier", unstuck_angle_multiplier)) { ROS_INFO("Got unstuck_angle_multiplier param"); } else { ROS_ERROR("Failed to get param 'unstuck_angle_multiplier'");}
     }
 private:
     ros::NodeHandle n;
@@ -37,6 +42,13 @@ private:
 
     message_filters::Synchronizer<ApproxTwistLaserPolicy> sync;
     message_filters::Synchronizer<ApproxTwistLaserPolicy> unstuck_sync;
+    
+    //PARAMS
+    double safe_range;
+    double unstuck_x_movement;
+    double unstuck_angle_threshold;
+    double unstuck_angle_multiplier;
+    
             
     void movement_and_laser_callback(const geometry_msgs::TwistStamped::ConstPtr &twist_stamped, 
             const sensor_msgs::LaserScan::ConstPtr &laser_scan) {
@@ -49,7 +61,7 @@ private:
         } else {
             safe = true;          
             for (const auto& range : laser_scan->ranges) {
-                if (range < 0.18) {
+                if (range < this->safe_range) {
                     safe = false;
                     break;
                 }
@@ -97,19 +109,16 @@ private:
 
         geometry_msgs::Twist move;
         move.linear.y = 0;        
-        move.linear.x = 0;
+        move.linear.x = this->unstuck_x_movement;
         move.linear.z = 0;
 
         move.angular.x = 0;
         move.angular.y = 0;        
         move.angular.z = 0;
         
-        if (fabs(minangle) > 0.2) {
-            move.angular.z = 2*minangle;
-            move.linear.x = -0.15;
-        } else {
-            move.linear.x = -0.15;
-        }
+        if (fabs(minangle) > this->unstuck_angle_threshold) {
+            move.angular.z = -this->unstuck_angle_multiplier*minangle;
+        } 
              
         navi_pub.publish(move);
     }

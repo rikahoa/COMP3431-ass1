@@ -125,7 +125,7 @@ private:
             if (this->spin) {
                 if (fabs(this->bot.get_yaw() - spin_yaw) > 0.1) {
                     ROS_INFO_STREAM("~~~~~~~~~~~ spin fat bastard! ~~~~~~~~~~");
-                    this->bot.setup_spin(move.twist);
+                    this->bot.setup_spin(move.twist, fabs(this->bot.get_yaw() - spin_yaw));
                     movement_pub.publish(move);
                     return;
                 }

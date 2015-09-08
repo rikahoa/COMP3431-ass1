@@ -54,10 +54,10 @@ public:
     }
 
     // Sets up a valid movement twist.
-    void setup_spin(geometry_msgs::Twist& move) {
+    void setup_spin(geometry_msgs::Twist& move, double delta) {
         move.linear.x = move.linear.y = move.linear.z = 0;
         move.angular.x = move.angular.y = 0;
-        move.angular.z = 0.4;
+        move.angular.z = 2*delta;
     }
 
     void setup_movement(const pair<double,double>& target, geometry_msgs::Twist& move) {
