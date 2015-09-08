@@ -30,10 +30,27 @@ public:
         stuck_sub = n.subscribe("ass1/stuck", 1, &Movement::stuck_callback, this);
         laser_unstuck_sub = n.subscribe("/scan", 1, &Movement::laser_unstuck_callback, this);
         
-        if (pnh.getParam("safe_range", safe_range)) { ROS_INFO("Got safe_range param"); } else { ROS_ERROR("Failed to get param 'safe_range'");}
-        if (pnh.getParam("unstuck_x_movement", unstuck_x_movement)) { ROS_INFO("Got unstuck_x_movement param"); } else { ROS_ERROR("Failed to get param 'unstuck_x_movement'");}
-        if (pnh.getParam("unstuck_angle_threshold", unstuck_angle_threshold)) { ROS_INFO("Got unstuck_angle_threshold param"); } else { ROS_ERROR("Failed to get param 'unstuck_angle_threshold'");}
-        if (pnh.getParam("unstuck_angle_multiplier", unstuck_angle_multiplier)) { ROS_INFO("Got unstuck_angle_multiplier param"); } else { ROS_ERROR("Failed to get param 'unstuck_angle_multiplier'");}
+        if (pnh.getParam("safe_range", safe_range)) { 
+            ROS_INFO("Got safe_range param"); 
+        } else { 
+            ROS_ERROR("Failed to get param 'safe_range'");
+        }
+
+        if (pnh.getParam("unstuck_x_movement", unstuck_x_movement)) { 
+            ROS_INFO("Got unstuck_x_movement param"); 
+        } else { 
+            ROS_ERROR("Failed to get param 'unstuck_x_movement'");
+        }
+        if (pnh.getParam("unstuck_angle_threshold", unstuck_angle_threshold)) { 
+            ROS_INFO("Got unstuck_angle_threshold param"); 
+        } else { 
+            ROS_ERROR("Failed to get param 'unstuck_angle_threshold'");
+        }
+        if (pnh.getParam("unstuck_angle_multiplier", unstuck_angle_multiplier)) { 
+            ROS_INFO("Got unstuck_angle_multiplier param"); 
+        } else { 
+            ROS_ERROR("Failed to get param 'unstuck_angle_multiplier'");
+        }
     }
 private:
     ros::NodeHandle n;
@@ -58,9 +75,8 @@ private:
     
             
     void movement_and_laser_callback(const geometry_msgs::TwistStamped::ConstPtr &twist_stamped, 
-            const sensor_msgs::LaserScan::ConstPtr &laser_scan) {
-            
-        if(!this->stuck) {
+            const sensor_msgs::LaserScan::ConstPtr &laser_scan) { 
+        if (!this->stuck) {
             bool safe = false;
 
             if (twist_stamped->twist.linear.x == 0) {
@@ -92,23 +108,24 @@ private:
     }
 
     void stuck_callback(const std_msgs::String::ConstPtr &msg) {
-        ROS_ERROR_STREAM("unstuck callback!");
-        this->stuck=true;
+        ROS_WARN_STREAM("unstuck callback!");
+        this->stuck = true;
     }
 
     void laser_unstuck_callback(const sensor_msgs::LaserScan::ConstPtr &laser) {
-        if(safe(laser, this->safe_range)) {
+        if (safe(laser, this->safe_range)) {
             ROS_INFO("Laser Safe");
-            if(this->stuck) {
+            if (this->stuck) {
                 ROS_INFO("UNSTUCK: NOT STUCK ASKING RECALC");
                 this->stuck = false;
+                
                 // signal to recalculate
-                 std_msgs::String msg;
-                 recalc_pub.publish(msg);
+                std_msgs::String msg;
+                recalc_pub.publish(msg);
              }
         } else {
             ROS_INFO("Laser unsafe");
-            this->stuck=true;
+            this->stuck = true;
             ROS_INFO("UNSTUCK: STILL STUCK");
             auto it = std::min_element(laser->ranges.begin(), laser->ranges.end());
             auto minindex = std::distance(laser->ranges.begin(), it);
@@ -127,7 +144,8 @@ private:
             move.angular.z = 0;
             
             if (fabs(minangle) > this->unstuck_angle_threshold) {
-                move.angular.z = minangle*this->unstuck_angle_multiplier;
+                move.angular.z = std::max(-0.6, 
+                        std::min(0.6, minangle*this->unstuck_angle_multiplier));
             } else {
                 move.linear.x = this->unstuck_x_movement;
             }
