@@ -58,29 +58,31 @@ public:
         move.linear.x = move.linear.y = move.linear.z = 0;
         move.angular.x = move.angular.y = move.angular.z = 0;
         
-        ROS_INFO_STREAM("** we are at " << this->get_position().first << "," 
+        ROS_DEBUG_STREAM("** we are at " << this->get_position().first << "," 
                 << this->get_position().second);
-        ROS_INFO_STREAM("** target of " << target.first << "," << target.second);
+        ROS_DEBUG_STREAM("** target of " << target.first << "," << target.second);
 
         auto displacement = get_displacement(target);
         double distance = displacement.first;
         double target_angle = displacement.second;
 
-        ROS_INFO_STREAM("** angle: " << (target_angle + this->get_yaw()) << " yaw: " << this->get_yaw());
-        ROS_INFO_STREAM("** angle change of " << target_angle << " required.");
-        ROS_INFO_STREAM("** distance from target is " << distance);
+        ROS_DEBUG_STREAM("** angle: " << (target_angle + this->get_yaw()) 
+                << " yaw: " << this->get_yaw());
+        ROS_DEBUG_STREAM("** angle change of " << target_angle << " required.");
+        ROS_DEBUG_STREAM("** distance from target is " << distance);
 
+        // TODO: Make this better
         if (target_angle > 0.1) {
-            // TODO: Make this better
             move.angular.z = 0.4; 
         } else if (target_angle < -0.1) {
             move.angular.z = -0.4;
         } else {
             if (distance > 0.1) {
-                move.linear.x = 0.25;
+                move.linear.x = 0.4;
             }
         }
-        ROS_INFO_STREAM("** movement set to " << move.linear.x << "," << move.angular.z);
+
+        ROS_DEBUG_STREAM("** movement set to " << move.linear.x << "," << move.angular.z);
     }
 
     double distance(const pair<double, double>& target) const {
@@ -93,12 +95,12 @@ public:
         return m.get_og_pos(make_pair(this->pose.position.x, this->pose.position.y));
     }
    
-    bool close_enough(const pair<double, double>& target) {
+    bool close_enough(const pair<double, double>& target) const {
         auto displacement = get_displacement(target);
         return displacement.first < 0.2;
     }
-    
-    bool astar_okay(const pair<double, double>& target) {
+
+    bool astar_okay(const pair<double, double>& target) const {
         auto displacement = get_displacement(target);
         return displacement.first > 0.3;
     }

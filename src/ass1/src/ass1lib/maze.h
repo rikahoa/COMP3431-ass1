@@ -76,6 +76,21 @@ public:
 
         return grid_path;
     }
+
+    void rviz(
+            ros::Publisher& pub, 
+            const vector<pair<int,int>>& points, 
+            const vector<pair<double,double>>& real_points) {
+        nav_msgs::OccupancyGrid copy = this->og;
+        for (const auto& p : points) {
+            copy.data[p.second * copy.info.width + p.first] = 50; 
+        }
+        for (const auto& rp : real_points) {
+            auto p = this->get_og_pos(rp);
+            copy.data[p.second * copy.info.width + p.first] = 50; 
+        }
+        pub.publish(copy);
+    }
     
     void set_data(int x, int y, int value) {
         this->og.data[y * this->og.info.width + x] = value;

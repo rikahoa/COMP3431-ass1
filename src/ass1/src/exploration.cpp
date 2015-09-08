@@ -35,7 +35,8 @@ public:
             int y = this->y + p.second;
 
             // try move places.
-            if (maze.get_data(this->x, this->y) < 80) {
+            if (maze.get_data(this->x, this->y) < 80/* || 
+                    this->bot->close_enough(maze.get_world_pos(make_pair(this->x, this->y)))*/) {
                 if (x >= 0 && x < maze.get_width() && 
                         y >= 0 && y < maze.get_height() && 
                         check(make_pair(x, y))) {
@@ -65,48 +66,43 @@ public:
         odom_sub = n.subscribe("ass1/odom", 1, &Exploration::odom_callback, this);
         recalc_sub = n.subscribe("ass1/recalc", 1, &Exploration::recalc_callback, this);
         map_sub = n.subscribe("map", 1, &Exploration::map_callback, this);
-        map_fatten_pub = n.advertise<nav_msgs::OccupancyGrid>("/ass1/fatten_map", 1);
+        map_fatten_pub = n.advertise<nav_msgs::OccupancyGrid>("/ass1/map", 1);
     }
 
 private:
     void beacon_callback(const ass1::FoundBeacons::ConstPtr& msg) {
-        ROS_INFO_STREAM("beacons found on exploration!");
+        ROS_INFO_STREAM("Beacons message on Exploration! Shutting down.");
         ros::shutdown();
     }
 
     void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og) {
         this->maze.set_occupancy_grid(*og);
         // publish for debugging...
-        nav_msgs::OccupancyGrid copy = this->maze.get_occupancy_grid();
-        for (const auto& p : this->og_path) {
-            copy.data[p.second * copy.info.width + p.first] = 50; 
-        }
-        map_fatten_pub.publish(copy);
+        this->maze.rviz(map_fatten_pub, this->og_path, vector<pair<double,double>>());
     }
 
     void recalculate_astar() {
         // Find current position.
         auto og_pos = this->bot.get_og_pos(this->maze);
     
-        ROS_INFO_STREAM("Commencing astar.");
+        ROS_INFO_STREAM("* ASTAR invoked.");
         // Do a A* to the nearest frontier
         auto og_path = search(this->maze, 
                 new ExplorationState(og_pos.first, og_pos.second, 0, &this->bot));
         
         // can't find path!
         if (og_path.empty()) {
-            ROS_ERROR_STREAM("Empty path to target.");
+            ROS_ERROR_STREAM("* No target found...");
             return;
         }
 
-        ROS_INFO_STREAM("Converting into path data.");
-
         // Target the frontier in real position.
         this->og_target = og_path.back();
-        this->og_path = og_path; // TODO: remove
-        this->path = this->maze.og_to_real_path(og_path);
+        this->og_path = std::move(og_path);
+        this->path = this->maze.og_to_real_path(this->og_path);
         this->started = true;
-        ROS_INFO_STREAM("Let's find " << og_target.first << "," << og_target.second);
+        this->maze.rviz(map_fatten_pub, this->og_path, vector<pair<double,double>>());
+        ROS_DEBUG_STREAM("* Let's find " << og_target.first << "," << og_target.second);
     }
 
     void recalc_callback(const std_msgs::String::ConstPtr &msg) {
@@ -129,10 +125,6 @@ private:
 
             // == REMOVE WHEN DONE
             queue<pair<double,double>> p(this->path);
-            int popCount = 5;
-            while(p.size() > 1 && popCount > 0) {
-                p.pop();
-            }
             while (!p.empty()) {
                 auto s = p.front();
                 p.pop();
@@ -149,7 +141,7 @@ private:
 
             // Error checking
             if (path.empty()) {
-                ROS_ERROR_STREAM("Exploration path empty! Cannot move anywhere...");
+                ROS_WARN_STREAM("Exploration path empty! Cannot move anywhere...");
                 recalculate_astar();
                 return;
             }

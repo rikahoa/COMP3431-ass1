@@ -26,30 +26,30 @@ private:
 
     message_filters::Synchronizer<ApproxTwistLaserPolicy> sync;
             
-    void movement_and_laser_callback(const geometry_msgs::TwistStamped::ConstPtr &twistStamped, 
-            const sensor_msgs::LaserScan::ConstPtr &laserScan) {
+    void movement_and_laser_callback(const geometry_msgs::TwistStamped::ConstPtr &twist_stamped, 
+            const sensor_msgs::LaserScan::ConstPtr &laser_scan) {
         bool safe = false;
 
-        if (twistStamped->twist.linear.x == 0) {
+        if (twist_stamped->twist.linear.x == 0) {
             safe = true;
         } else {
-
-
-            safe = true;           
-            for (auto i = laserScan->ranges.begin(); i!= laserScan->ranges.end(); i++ ) {
-              if (*i < 0.2) {
-                safe = false;            
-              }  
-            }   
+            safe = true;          
+            for (const auto& range : laser_scan->ranges) {
+                if (range < 0.18) {
+                    safe = false;
+                    break;
+                }
+            }
         }
 
         if (safe) {
-             ROS_INFO_STREAM("MOVEMENT: x = " << twistStamped->twist.linear.x << 
-                ", angle z = " << twistStamped->twist.angular.z);
-             navi_pub.publish(twistStamped->twist);
+             // Publish messages
+             ROS_DEBUG_STREAM("MOVEMENT: x = " << twist_stamped->twist.linear.x << 
+                ", angle z = " << twist_stamped->twist.angular.z);
+             navi_pub.publish(twist_stamped->twist);
         } else {
-             ROS_ERROR_STREAM("Cannot Move x = " << twistStamped->twist.linear.x << 
-                    ", angle z = " << twistStamped->twist.angular.z);
+             ROS_ERROR_STREAM("Cannot Move x = " << twist_stamped->twist.linear.x << 
+                    ", angle z = " << twist_stamped->twist.angular.z);
             
              // signal to recalculate
              std_msgs::String msg;
