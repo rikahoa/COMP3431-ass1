@@ -64,6 +64,7 @@ public:
         n(n)
     {
         movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
+        unstuck_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/unstuck", 1);
         beacons_sub = n.subscribe("ass1/beacons", 1, &Exploration::beacon_callback, this);
         odom_sub = n.subscribe("ass1/odom", 1, &Exploration::odom_callback, this);
         recalc_sub = n.subscribe("ass1/recalc", 1, &Exploration::recalc_callback, this);
@@ -83,7 +84,7 @@ private:
         this->maze.rviz(map_fatten_pub, this->og_path, vector<pair<double,double>>());
     }
 
-    void recalculate_astar() {
+    bool recalculate_astar() {
         // Find current position.
         auto og_pos = this->bot.get_og_pos(this->maze);
     
@@ -95,7 +96,7 @@ private:
         // can't find path!
         if (og_path.empty()) {
             ROS_ERROR_STREAM("* No target found...");
-            return;
+            return false;
         }
 
         // Target the frontier in real position.
@@ -105,6 +106,7 @@ private:
         this->started = true;
         this->maze.rviz(map_fatten_pub, this->og_path, vector<pair<double,double>>());
         ROS_DEBUG_STREAM("* Let's find " << og_target.first << "," << og_target.second);
+        return true;
     }
 
     void recalc_callback(const std_msgs::String::ConstPtr &msg) {
@@ -137,7 +139,9 @@ private:
                     << ":" << this->maze.get_data(og_target.first, og_target.second));
             //if (!started || this->maze.get_data(og_target.first, og_target.second) > -1) {
             if (!started || this->bot.close_enough(path.back())) {
-                recalculate_astar();
+                if (!recalculate_astar()) {
+                    unstuck_pub.publish(move);
+                }
             }
 
             // == REMOVE WHEN DONE
@@ -159,7 +163,9 @@ private:
             // Error checking
             if (path.empty()) {
                 ROS_WARN_STREAM("Exploration path empty! Cannot move anywhere...");
-                recalculate_astar();
+                if (!recalculate_astar()) {
+                    unstuck_pub.publish(move);
+                }
                 return;
             }
 
@@ -180,6 +186,7 @@ private:
 
     ros::NodeHandle n;
     ros::Publisher movement_pub;    
+    ros::Publisher unstuck_pub;    
     ros::Publisher map_fatten_pub;
     ros::Subscriber map_sub;
     ros::Subscriber recalc_sub;

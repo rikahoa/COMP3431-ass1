@@ -14,10 +14,17 @@ constexpr float PI = acos(-1);
         
 class Movement {
 public:
-    Movement(ros::NodeHandle n) : n(n),movement_sub(n, "/ass1/movement", 1),laser_sub(n, "/scan", 1), sync(ApproxTwistLaserPolicy(10), movement_sub, laser_sub)   {
+    Movement(ros::NodeHandle n) : n(n),
+        movement_sub(n, "/ass1/movement", 1),
+        laser_sub(n, "/scan", 1), 
+        unstuck_sub(n, "/ass1/unstuck", 1),
+        sync(ApproxTwistLaserPolicy(10), movement_sub, laser_sub),
+        unstuck_sync(ApproxTwistLaserPolicy(100), unstuck_sub, laser_sub)
+    {
         navi_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/navi", 1);
         recalc_pub = n.advertise<std_msgs::String>("/ass1/recalc", 1);
         sync.registerCallback(boost::bind(&Movement::movement_and_laser_callback, this, _1, _2));
+        unstuck_sync.registerCallback(boost::bind(&Movement::unstuck_callback, this, _1, _2));
     }
 private:
     ros::NodeHandle n;
@@ -26,8 +33,10 @@ private:
 
     message_filters::Subscriber<geometry_msgs::TwistStamped> movement_sub;
     message_filters::Subscriber<sensor_msgs::LaserScan> laser_sub;
+    message_filters::Subscriber<geometry_msgs::TwistStamped> unstuck_sub;
 
     message_filters::Synchronizer<ApproxTwistLaserPolicy> sync;
+    message_filters::Synchronizer<ApproxTwistLaserPolicy> unstuck_sync;
             
     void movement_and_laser_callback(const geometry_msgs::TwistStamped::ConstPtr &twist_stamped, 
             const sensor_msgs::LaserScan::ConstPtr &laser_scan) {
@@ -49,7 +58,7 @@ private:
 
         if (safe) {
              // Publish messages
-             ROS_DEBUG_STREAM("MOVEMENT: x = " << twist_stamped->twist.linear.x << 
+             ROS_INFO_STREAM("MOVEMENT: x = " << twist_stamped->twist.linear.x << 
                 ", angle z = " << twist_stamped->twist.angular.z);
              navi_pub.publish(twist_stamped->twist);
         } else {
@@ -64,6 +73,12 @@ private:
              std_msgs::String msg;
              recalc_pub.publish(msg);
         }
+    }
+
+    void unstuck_callback(const geometry_msgs::TwistStamped::ConstPtr &twist_stamped, 
+            const sensor_msgs::LaserScan::ConstPtr &laser_scan) {
+        ROS_ERROR_STREAM("unstuck callback!");
+        unstuck(laser_scan);
     }
 
     void unstuck(const sensor_msgs::LaserScan::ConstPtr &msg) {
