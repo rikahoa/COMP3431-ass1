@@ -15,7 +15,9 @@ class Maze {
 public:
     Maze() : _valid(false) {}
 
-    Maze(int fatten_value) : fatten_value(fatten_value), _valid(false) {}
+    Maze(int fatten_value) : fatten_value(fatten_value), _valid(false) {
+        ROS_INFO("Fatten value is %d", fatten_value);
+    }
 
     const nav_msgs::OccupancyGrid& get_occupancy_grid() const {
         return this->og;
