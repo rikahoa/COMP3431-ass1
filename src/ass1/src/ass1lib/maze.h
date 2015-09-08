@@ -58,25 +58,6 @@ public:
         return real_path;
     }
 
-    // RIP Aneita
-    vector<pair<int, int>> path_to_grid(const vector<pair<int, int>>& astar_path) const {
-        vector<pair<int, int>> grid_path;
-
-        for (const auto& a : astar_path) {
-            int grid_x = static_cast<int>(a.first * og.info.resolution);
-            int grid_y = static_cast<int>(a.second * og.info.resolution);
-
-            if (!grid_path.empty() && grid_path.back().first == grid_x &&
-                    grid_path.back().second == grid_y) {
-                continue;
-            }
-
-            grid_path.push_back(pair<int, int>(grid_x, grid_y));
-        }
-
-        return grid_path;
-    }
-
     void rviz(
             ros::Publisher& pub, 
             const vector<pair<int,int>>& points, 
