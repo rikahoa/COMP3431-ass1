@@ -14,7 +14,7 @@ constexpr float PI = acos(-1);
         
 class Movement {
 public:
-    Movement(ros::NodeHandle n) : n(n),
+    Movement(ros::NodeHandle n) : n(n), pnh("~"),
         movement_sub(n, "/ass1/movement", 1),
         laser_sub(n, "/scan", 1), 
         unstuck_sub(n, "/ass1/unstuck", 1),
@@ -26,13 +26,14 @@ public:
         sync.registerCallback(boost::bind(&Movement::movement_and_laser_callback, this, _1, _2));
         unstuck_sync.registerCallback(boost::bind(&Movement::unstuck_callback, this, _1, _2));
         
-        if (n.getParam("safe_range", safe_range)) { ROS_INFO("Got safe_range param"); } else { ROS_ERROR("Failed to get param 'safe_range'");}
-        if (n.getParam("unstuck_x_movement", unstuck_x_movement)) { ROS_INFO("Got unstuck_x_movement param"); } else { ROS_ERROR("Failed to get param 'unstuck_x_movement'");}
-        if (n.getParam("unstuck_angle_threshold", unstuck_angle_threshold)) { ROS_INFO("Got unstuck_angle_threshold param"); } else { ROS_ERROR("Failed to get param 'unstuck_angle_threshold'");}
-        if (n.getParam("unstuck_angle_multiplier", unstuck_angle_multiplier)) { ROS_INFO("Got unstuck_angle_multiplier param"); } else { ROS_ERROR("Failed to get param 'unstuck_angle_multiplier'");}
+        if (pnh.getParam("safe_range", safe_range)) { ROS_INFO("Got safe_range param"); } else { ROS_ERROR("Failed to get param 'safe_range'");}
+        if (pnh.getParam("unstuck_x_movement", unstuck_x_movement)) { ROS_INFO("Got unstuck_x_movement param"); } else { ROS_ERROR("Failed to get param 'unstuck_x_movement'");}
+        if (pnh.getParam("unstuck_angle_threshold", unstuck_angle_threshold)) { ROS_INFO("Got unstuck_angle_threshold param"); } else { ROS_ERROR("Failed to get param 'unstuck_angle_threshold'");}
+        if (pnh.getParam("unstuck_angle_multiplier", unstuck_angle_multiplier)) { ROS_INFO("Got unstuck_angle_multiplier param"); } else { ROS_ERROR("Failed to get param 'unstuck_angle_multiplier'");}
     }
 private:
     ros::NodeHandle n;
+    ros::NodeHandle pnh;
     ros::Publisher navi_pub;
     ros::Publisher recalc_pub;
 
