@@ -8,5 +8,4 @@
                 top:    "green"
                 bottom: "pink"
     </rosparam>
-    <node name="beacon_finder" pkg="ass1" type="beacon_finder" output="screen" />
 </launch>
