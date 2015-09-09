@@ -1,0 +1,23 @@
+<launch>
+    <rosparam>
+        beacons:
+            beacon0:
+                top:    "pink"
+                bottom: "yellow"
+            beacon1:
+                top:    "green"
+                bottom: "pink"
+            beacon2:
+                top:    "yellow"
+                bottom: "pink"
+            beacon3:
+                top:    "pink"
+                bottom: "green"
+            beacon4:
+                top:    "pink"
+                bottom: "blue"
+            beacon5:
+                top:    "blue"
+                bottom: "pink"
+    </rosparam>
+</launch>
