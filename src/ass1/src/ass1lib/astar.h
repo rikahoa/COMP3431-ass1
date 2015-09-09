@@ -112,7 +112,7 @@ public:
         ExplorationState(x, y, cost, make_pair(-1, -1), bot) {};
 
     virtual bool is_goal(const Maze& maze) const override {
-        return maze.get_data(this->x, this->y) == -1 &&
+        return (!maze.certain(make_pair(this->x, this->y))) &&
             this->bot->astar_okay(maze.get_world_pos(make_pair(this->x, this->y)));
     }
 

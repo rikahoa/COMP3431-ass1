@@ -6,7 +6,7 @@
 #include <message_filters/sync_policies/approximate_time.h>
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/LaserScan.h>
-#include <sensor_msgs/Image.h>
+#include <sensor_msgs/CompressedImage.h>
 #include <geometry_msgs/Point.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -25,7 +25,7 @@
 using namespace std;
 
 typedef message_filters::sync_policies::
-    ApproximateTime<sensor_msgs::LaserScan, sensor_msgs::Image> SyncPolicy;
+    ApproximateTime<sensor_msgs::LaserScan, sensor_msgs::CompressedImage> SyncPolicy;
 
 class Beacon {
 public:
@@ -46,7 +46,7 @@ class BeaconFinder {
 public:
     BeaconFinder(ros::NodeHandle n, vector<Beacon> beacons) : n(n), pnh("~"),
         beacons(beacons),
-        img_sub(n, "/camera/rgb/image_color", 1),
+        img_sub(n, "/camera/rgb/image_color/compressed", 1),
         laser_sub(n, "/scan", 1),
         sync(SyncPolicy(10), laser_sub, img_sub) {
 
@@ -100,7 +100,7 @@ private:
     ros::NodeHandle pnh;
     vector<Beacon> beacons;
     Bot bot;
-    message_filters::Subscriber<sensor_msgs::Image> img_sub;
+    message_filters::Subscriber<sensor_msgs::CompressedImage> img_sub;
     message_filters::Subscriber<sensor_msgs::LaserScan> laser_sub;
 
     ros::Publisher beacons_pub;
@@ -118,13 +118,13 @@ private:
     }
 
     void image_callback(const sensor_msgs::LaserScan::ConstPtr& laser, 
-                        const sensor_msgs::Image::ConstPtr& image) {
+                        const sensor_msgs::CompressedImage::ConstPtr& image) {
         try {
             // Convert from ROS image msg to OpenCV matrix images
             cv_bridge::CvImagePtr cv_ptr;
-            cv_ptr = cv_bridge::toCvCopy(image, sensor_msgs::image_encodings::BGR8);
-            cv::Mat src = cv_ptr->image;
-
+          //  cv_ptr = cv_bridge::toCvCopy((sensor_msgs::Imageu) image, sensor_msgs::image_encodings::BGR8);
+           // cv::Mat src = cv_ptr->image;
+            cv::Mat src = cv::imdecode(image->data, 1);
             // Take hsv ranges from launch
 
             // OpenCV filters to find colours
@@ -175,6 +175,7 @@ private:
 
             // acceptable horizontal distance between the 2 colours on a pillar
             for (auto pink_pt = pink_keypoints.begin(); pink_pt != pink_keypoints.end(); pink_pt++) {
+                ROS_INFO_STREAM("Pink x= " << pink_pt->pt.x);
                 double xCo = pink_pt->pt.x;
                 xCo = 320 - xCo;
                 // TODO: you might want atan2
@@ -184,7 +185,7 @@ private:
                 int distance_index = lTheta / laser->angle_increment;
                 double r2 = laser->ranges[distance_index];
                 double r1 = 0.1;
-                double distance = sqrt( (r1 + r2*cos(lTheta))*(r1 + r2*cos(lTheta)) + (r2*sin(lTheta))*(r2*sin(lTheta)) );
+                double distance = sqrt( (r1 + r2*cos(theta))*(r1 + r2*cos(theta)) + (r2*sin(theta))*(r2*sin(theta)) );
                 if( std::isfinite(distance) && std::isfinite(theta) ) { 
                     distance = distance - 0.1;
             //ROS_INFO_STREAM("theta " << (theta * 180 / M_PI) << " distance " << distance);
@@ -232,7 +233,7 @@ private:
 
             cv::waitKey(30);
         } catch (cv_bridge::Exception& e) {
-            ROS_ERROR("Could not convert from '%s' to 'bgr8'.", image->encoding.c_str());
+            ROS_ERROR("Could not convert from to 'bgr8'.");
         }
     }
 

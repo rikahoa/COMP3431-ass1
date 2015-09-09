@@ -166,10 +166,10 @@ public:
                          static_cast<int>((pos.second - origin.y) / this->og.info.resolution));
     }
 
-    bool certain(pair<int, int>& target) const {
+    bool certain(const pair<int, int>& target) const {
         auto x = target.first;
         auto y = target.second;
-        return get_data(x,y) <= 20 || get_data(x,y) >= 95;
+        return (get_data(x,y) >= 0 && get_data(x,y) <= 20) || get_data(x,y) >= 90;
     }
 private:
     void fatten_neighbours(const nav_msgs::OccupancyGrid &og);
