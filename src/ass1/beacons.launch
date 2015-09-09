@@ -4,8 +4,5 @@
             beacon0:
                 top:    "green"
                 bottom: "pink"
-            beacon1:
-                top:    "blue"
-                bottom: "pink"
     </rosparam>
 </launch>

@@ -36,7 +36,7 @@ void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
 
         // Mark data
         seen[y][x] = true;
-        set_data(x, y, 100);
+        set_data(x, y, 90);
 
         // Search all directions if not too fat.
         if (distance < fatten_value) {

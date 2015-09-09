@@ -67,10 +67,21 @@ private:
             ROS_ERROR_STREAM("WAYPOINT: * No Target found...");
             return false;
         }
+        ROS_INFO_STREAM("WAYPOINT ASTAR: size of path: " << og_path.size()); 
+
         this->og_path = og_path;
         this->path = this->maze.og_to_real_path(og_path);
-        // push path to the end
         this->path.push(to_visit.front());
+
+        // ==== debugging
+        vector<pair<double,double>> extra{this->to_visit.front()};
+        if (!path.empty()) {
+            extra.push_back(path.front());
+        }
+        this->maze.rviz(map_fatten_pub, this->og_path, extra);
+        // ===== end
+        
+        // push path to the end
         this->started = true;
         return true;
     }
@@ -97,7 +108,8 @@ private:
         if (this->maze.valid()) {
             while (!started || this->path.empty() || this->bot.close_enough(to_visit.front())) {
                 if (started && this->bot.close_enough(to_visit.front())) {
-                    ROS_INFO_STREAM("WAYPOINT: found" << to_visit.front().first << "," << to_visit.front().second );
+                    ROS_INFO_STREAM("WAYPOINT: found" << to_visit.front().first << 
+                            "," << to_visit.front().second );
                     this->to_visit.pop();
                     if (this->to_visit.empty()) {
                         ROS_INFO_STREAM("WAYPOINT: targets found. Shutting down...");

@@ -61,14 +61,16 @@ protected:
 class WaypointState : public State {
 public:
     WaypointState(int x, int y, double cost, double heuristic, pair<int,int> goal, double accepted) : 
-        WaypointState(x, y, cost, make_pair(-1, -1), heuristic, goal, accepted) {
+        WaypointState(x, y, cost, heuristic, make_pair(-1, -1), goal, accepted) {
         
     }
 
     virtual bool is_goal(const Maze& maze) const override {
         double vy = y - goal.second;
         double vx = x - goal.first;
-        return (sqrt(vy*vy + vx*vx) * maze.get_resolution()) < this->accepted;
+        auto distance = sqrt(vy*vy+vx*vx) * maze.get_resolution();
+        ROS_INFO_STREAM("distance: " << distance);
+        return distance < this->accepted;
     }
 
     virtual vector<State*> explore(const Maze& maze,
@@ -78,7 +80,8 @@ public:
         for (const auto &p : State::DIRECTIONS) {
             int x = this->x + p.first;
             int y = this->y + p.second;
-
+            
+            ROS_INFO_STREAM("attempting to get for " << x << "," << y);
             if (maze.get_data(this->x, this->y) < SAFE_PERCENT) {
                 if (x >= 0 && x < maze.get_width() && 
                         y >= 0 && y < maze.get_height() && 
@@ -87,15 +90,16 @@ public:
                     double vx = pos.first - world_goal.first;
                     double vy = pos.second - world_goal.second;
                     new_states.push_back(new WaypointState(x, y, this->cost + maze.get_resolution(),
-                                        sqrt(vx*vx+vy*vy), goal, this->accepted));
+                                        sqrt(vx*vx+vy*vy), make_pair(this->x, this->y),
+                                        goal, this->accepted));
                 }
             }
         }
         return new_states;
     }
 private:
-    WaypointState(int x, int y, double cost, pair<int, int> parent, double heuristic, 
-            pair<int, int> goal, double accepted) :
+    WaypointState(int x, int y, double cost, double heuristic, 
+        pair<int, int> parent, pair<int, int> goal, double accepted) :
         State(x, y, cost, parent, heuristic), goal(goal), accepted(accepted) {
         
     };
