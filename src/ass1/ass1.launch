@@ -19,9 +19,9 @@
         <param name="unstuck_angle_multiplier" value="2" />
     </node>
 
-    <!-- <node name="waypoint" pkg="ass1" type="waypoint" output="screen"> 
+    <node name="waypoint" pkg="ass1" type="waypoint" output="screen"> 
         <param name="fatten" value="5" />
-    </node> -->
+    </node>
     <node name="odom" pkg="ass1" type="odom" output="screen" />
     <node name="exploration" pkg="ass1" type="exploration" output="screen">
         <param name="fatten" value="5" />

@@ -37,7 +37,7 @@ public:
 
 private:
     void beacon_callback(const ass1::FoundBeacons::ConstPtr& msg) {
-        ROS_INFO_STREAM("Beacons found! Dora the Explorer is now Dora the Waypoint.");
+        ROS_INFO_STREAM("WAYPOINT BEGIN: Beacons found! Dora the Explorer is now Dora the Waypoint.");
 
         // start this shizzle up!
         movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
@@ -46,7 +46,7 @@ private:
         recalc_sub = n.subscribe("ass1/recalc", 1, &Waypoint::recalc_callback, this);
 
         for (auto it = msg->positions.begin(); it != msg->positions.end(); ++it) {
-            ROS_INFO_STREAM("beacon: " << it->x << "," << it->y);
+            ROS_INFO_STREAM("WAYPOINT: beacon: " << it->x << "," << it->y);
             to_visit.push(make_pair(it->x, it->y));
         }
     }
@@ -62,9 +62,9 @@ private:
         auto og_pos = this->bot.get_og_pos(this->maze);
         auto og_path = search(this->maze, 
                 new WaypointState(og_pos.first, og_pos.second, 0, 0, 
-                    this->maze.get_og_pos(to_visit.front()), 0.3));
+                    this->maze.get_og_pos(to_visit.front()), 0.4));
         if (og_path.empty()) {
-            ROS_ERROR_STREAM("* No Target found...");
+            ROS_ERROR_STREAM("WAYPOINT: * No Target found...");
             return false;
         }
         this->og_path = og_path;
@@ -74,7 +74,7 @@ private:
     }
     
     void recalc_callback(const std_msgs::String::ConstPtr &msg) {
-        ROS_INFO_STREAM("Recalculate whores!");
+        ROS_INFO_STREAM("WAYPOINT: Recalculate whores!");
         recalculate_astar();
     }
 
@@ -95,9 +95,10 @@ private:
         if (this->maze.valid()) {
             while (!started || this->path.empty() || this->bot.close_enough(to_visit.front())) {
                 if (started && this->bot.close_enough(to_visit.front())) {
+                    ROS_INFO_STREAM("WAYPOINT: found" << to_visit.front().first << "," << to_visit.front().second );
                     this->to_visit.pop();
                     if (this->to_visit.empty()) {
-                        ROS_INFO_STREAM("Waypoint targets found. Shutting down...");
+                        ROS_INFO_STREAM("WAYPOINT: targets found. Shutting down...");
                         ros::shutdown();
                         return;
                     }
@@ -110,20 +111,20 @@ private:
 
             // Populate until next path is found.
             while (!this->path.empty() && this->bot.close_enough(path.front())) {
-                ROS_INFO_STREAM("close enough to " << path.front().first << "," << 
+                ROS_INFO_STREAM("WAYPOINT: close enough to " << path.front().first << "," << 
                         path.front().second << " ... popping");
                 path.pop();
             }
             
             if (path.empty()) {
-                ROS_ERROR_STREAM("Exploration path empty! Cannot move anywhere...");
+                ROS_ERROR_STREAM("WAYPOINT: Exploration path empty! Cannot move anywhere...");
                 if (!recalculate_astar()) {
                     send_unstuck();
                 }
                 return;
             }
             
-            ROS_INFO_STREAM("We want to reach " << to_visit.front().first << "," << 
+            ROS_INFO_STREAM("WAYPOINT: We want to reach " << to_visit.front().first << "," << 
                     to_visit.front().second);
 
             // Generate me a move message to target.
