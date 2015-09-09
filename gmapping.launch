@@ -1,0 +1,10 @@
+<launch>
+  <param name="/use_sim_time" value="false" />
+  
+  <node pkg="gmapping" type="slam_gmapping" name="slam" >
+    <!--remap from="scan" to="/false_scan" /-->
+    <rosparam>
+      transform_publish_period: 0.1
+    </rosparam>
+  </node>
+</launch>
