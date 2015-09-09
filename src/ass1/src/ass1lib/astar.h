@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include "maze.h"
+#include "bot.h"
 
 using namespace std;
 
@@ -53,6 +54,83 @@ protected:
 
     State(int x, int y, double cost, pair<int, int> parent, double heuristic) : 
         x(x), y(y), cost(cost), parent(parent), heuristic(heuristic) {};
+};
+
+class WaypointState : public State {
+public:
+    WaypointState(int x, int y, double cost, double heuristic, pair<int,int> goal) : 
+        WaypointState(x, y, cost, make_pair(-1, -1), heuristic, goal) {
+        
+    }
+
+    virtual bool is_goal(const Maze& maze) const override {
+        return x == goal.first && y == goal.second;
+    }
+
+    virtual vector<State*> explore(const Maze& maze,
+            std::function<bool(pair<int,int>)> check) const override {
+        vector<State*> new_states;
+        auto world_goal = maze.get_world_pos(this->goal);
+        for (const auto &p : State::DIRECTIONS) {
+            int x = this->x + p.first;
+            int y = this->y + p.second;
+
+            if (x >= 0 && x < maze.get_width() && 
+                    y >= 0 && y < maze.get_height() && 
+                    check(make_pair(x, y)) &&
+                    maze.get_data(x, y) <= 20) {
+                auto pos = maze.get_world_pos(make_pair(x, y)); 
+                double vx = pos.first - world_goal.first;
+                double vy = pos.second - world_goal.second;
+                new_states.push_back(new WaypointState(x, y, this->cost + maze.get_resolution(),
+                                    sqrt(vx*vx+vy*vy), goal));
+            }
+        }
+        return new_states;
+    }
+private:
+    WaypointState(int x, int y, double cost, pair<int, int> parent, double heuristic, 
+            pair<int, int> goal) :
+        State(x, y, cost, parent, heuristic), goal(goal) {};
+
+    pair<int, int> goal;
+};
+
+class ExplorationState : public State {
+public:
+    ExplorationState(int x, int y, double cost, Bot* bot) : 
+        ExplorationState(x, y, cost, make_pair(-1, -1), bot) {};
+
+    virtual bool is_goal(const Maze& maze) const override {
+        return maze.get_data(this->x, this->y) == -1 &&
+            this->bot->astar_okay(maze.get_world_pos(make_pair(this->x, this->y)));
+    }
+
+    virtual vector<State*> explore(const Maze& maze, 
+            std::function<bool(pair<int,int>)> check) const override {
+        vector<State*> new_states;
+        for (const auto &p : State::DIRECTIONS) {
+            int x = this->x + p.first;
+            int y = this->y + p.second;
+            
+            // try move places.
+            if (maze.get_data(this->x, this->y) < 80/* || 
+                    this->bot->close_enough(maze.get_world_pos(make_pair(this->x, this->y)))*/) {
+                if (x >= 0 && x < maze.get_width() && 
+                        y >= 0 && y < maze.get_height() && 
+                        check(make_pair(x, y))) {
+                    new_states.push_back(
+                            new ExplorationState(x, y, 
+                                this->cost + maze.get_resolution(), this->get_position(), this->bot));
+                }
+            }
+        }
+        return new_states;
+    }
+private:
+    ExplorationState(int x, int y, double cost, pair<int, int> parent, Bot* bot) :
+        State(x, y, cost, parent, 0), bot(bot) {};
+    Bot* bot;
 };
 
 const vector<pair<int,int>> State::DIRECTIONS = 

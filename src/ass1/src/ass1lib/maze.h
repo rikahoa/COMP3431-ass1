@@ -174,6 +174,12 @@ public:
         return make_pair(static_cast<int>((pos.first - origin.x) / this->og.info.resolution),
                          static_cast<int>((pos.second - origin.y) / this->og.info.resolution));
     }
+
+    bool certain(pair<int, int>& target) const {
+        auto x = target.first;
+        auto y = target.second;
+        return get_data(x,y) <= 20 || get_data(x,y) >= 95;
+    }
 private:
     void fatten_neighbours(const nav_msgs::OccupancyGrid &og);
     

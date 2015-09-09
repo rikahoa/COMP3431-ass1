@@ -114,9 +114,9 @@ private:
 
     void laser_unstuck_callback(const sensor_msgs::LaserScan::ConstPtr &laser) {
         if (safe(laser, this->safe_range)) {
-            ROS_INFO("Laser Safe");
+            //ROS_STREAM_INFO("Laser Safe");
             if (this->stuck) {
-                ROS_INFO("UNSTUCK: NOT STUCK ASKING RECALC");
+                ROS_INFO_STREAM("UNSTUCK: NOT STUCK ASKING RECALC");
                 this->stuck = false;
                 
                 // signal to recalculate
@@ -124,15 +124,13 @@ private:
                 recalc_pub.publish(msg);
              }
         } else {
-            ROS_INFO("Laser unsafe");
             this->stuck = true;
-            ROS_INFO("UNSTUCK: STILL STUCK");
             auto it = std::min_element(laser->ranges.begin(), laser->ranges.end());
             auto minindex = std::distance(laser->ranges.begin(), it);
 
             float minangle = laser->angle_min + minindex * laser->angle_increment;
 
-            ROS_INFO_STREAM("min=" << *it << ",minindex=" << minindex << ",minangle=" << minangle);
+            ROS_DEBUG_STREAM("min=" << *it << ",minindex=" << minindex << ",minangle=" << minangle);
 
             geometry_msgs::Twist move;
             move.linear.y = 0;        
@@ -144,13 +142,13 @@ private:
             move.angular.z = 0;
             
             if (fabs(minangle) > this->unstuck_angle_threshold) {
-                move.angular.z = std::max(-0.6, 
-                        std::min(0.6, minangle*this->unstuck_angle_multiplier));
+                move.angular.z = std::max(-0.4, 
+                        std::min(0.4, minangle*this->unstuck_angle_multiplier));
             } else {
                 move.linear.x = this->unstuck_x_movement;
             }
                 
-            ROS_INFO_STREAM("UNSTUCK: moving " << move.linear.x << "," << move.angular.z << "...");
+            ROS_WARN_STREAM("UNSTUCK: moving " << move.linear.x << "," << move.angular.z << "...");
             navi_pub.publish(move); 
         }
 

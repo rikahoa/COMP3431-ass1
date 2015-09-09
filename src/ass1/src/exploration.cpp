@@ -17,44 +17,6 @@ using namespace std;
 typedef message_filters::sync_policies::ApproximateTime<
     nav_msgs::OccupancyGrid, nav_msgs::Odometry> ApproxPolicy;
 
-class ExplorationState : public State {
-public:
-    ExplorationState(int x, int y, double cost, Bot* bot) : 
-        ExplorationState(x, y, cost, make_pair(-1, -1), bot) {};
-
-    virtual bool is_goal(const Maze& maze) const override {
-        return maze.get_data(this->x, this->y) == -1 &&
-            this->bot->astar_okay(maze.get_world_pos(make_pair(this->x, this->y)));
-    }
-
-    virtual vector<State*> explore(const Maze& maze, 
-            std::function<bool(pair<int,int>)> check) const override {
-        vector<State*> new_states;
-        for (const auto &p : State::DIRECTIONS) {
-            int x = this->x + p.first;
-            int y = this->y + p.second;
-
-            // try move places.
-            if (maze.get_data(this->x, this->y) < 80/* || 
-                    this->bot->close_enough(maze.get_world_pos(make_pair(this->x, this->y)))*/) {
-                if (x >= 0 && x < maze.get_width() && 
-                        y >= 0 && y < maze.get_height() && 
-                        check(make_pair(x, y))) {
-                    new_states.push_back(
-                            new ExplorationState(x, y, 
-                                this->cost + maze.get_resolution(), this->get_position(), this->bot));
-                }
-            }
-        }
-        return new_states;
-    }
-private:
-    ExplorationState(int x, int y, double cost, pair<int, int> parent, Bot* bot) :
-        State(x, y, cost, parent, 0), bot(bot) {};
-    Bot* bot;
-};
-
-
 class Exploration {
 public:
     Exploration(ros::NodeHandle n) : 
@@ -103,9 +65,16 @@ private:
     
         ROS_INFO_STREAM("* ASTAR invoked.");
         // Do a A* to the nearest frontier
-        auto og_path = search(this->maze, 
+        vector<pair<int,int>> og_path;
+        if (!started || this->bot.close_enough(this->target) || 
+                maze.certain(this->og_target)) {
+            og_path = search(this->maze, 
                 new ExplorationState(og_pos.first, og_pos.second, 0, &this->bot));
-        
+        } else {
+            ROS_INFO_STREAM("recalculating path to certain target...");
+            og_path = search(this->maze, 
+                new WaypointState(og_pos.first, og_pos.second, 0, 0, og_target));
+        }
         // can't find path!
         if (og_path.empty()) {
             ROS_ERROR_STREAM("* No target found...");
@@ -116,6 +85,7 @@ private:
         this->og_target = og_path.back();
         this->og_path = og_path;
         this->path = this->maze.og_to_real_path(this->og_path);
+        this->target = this->path.back();
         this->started = true;
 
         // == publish for debugging...
@@ -138,7 +108,9 @@ private:
 
     void recalc_callback(const std_msgs::String::ConstPtr &msg) {
         ROS_INFO_STREAM("Recalculate whores!");
-        recalculate_astar();
+        if (this->bot.valid() && this->maze.valid()) {
+            recalculate_astar();
+        }
     }
 
     void odom_callback(const nav_msgs::Odometry::ConstPtr &odom) {
@@ -164,22 +136,12 @@ private:
                     << ":" << this->maze.get_data(og_target.first, og_target.second));
             
             // Continue while the goal is unknown.
-            //if (!started || this->maze.get_data(og_target.first, og_target.second) > -1) {
             if (!started || path.empty() || this->bot.close_enough(path.back())) {
                 if (!recalculate_astar()) {
                     send_unstuck();
                     return;
                 }
             }
-
-            // == REMOVE WHEN DONE
-            queue<pair<double,double>> p(this->path);
-            while (!p.empty()) {
-                auto s = p.front();
-                p.pop();
-                ROS_INFO_STREAM("* path: " << s.first << "," << s.second);
-            }
-            // ==
 
             // Populate until next path is found.
             while (!this->path.empty() && this->bot.close_enough(path.front())) {
@@ -225,6 +187,7 @@ private:
     ros::Subscriber beacons_sub;
 
     pair<int, int> og_target;
+    pair<double, double> target;
     queue<pair<double, double>> path;
     vector<pair<int, int>> og_path;
 };

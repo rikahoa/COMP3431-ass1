@@ -3,7 +3,7 @@
 const vector<pair<int,int>> Maze::DIRECTIONS = 
     vector<pair<int, int>>{make_pair(-1,0),make_pair(1,0),make_pair(0,-1),make_pair(0,1)};
 
-#define MIN_PROB 80
+#define MIN_PROB 95
 void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
     vector<vector<bool>> seen;
     for (size_t y = 0; y < og.info.height; ++y) {
