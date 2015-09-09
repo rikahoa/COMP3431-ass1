@@ -118,6 +118,19 @@ private:
         }
     }
 
+    void start_spin() {
+        this->spin = true;
+        this->spin_yaw = this->bot.get_yaw() - 0.11;
+        // fix the angle
+        this->spin_yaw -= static_cast<int>(this->spin_yaw / (2*PI)) * 2 * PI;
+        // fix to spin the right way around
+        if (this->spin_yaw > PI) {
+            this->spin_yaw = -this->spin_yaw + PI;
+        } else if (this->spin_yaw < -PI) {
+            this->spin_yaw = -this->spin_yaw - PI;
+        }
+    }
+
     void odom_callback(const nav_msgs::Odometry::ConstPtr &odom) {
         this->bot.update(odom);
 

@@ -94,7 +94,7 @@ private:
 
         if (this->maze.valid()) {
             while (!started || this->path.empty() || this->bot.close_enough(to_visit.front())) {
-                if (started && !this->path.empty()) {
+                if (started && this->bot.close_enough(to_visit.front())) {
                     this->to_visit.pop();
                     if (this->to_visit.empty()) {
                         ROS_INFO_STREAM("Waypoint targets found. Shutting down...");
