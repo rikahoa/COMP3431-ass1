@@ -8,6 +8,8 @@
 #include "maze.h"
 #include "bot.h"
 
+#define SAFE_PERCENT 60
+
 using namespace std;
 
 class State {
@@ -77,7 +79,7 @@ public:
             int x = this->x + p.first;
             int y = this->y + p.second;
 
-            if (maze.get_data(this->x, this->y) < 50) {
+            if (maze.get_data(this->x, this->y) < SAFE_PERCENT) {
                 if (x >= 0 && x < maze.get_width() && 
                         y >= 0 && y < maze.get_height() && 
                         check(make_pair(x, y))) {
@@ -120,7 +122,7 @@ public:
             int y = this->y + p.second;
             
             // try move places.
-            if (maze.get_data(this->x, this->y) < 50/* || 
+            if (maze.get_data(this->x, this->y) < SAFE_PERCENT/* || 
                     this->bot->close_enough(maze.get_world_pos(make_pair(this->x, this->y)))*/) {
                 if (x >= 0 && x < maze.get_width() && 
                         y >= 0 && y < maze.get_height() && 
