@@ -66,9 +66,6 @@ public:
         pink_ranges[1] = (int)colour_thresholds["h_hi"];
         pink_ranges[2] = (int)colour_thresholds["s"];
         pink_ranges[3] = (int)colour_thresholds["v"];
-        for( int i=0; i < 4; i++ ) {
-            ROS_INFO("PINK %i = %d", i, pink_ranges[i] );
-        }
         n.getParam("/beacon_finder/colour_ranges/blue", colour_thresholds);
         blue_ranges[0] = (int)colour_thresholds["h_lo"];
         blue_ranges[1] = (int)colour_thresholds["h_hi"];
@@ -84,6 +81,19 @@ public:
         yellow_ranges[1] = (int)colour_thresholds["h_hi"];
         yellow_ranges[2] = (int)colour_thresholds["s"];
         yellow_ranges[3] = (int)colour_thresholds["v"];
+        for( int i=0; i < 4; i++ ) {
+            ROS_INFO("PINK %i = %d", i, pink_ranges[i] );
+        }
+        for( int i=0; i < 4; i++ ) {
+            ROS_INFO("BLUE %i = %d", i, blue_ranges[i] );
+        }
+        for( int i=0; i < 4; i++ ) {
+            ROS_INFO("GREEN %i = %d", i, green_ranges[i] );
+        }
+        for( int i=0; i < 4; i++ ) {
+            ROS_INFO("YELLOW %i = %d", i, yellow_ranges[i] );
+        }
+
 
    }
 
@@ -123,10 +133,10 @@ private:
             cv::Mat hsv, pink_threshold, yellow_threshold, blue_threshold, green_threshold;
             cv::cvtColor(src, hsv, CV_BGR2HSV);
 
-            cv::inRange(hsv, cv::Scalar(pink_ranges[0],pink_ranges[2],pink_ranges[3]), cv::Scalar(pink_ranges[1],355,355), pink_threshold);
-            cv::inRange(hsv, cv::Scalar(yellow_ranges[0],yellow_ranges[2],yellow_ranges[3]), cv::Scalar(yellow_ranges[1],355,355), yellow_threshold);
-            cv::inRange(hsv, cv::Scalar(blue_ranges[0],blue_ranges[2],blue_ranges[3]), cv::Scalar(blue_ranges[1],355,355), blue_threshold);
-            cv::inRange(hsv, cv::Scalar(green_ranges[0],green_ranges[2],green_ranges[3]), cv::Scalar(green_ranges[1],355,355), green_threshold);
+            cv::inRange(hsv, cv::Scalar(pink_ranges[0],pink_ranges[2],pink_ranges[3]), cv::Scalar(pink_ranges[1],255,255), pink_threshold);
+            cv::inRange(hsv, cv::Scalar(yellow_ranges[0],yellow_ranges[2],yellow_ranges[3]), cv::Scalar(yellow_ranges[1],255,255), yellow_threshold);
+            cv::inRange(hsv, cv::Scalar(blue_ranges[0],blue_ranges[2],blue_ranges[3]), cv::Scalar(blue_ranges[1],255,255), blue_threshold);
+            cv::inRange(hsv, cv::Scalar(green_ranges[0],green_ranges[2],green_ranges[3]), cv::Scalar(green_ranges[1],255,255), green_threshold);
             blue_threshold = cv::Scalar::all(255) - blue_threshold;
             pink_threshold = cv::Scalar::all(255) - pink_threshold;
             yellow_threshold = cv::Scalar::all(255) - yellow_threshold;
