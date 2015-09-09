@@ -1,7 +1,8 @@
 #include "maze.h"
 
 const vector<pair<int,int>> Maze::DIRECTIONS = 
-    vector<pair<int, int>>{make_pair(-1,0),make_pair(1,0),make_pair(0,-1),make_pair(0,1),make_pair(-1,-1),make_pair(1,1),make_pair(1,-1),make_pair(-1,1)};
+    vector<pair<int, int>>{make_pair(-1,0),make_pair(1,0),make_pair(0,-1),make_pair(0,1),
+                           make_pair(-1,-1),make_pair(1,1),make_pair(1,-1),make_pair(-1,1)};
 
 #define MIN_PROB 95
 void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
