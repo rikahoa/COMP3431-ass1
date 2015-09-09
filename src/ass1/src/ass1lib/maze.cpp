@@ -29,8 +29,7 @@ void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
         auto x = info.first.first;
         auto y = info.first.second;
         auto start_x = info.second.first;
-        auto start_y = info.second.first;
-        
+        auto start_y = info.second.second;
         
         auto distance = sqrt( (x-start_x)*(x-start_x) + (y-start_y)*(y-start_y));
        
