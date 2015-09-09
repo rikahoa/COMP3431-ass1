@@ -135,11 +135,11 @@ public:
     {
         nav_msgs::OccupancyGrid copy = this->og;
         for (const auto& p : points) {
-            copy.data[p.second * copy.info.width + p.first] = 50; 
+            copy.data[p.second * copy.info.width + p.first] = 40; 
         }
         for (const auto& rp : real_points) {
             auto p = this->get_og_pos(rp);
-            copy.data[p.second * copy.info.width + p.first] = 50; 
+            copy.data[p.second * copy.info.width + p.first] = 75; 
         }
         pub.publish(copy);
     }

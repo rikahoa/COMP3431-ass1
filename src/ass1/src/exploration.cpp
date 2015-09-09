@@ -117,6 +117,12 @@ private:
         return true;
     }
 
+    void send_unstuck() {
+        std_msgs::String result;
+        result.data = "Bob";
+        unstuck_pub.publish(result);
+    }
+
     void recalc_callback(const std_msgs::String::ConstPtr &msg) {
         ROS_INFO_STREAM("Recalculate whores!");
         recalculate_astar();
@@ -148,9 +154,8 @@ private:
             //if (!started || this->maze.get_data(og_target.first, og_target.second) > -1) {
             if (!started || path.empty() || this->bot.close_enough(path.back())) {
                 if (!recalculate_astar()) {
-                    std_msgs::String result;
-                    result.data = "Bob";
-                    unstuck_pub.publish(result);
+                    send_unstuck();
+                    return;
                 }
             }
 
@@ -174,9 +179,8 @@ private:
             if (path.empty()) {
                 ROS_WARN_STREAM("Exploration path empty! Cannot move anywhere...");
                 if (!recalculate_astar()) {
-                    std_msgs::String result;
-                    result.data = "Bob";
-                    unstuck_pub.publish(result);
+                    send_unstuck();
+                    return;
                 }
                 return;
             }
@@ -199,6 +203,7 @@ private:
 
     ros::NodeHandle n;
     ros::NodeHandle pnh;
+
     ros::Publisher movement_pub;    
     ros::Publisher unstuck_pub;    
     ros::Publisher map_fatten_pub;
