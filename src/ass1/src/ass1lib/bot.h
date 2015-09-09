@@ -48,7 +48,14 @@ public:
 
         // Find the angle to target.
         double target_angle = atan2(vy, vx) - this->get_yaw();
-        target_angle -= static_cast<int>(target_angle / PI) * PI;
+        // fix the angle
+        target_angle -= static_cast<int>(target_angle / (2*PI)) * 2 * PI;
+        // fix to spin the right way around
+        if (target_angle > PI) {
+            target_angle = -target_angle + PI;
+        } else if (target_angle < -PI) {
+            target_angle = -target_angle - PI;
+        }
 
         return make_pair(distance, target_angle);
     }
@@ -57,7 +64,7 @@ public:
     void setup_spin(geometry_msgs::Twist& move, double delta) {
         move.linear.x = move.linear.y = move.linear.z = 0;
         move.angular.x = move.angular.y = 0;
-        move.angular.z = min(0.6, max(-0.6, 2*delta));
+        move.angular.z = std::min(0.6, std::max(-0.6, 2*delta));
     }
 
     void setup_movement(const pair<double,double>& target, geometry_msgs::Twist& move) {
@@ -77,12 +84,11 @@ public:
         ROS_DEBUG_STREAM("** angle change of " << target_angle << " required.");
         ROS_DEBUG_STREAM("** distance from target is " << distance);
 
-        // TODO: Make this better
         if (fabs(target_angle) > 0.1) {
-            move.angular.z = max(-0.6, min(0.6, target_angle)); 
+            move.angular.z = std::max(-0.6, std::min(0.6, target_angle)); 
         } else {
             if (distance > 0.1) {
-                move.linear.x = 0.15;
+                move.linear.x = 0.25;
             }
         }
 

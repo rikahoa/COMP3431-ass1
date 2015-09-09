@@ -71,7 +71,7 @@ public:
         } else {
             ROS_INFO("Got fatten param");
         }
-        maze = Maze{fatten_value};
+        maze = Maze(fatten_value);
     }
 
 private:

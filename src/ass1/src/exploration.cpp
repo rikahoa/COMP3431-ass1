@@ -77,7 +77,7 @@ public:
         } else {
             ROS_INFO("Got fatten param");
         }
-        maze = Maze{fatten_value};
+        maze = Maze(fatten_value);
     }
 
 private:
@@ -88,12 +88,13 @@ private:
 
     void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og) {
         this->maze.set_occupancy_grid(*og);
-        // publish for debugging...
+        // == publish for debugging...
         vector<pair<double,double>> extra;
         if (!path.empty()) {
             extra.push_back(path.front());
         }
         this->maze.rviz(map_fatten_pub, this->og_path, extra);
+        // == remove when done
     }
 
     bool recalculate_astar() {
@@ -113,10 +114,18 @@ private:
 
         // Target the frontier in real position.
         this->og_target = og_path.back();
-        this->og_path = std::move(og_path);
+        this->og_path = og_path;
         this->path = this->maze.og_to_real_path(this->og_path);
         this->started = true;
-        this->maze.rviz(map_fatten_pub, this->og_path, vector<pair<double,double>>());
+
+        // == publish for debugging...
+        vector<pair<double,double>> extra;
+        if (!path.empty()) {
+            extra.push_back(path.front());
+        }
+        this->maze.rviz(map_fatten_pub, this->og_path, extra);
+        // == remove when done
+
         ROS_DEBUG_STREAM("* Let's find " << og_target.first << "," << og_target.second);
         return true;
     }
@@ -184,7 +193,6 @@ private:
                 ROS_WARN_STREAM("Exploration path empty! Cannot move anywhere...");
                 if (!recalculate_astar()) {
                     send_unstuck();
-                    return;
                 }
                 return;
             }

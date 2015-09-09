@@ -29,7 +29,8 @@ typedef message_filters::sync_policies::
 class Beacon {
 public:
     Beacon(string top, string bottom) : 
-        x(0), y(0), known_location(false), top(top), bottom(bottom), h_hi(h_hi), h_lo(h_lo), s(s), v(v) {
+        x(0), y(0), known_location(false), 
+        top(top), bottom(bottom) {
         ROS_INFO_STREAM("Looking for beacon top=" << top << ",bottom=" << bottom);
     }
     bool found() { return known_location; }
@@ -37,12 +38,8 @@ public:
     double x, y;
     bool known_location;
     string top, bottom;
-    int h_hi, h_lo, s, v;
     // COLOURS
 };
-
-
-
 
 class BeaconFinder {
 public:
@@ -215,7 +212,7 @@ private:
                 // Send beacon message
                 ass1::FoundBeacons msg;
                 msg.n = beacons.size();
-                for (int i = 0; i < beacons.size(); ++i) {
+                for (size_t i = 0; i < beacons.size(); ++i) {
                     geometry_msgs::Point point;
                     point.x = beacons[i].x;
                     point.y = beacons[i].y;
