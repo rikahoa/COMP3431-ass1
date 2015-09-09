@@ -6,6 +6,7 @@
 #include <message_filters/sync_policies/approximate_time.h>
 #include <sensor_msgs/image_encodings.h>
 #include <sensor_msgs/LaserScan.h>
+#include <sensor_msgs/Image.h>
 #include <geometry_msgs/Point.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -45,7 +46,7 @@ class BeaconFinder {
 public:
     BeaconFinder(ros::NodeHandle n, vector<Beacon> beacons) : n(n), pnh("~"),
         beacons(beacons),
-        img_sub(n, "/camera/rgb/image_color", 1),
+        img_sub(n, "/camera/rgb/image_color/compressed", 1),
         laser_sub(n, "/scan", 1),
         sync(SyncPolicy(10), laser_sub, img_sub) {
 
@@ -181,8 +182,11 @@ private:
 		//ROS_INFO_STREAM("theta: " << (theta * 180 / M_PI));
                 double lTheta = theta - laser->angle_min;
                 int distance_index = lTheta / laser->angle_increment;
-                double distance = laser->ranges[distance_index];
+                double r2 = laser->ranges[distance_index];
+                double r1 = 0.1;
+                double distance = sqrt( (r1 + r2*cos(lTheta))*(r1 + r2*cos(lTheta)) + (r2*sin(lTheta))*(r2*sin(lTheta)) );
                 if( std::isfinite(distance) && std::isfinite(theta) ) { 
+                    distance = distance - 0.1;
             //ROS_INFO_STREAM("theta " << (theta * 180 / M_PI) << " distance " << distance);
                     search_for_match(blue_keypoints.begin(), blue_keypoints.end(), pink_pt, "blue", make_pair(distance, theta));
                     search_for_match(yellow_keypoints.begin(), yellow_keypoints.end(), pink_pt, "yellow", make_pair(distance, theta));
