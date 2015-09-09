@@ -73,7 +73,12 @@ private:
         } else {
             ROS_INFO_STREAM("recalculating path to certain target...");
             og_path = search(this->maze, 
-                new WaypointState(og_pos.first, og_pos.second, 0, 0, og_target));
+                new WaypointState(og_pos.first, og_pos.second, 0, 0, og_target, 0.5));
+            if (og_path.empty()) {
+                ROS_INFO_STREAM("giving up...can't get to that point...");
+                og_path = search(this->maze, 
+                    new ExplorationState(og_pos.first, og_pos.second, 0, &this->bot));
+            }
         }
         // can't find path!
         if (og_path.empty()) {
@@ -110,6 +115,19 @@ private:
         ROS_INFO_STREAM("Recalculate whores!");
         if (this->bot.valid() && this->maze.valid()) {
             recalculate_astar();
+        }
+    }
+
+    void start_spin() {
+        this->spin = true;
+        this->spin_yaw = this->bot.get_yaw() - 0.11;
+        // fix the angle
+        this->spin_yaw -= static_cast<int>(this->spin_yaw / (2*PI)) * 2 * PI;
+        // fix to spin the right way around
+        if (this->spin_yaw > PI) {
+            this->spin_yaw = -this->spin_yaw + PI;
+        } else if (this->spin_yaw < -PI) {
+            this->spin_yaw = -this->spin_yaw - PI;
         }
     }
 

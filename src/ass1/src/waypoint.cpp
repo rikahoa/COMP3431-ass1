@@ -62,7 +62,7 @@ private:
         auto og_pos = this->bot.get_og_pos(this->maze);
         auto og_path = search(this->maze, 
                 new WaypointState(og_pos.first, og_pos.second, 0, 0, 
-                    this->maze.get_og_pos(to_visit.front())));
+                    this->maze.get_og_pos(to_visit.front()), 0.3));
         if (og_path.empty()) {
             ROS_ERROR_STREAM("* No Target found...");
             return false;
@@ -94,7 +94,7 @@ private:
 
         if (this->maze.valid()) {
             while (!started || this->path.empty() || this->bot.close_enough(to_visit.front())) {
-                if (started && !this->path.empty()) {
+                if (started && this->bot.close_enough(to_visit.front())) {
                     this->to_visit.pop();
                     if (this->to_visit.empty()) {
                         ROS_INFO_STREAM("Waypoint targets found. Shutting down...");

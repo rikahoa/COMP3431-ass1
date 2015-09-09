@@ -37,23 +37,14 @@ public:
     queue<pair<double, double>> og_to_real_path(const vector<pair<int, int>>& astar_path) const {
         vector<pair<double, double>> real_path;        
         
-       ROS_INFO_STREAM("ORIGINAL PATH");
         for(auto it = astar_path.begin(); it!= astar_path.end(); ++it) {
             real_path.push_back(get_world_pos(*it));
-            ROS_INFO_STREAM(get_world_pos(*it).first << "," << get_world_pos(*it).second);
         }
             
         vector<pair<double,double>> simplified = rdp_simplify(real_path, 0.05);
-        
-        ROS_INFO_STREAM("Simplified PATH");
-        for(auto it = simplified.begin(); it!= simplified.end(); ++it) {
-            ROS_INFO_STREAM((*it).first << "," << (*it).second);
-        }
-
         std::queue<pair<double,double>> q(std::deque<pair<double,double>>(simplified.begin(),
                                                                   simplified.end()));
         return q;
-      
     }
     
     static double distance_line_point(
