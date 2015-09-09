@@ -69,6 +69,8 @@ private:
         }
         this->og_path = og_path;
         this->path = this->maze.og_to_real_path(og_path);
+        // push path to the end
+        this->path.push(to_visit.front());
         this->started = true;
         return true;
     }
