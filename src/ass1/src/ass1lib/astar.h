@@ -58,13 +58,15 @@ protected:
 
 class WaypointState : public State {
 public:
-    WaypointState(int x, int y, double cost, double heuristic, pair<int,int> goal) : 
-        WaypointState(x, y, cost, make_pair(-1, -1), heuristic, goal) {
+    WaypointState(int x, int y, double cost, double heuristic, pair<int,int> goal, double accepted) : 
+        WaypointState(x, y, cost, make_pair(-1, -1), heuristic, goal, accepted) {
         
     }
 
     virtual bool is_goal(const Maze& maze) const override {
-        return x == goal.first && y == goal.second;
+        double vy = y - goal.second;
+        double vx = x - goal.first;
+        return (sqrt(vy*vy + vx*vx) * maze.get_resolution()) < this->accepted;
     }
 
     virtual vector<State*> explore(const Maze& maze,
@@ -75,25 +77,29 @@ public:
             int x = this->x + p.first;
             int y = this->y + p.second;
 
-            if (x >= 0 && x < maze.get_width() && 
-                    y >= 0 && y < maze.get_height() && 
-                    check(make_pair(x, y)) &&
-                    maze.get_data(x, y) <= 20) {
-                auto pos = maze.get_world_pos(make_pair(x, y)); 
-                double vx = pos.first - world_goal.first;
-                double vy = pos.second - world_goal.second;
-                new_states.push_back(new WaypointState(x, y, this->cost + maze.get_resolution(),
-                                    sqrt(vx*vx+vy*vy), goal));
+            if (maze.get_data(this->x, this->y) < 50) {
+                if (x >= 0 && x < maze.get_width() && 
+                        y >= 0 && y < maze.get_height() && 
+                        check(make_pair(x, y))) {
+                    auto pos = maze.get_world_pos(make_pair(x, y)); 
+                    double vx = pos.first - world_goal.first;
+                    double vy = pos.second - world_goal.second;
+                    new_states.push_back(new WaypointState(x, y, this->cost + maze.get_resolution(),
+                                        sqrt(vx*vx+vy*vy), goal, this->accepted));
+                }
             }
         }
         return new_states;
     }
 private:
     WaypointState(int x, int y, double cost, pair<int, int> parent, double heuristic, 
-            pair<int, int> goal) :
-        State(x, y, cost, parent, heuristic), goal(goal) {};
+            pair<int, int> goal, double accepted) :
+        State(x, y, cost, parent, heuristic), goal(goal), accepted(accepted) {
+        
+    };
 
     pair<int, int> goal;
+    double accepted;
 };
 
 class ExplorationState : public State {
@@ -114,7 +120,7 @@ public:
             int y = this->y + p.second;
             
             // try move places.
-            if (maze.get_data(this->x, this->y) < 80/* || 
+            if (maze.get_data(this->x, this->y) < 50/* || 
                     this->bot->close_enough(maze.get_world_pos(make_pair(this->x, this->y)))*/) {
                 if (x >= 0 && x < maze.get_width() && 
                         y >= 0 && y < maze.get_height() && 
