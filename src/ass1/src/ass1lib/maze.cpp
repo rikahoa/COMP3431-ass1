@@ -11,11 +11,11 @@ void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
         seen.push_back(vector<bool>(og.info.width));
     }
 
-    queue<pair<pair<size_t, size_t>, size_t>> bfs;
+    queue<pair<pair<size_t, size_t>, pair<size_t, size_t>>> bfs;
     for (size_t y = 0; y < og.info.height; ++y) {
         for (size_t x = 0; x < og.info.width; ++x) {
             if (og.data[y * og.info.width + x] >= MIN_PROB) {
-                bfs.push(make_pair(make_pair(x, y), 0));
+                bfs.push(make_pair(make_pair(x, y), make_pair(x, y)));
             }
         }
     }
@@ -28,7 +28,11 @@ void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
         // Find information.
         auto x = info.first.first;
         auto y = info.first.second;
-        auto distance = info.second;
+        auto start_x = info.second.first;
+        auto start_y = info.second.first;
+        
+        
+        auto distance = sqrt( (x-start_x)*(x-start_x) + (y-start_y)*(y-start_y));
        
         if (seen[y][x] || distance > fatten_value) {
             continue;
@@ -39,15 +43,14 @@ void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
         set_data(x, y, 90);
 
         // Search all directions if not too fat.
-        if (distance < fatten_value) {
-            for (const auto& dir : Maze::DIRECTIONS) {
-                auto newX = x + dir.first;
-                auto newY = y + dir.second;
-                if (newX >= 0 && newX < og.info.width && newY >= 0 && newY < og.info.height &&
-                        !seen[newY][newX]) {
-                    bfs.push(make_pair(make_pair(newX, newY), distance + 1));
-                }
+        for (const auto& dir : Maze::DIRECTIONS) {
+            auto newX = x + dir.first;
+            auto newY = y + dir.second;
+            if (newX >= 0 && newX < og.info.width && newY >= 0 && newY < og.info.height &&
+                    !seen[newY][newX]) {
+                bfs.push(make_pair(make_pair(newX, newY), info.second));
             }
         }
+
     }
 }
