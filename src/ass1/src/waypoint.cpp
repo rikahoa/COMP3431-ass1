@@ -117,7 +117,7 @@ private:
             }
             
             if (path.empty()) {
-                ROS_ERROR_STREAM("WAYPOINT: Exploration path empty! Cannot move anywhere...");
+                ROS_ERROR_STREAM("WAYPOINT: path empty! Cannot move anywhere...");
                 if (!recalculate_astar()) {
                     send_unstuck();
                 }
