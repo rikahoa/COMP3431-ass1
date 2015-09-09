@@ -69,7 +69,6 @@ public:
         double vy = y - goal.second;
         double vx = x - goal.first;
         auto distance = sqrt(vy*vy+vx*vx) * maze.get_resolution();
-        ROS_INFO_STREAM("distance: " << distance);
         return distance < this->accepted;
     }
 
@@ -81,7 +80,6 @@ public:
             int x = this->x + p.first;
             int y = this->y + p.second;
             
-            ROS_INFO_STREAM("attempting to get for " << x << "," << y);
             if (maze.get_data(this->x, this->y) < SAFE_PERCENT) {
                 if (x >= 0 && x < maze.get_width() && 
                         y >= 0 && y < maze.get_height() && 
