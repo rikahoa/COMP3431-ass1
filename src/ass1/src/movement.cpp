@@ -82,22 +82,6 @@ private:
                 safe = true;
             } else {
                 safe = is_safe(laser_scan, this->safe_range);  
-                /*for(unsigned int i = 0; i < laser_scan->ranges.size(); ++i) {
-                    double angle = i * laser_scan->angle_increment - laser_scan->angle_min;
-                    double range = laser_scan->ranges[i];
-                    double base_x = 0.1 + range*cos(angle);
-                    double base_y = range*sin(angle);
-                    double base_range = sqrt(base_x*base_x + base_y*base_y);
-                    if(base_range < this->safe_range) {
-                        return false;
-                    }
-                }        
-                for (const auto& range : laser_scan->ranges) {
-                    if (range < this->safe_range) {
-                        safe = false;
-                        break;
-                    }
-                }*/
             }
 
             if (safe) {
@@ -162,10 +146,8 @@ private:
     }
     
     static bool is_safe(const sensor_msgs::LaserScan::ConstPtr &laser_scan, double safe_range) {
-        /*auto it = std::min_element(laser->ranges.begin(), laser->ranges.end());
-        return *it > safe_range;*/ 
         for (size_t i = 0; i < laser_scan->ranges.size(); ++i) {
-            double angle = i * laser_scan->angle_increment - laser_scan->angle_min;
+            double angle = i * laser_scan->angle_increment + laser_scan->angle_min;
             double range = laser_scan->ranges[i];
             double base_x = 0.1 + range*cos(angle);
             double base_y = range*sin(angle);
