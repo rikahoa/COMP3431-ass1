@@ -46,7 +46,7 @@ class BeaconFinder {
 public:
     BeaconFinder(ros::NodeHandle n, vector<Beacon> beacons) : n(n), pnh("~"),
         beacons(beacons),
-        img_sub(n, "/camera/rgb/image_color/compressed", 1),
+        img_sub(n, "/camera/rgb/image_color", 1),
         laser_sub(n, "/scan", 1),
         sync(SyncPolicy(10), laser_sub, img_sub) {
 
