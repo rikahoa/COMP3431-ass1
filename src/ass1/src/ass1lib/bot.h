@@ -85,7 +85,7 @@ public:
         ROS_DEBUG_STREAM("** distance from target is " << distance);
 
         if (fabs(target_angle) > 0.1) {
-            move.angular.z = std::max(-0.6, std::min(0.6, target_angle)); 
+            move.angular.z = std::max(-0.6, std::min(0.6, 3*target_angle)); 
         } else {
             if (distance > 0.1) {
                 move.linear.x = 0.25;
