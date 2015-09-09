@@ -41,7 +41,7 @@ public:
             real_path.push_back(get_world_pos(*it));
         }
             
-        vector<pair<double,double>> simplified = rdp_simplify(real_path, 0.05);
+        vector<pair<double,double>> simplified = rdp_simplify(real_path, 0.055);
         std::queue<pair<double,double>> q(std::deque<pair<double,double>>(simplified.begin(),
                                                                   simplified.end()));
         return q;
