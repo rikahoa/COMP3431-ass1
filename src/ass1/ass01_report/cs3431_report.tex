@@ -144,19 +144,22 @@ However, as the frontier-based search is performed on a map with a resolution of
 \large{\textbf{\\Detection}} \\
 \normalsize
 \\
-During the TurtleBot's first exploration of the maze, the camera is used to identify and position beacons. For every image frame captured by the Bot, we generate four additional images (for pink, yellow, blue and green), which only display the regions that lie within their colour thresholds. OpenCV's SimpleBlobDetector is used to extract the colour "blobs" from our images.\\
-\\
-To minimise the number of false positives and to distinguish between beacons and background colour noise, the SimpleBlobDetector filters by area, inertia and convexity and looks for areas in an image which satisfy the following criteria:
+During the TurtleBot's first exploration of the maze, the camera is used to identify and position beacons. The beacon finder node subscribes to RGB images from the Kinect camera and processes them using OpenCV. The following criteria is used to detect the beacons:
 
-	\begin{enumerate}
-		\item Area of the coloured region in the image is at least 200 pixels.
-		\item Inertia of the detected region is greater than 0.65.
-		\item Detected blob has a minimum convexity of 0.5.\\
-	\end{enumerate}
+    \begin{enumerate}
+        \item Colour range filtering to see only and distinguish pink, blue, green and yellow colours of the beacons.
+        \item Simple blob detection to find beacon shaped objects:
+        \begin{enumerate}
+            \item Area greater than 200 pixels.
+            \item Inertia greater than 0.65.
+            \item Convexity greater than 0.5.
+        \end{enumerate}
+    \end{enumerate}
 
-\noindent
-OpenCV's drawKeypoints is used to retrieve the location, as pixel values, of each detected colour region within an image. We conclude that a beacon has been successfully detected if there are two "blobs" in the same image frame within a 20 pixel offset from each other in the horizontal axis. This threshold of 20 pixels is used to account for any motion blur. The beacon's top colour is determined by comparing the two keypoints' y values.\\
-\\
+\noindent The blob detector produces key points in the form of coordinates on the 640 * 480 RGB image, in the center of the beacon colour block. We conclude that a beacon has been successfully detected if there are two "blobs" in the same image frame within a 20 pixel offset from each other in the horizontal x axis. This threshold of 20 pixels is used to account for any motion blur. The beacon's top colour is determined by comparing the two keypoints' y values.\\
+
+\noindent We also use the laser scan data to find the location of the beacon relative to the bot by reading the laser data at the angle corresponding to the angle on the RGB image. This information is then used in conjunction with the xxx to give the location of the beacon with respect to the global map. \\
+
 \large{\textbf{\\Localisation}} \\
 \normalsize
 \\
