@@ -212,10 +212,10 @@ private:
                 // Send beacon message
                 ass1::FoundBeacons msg;
                 msg.n = beacons.size();
-                for (size_t i = 0; i < beacons.size(); ++i) {
+                for (auto it = beacons.begin(); it != beacons.end(); ++it) {
                     geometry_msgs::Point point;
-                    point.x = beacons[i].x;
-                    point.y = beacons[i].y;
+                    point.x = it->x;
+                    point.y = it->y;
                     point.z = 0;
                     msg.positions.push_back(point);
                 }
