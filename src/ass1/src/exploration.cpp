@@ -89,7 +89,11 @@ private:
     void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og) {
         this->maze.set_occupancy_grid(*og);
         // publish for debugging...
-        this->maze.rviz(map_fatten_pub, this->og_path, vector<pair<double,double>>());
+        vector<pair<double,double>> extra;
+        if (!path.empty()) {
+            extra.push_back(path.front());
+        }
+        this->maze.rviz(map_fatten_pub, this->og_path, extra);
     }
 
     bool recalculate_astar() {
