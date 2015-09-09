@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
 )
 
-set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall ${CMAKE_CXX_FLAGS}")
 
 
 ## System dependencies are found with CMake's conventions

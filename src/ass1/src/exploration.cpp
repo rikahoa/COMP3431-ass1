@@ -17,44 +17,6 @@ using namespace std;
 typedef message_filters::sync_policies::ApproximateTime<
     nav_msgs::OccupancyGrid, nav_msgs::Odometry> ApproxPolicy;
 
-class ExplorationState : public State {
-public:
-    ExplorationState(int x, int y, double cost, Bot* bot) : 
-        ExplorationState(x, y, cost, make_pair(-1, -1), bot) {};
-
-    virtual bool is_goal(const Maze& maze) const override {
-        return maze.get_data(this->x, this->y) == -1 &&
-            this->bot->astar_okay(maze.get_world_pos(make_pair(this->x, this->y)));
-    }
-
-    virtual vector<State*> explore(const Maze& maze, 
-            std::function<bool(pair<int,int>)> check) const override {
-        vector<State*> new_states;
-        for (const auto &p : State::DIRECTIONS) {
-            int x = this->x + p.first;
-            int y = this->y + p.second;
-
-            // try move places.
-            if (maze.get_data(this->x, this->y) < 80/* || 
-                    this->bot->close_enough(maze.get_world_pos(make_pair(this->x, this->y)))*/) {
-                if (x >= 0 && x < maze.get_width() && 
-                        y >= 0 && y < maze.get_height() && 
-                        check(make_pair(x, y))) {
-                    new_states.push_back(
-                            new ExplorationState(x, y, 
-                                this->cost + maze.get_resolution(), this->get_position(), this->bot));
-                }
-            }
-        }
-        return new_states;
-    }
-private:
-    ExplorationState(int x, int y, double cost, pair<int, int> parent, Bot* bot) :
-        State(x, y, cost, parent, 0), bot(bot) {};
-    Bot* bot;
-};
-
-
 class Exploration {
 public:
     Exploration(ros::NodeHandle n) : 
@@ -77,7 +39,7 @@ public:
         } else {
             ROS_INFO("Got fatten param");
         }
-        maze = Maze{fatten_value};
+        maze = Maze(fatten_value);
     }
 
 private:
@@ -88,8 +50,13 @@ private:
 
     void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og) {
         this->maze.set_occupancy_grid(*og);
-        // publish for debugging...
-        this->maze.rviz(map_fatten_pub, this->og_path, vector<pair<double,double>>());
+        // == publish for debugging...
+        vector<pair<double,double>> extra;
+        if (!path.empty()) {
+            extra.push_back(path.front());
+        }
+        this->maze.rviz(map_fatten_pub, this->og_path, extra);
+        // == remove when done
     }
 
     bool recalculate_astar() {
@@ -98,9 +65,21 @@ private:
     
         ROS_INFO_STREAM("* ASTAR invoked.");
         // Do a A* to the nearest frontier
-        auto og_path = search(this->maze, 
+        vector<pair<int,int>> og_path;
+        if (!started || this->bot.close_enough(this->target) || 
+                maze.certain(this->og_target)) {
+            og_path = search(this->maze, 
                 new ExplorationState(og_pos.first, og_pos.second, 0, &this->bot));
-        
+        } else {
+            ROS_INFO_STREAM("recalculating path to certain target...");
+            og_path = search(this->maze, 
+                new WaypointState(og_pos.first, og_pos.second, 0, 0, og_target, 0.5));
+            if (og_path.empty()) {
+                ROS_INFO_STREAM("giving up...can't get to that point...");
+                og_path = search(this->maze, 
+                    new ExplorationState(og_pos.first, og_pos.second, 0, &this->bot));
+            }
+        }
         // can't find path!
         if (og_path.empty()) {
             ROS_ERROR_STREAM("* No target found...");
@@ -109,17 +88,47 @@ private:
 
         // Target the frontier in real position.
         this->og_target = og_path.back();
-        this->og_path = std::move(og_path);
+        this->og_path = og_path;
         this->path = this->maze.og_to_real_path(this->og_path);
+        this->target = this->path.back();
         this->started = true;
-        this->maze.rviz(map_fatten_pub, this->og_path, vector<pair<double,double>>());
+
+        // == publish for debugging...
+        vector<pair<double,double>> extra;
+        if (!path.empty()) {
+            extra.push_back(path.front());
+        }
+        this->maze.rviz(map_fatten_pub, this->og_path, extra);
+        // == remove when done
+
         ROS_DEBUG_STREAM("* Let's find " << og_target.first << "," << og_target.second);
         return true;
     }
 
+    void send_unstuck() {
+        std_msgs::String result;
+        result.data = "Bob";
+        unstuck_pub.publish(result);
+    }
+
     void recalc_callback(const std_msgs::String::ConstPtr &msg) {
         ROS_INFO_STREAM("Recalculate whores!");
-        recalculate_astar();
+        if (this->bot.valid() && this->maze.valid()) {
+            recalculate_astar();
+        }
+    }
+
+    void start_spin() {
+        this->spin = true;
+        this->spin_yaw = this->bot.get_yaw() - 0.11;
+        // fix the angle
+        this->spin_yaw -= static_cast<int>(this->spin_yaw / (2*PI)) * 2 * PI;
+        // fix to spin the right way around
+        if (this->spin_yaw > PI) {
+            this->spin_yaw = -this->spin_yaw + PI;
+        } else if (this->spin_yaw < -PI) {
+            this->spin_yaw = -this->spin_yaw - PI;
+        }
     }
 
     void odom_callback(const nav_msgs::Odometry::ConstPtr &odom) {
@@ -145,23 +154,12 @@ private:
                     << ":" << this->maze.get_data(og_target.first, og_target.second));
             
             // Continue while the goal is unknown.
-            //if (!started || this->maze.get_data(og_target.first, og_target.second) > -1) {
             if (!started || path.empty() || this->bot.close_enough(path.back())) {
                 if (!recalculate_astar()) {
-                    std_msgs::String result;
-                    result.data = "Bob";
-                    unstuck_pub.publish(result);
+                    send_unstuck();
+                    return;
                 }
             }
-
-            // == REMOVE WHEN DONE
-            queue<pair<double,double>> p(this->path);
-            while (!p.empty()) {
-                auto s = p.front();
-                p.pop();
-                ROS_INFO_STREAM("* path: " << s.first << "," << s.second);
-            }
-            // ==
 
             // Populate until next path is found.
             while (!this->path.empty() && this->bot.close_enough(path.front())) {
@@ -174,9 +172,7 @@ private:
             if (path.empty()) {
                 ROS_WARN_STREAM("Exploration path empty! Cannot move anywhere...");
                 if (!recalculate_astar()) {
-                    std_msgs::String result;
-                    result.data = "Bob";
-                    unstuck_pub.publish(result);
+                    send_unstuck();
                 }
                 return;
             }
@@ -199,6 +195,7 @@ private:
 
     ros::NodeHandle n;
     ros::NodeHandle pnh;
+
     ros::Publisher movement_pub;    
     ros::Publisher unstuck_pub;    
     ros::Publisher map_fatten_pub;
@@ -208,6 +205,7 @@ private:
     ros::Subscriber beacons_sub;
 
     pair<int, int> og_target;
+    pair<double, double> target;
     queue<pair<double, double>> path;
     vector<pair<int, int>> og_path;
 };

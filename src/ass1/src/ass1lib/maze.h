@@ -13,10 +13,10 @@ using namespace std;
 
 class Maze {
 public:
-    Maze() : _valid(false) {}
+    Maze() : _valid(false), fatten_value(0) {}
 
-    Maze(int fatten_value) : fatten_value(fatten_value), _valid(false) {
-        ROS_INFO("Fatten value is %d", fatten_value);
+    Maze(size_t fatten_value) : _valid(false), fatten_value(fatten_value) {
+        ROS_INFO_STREAM("Fatten value is " << fatten_value);
     }
 
     const nav_msgs::OccupancyGrid& get_occupancy_grid() const {
@@ -37,23 +37,14 @@ public:
     queue<pair<double, double>> og_to_real_path(const vector<pair<int, int>>& astar_path) const {
         vector<pair<double, double>> real_path;        
         
-       ROS_INFO_STREAM("ORIGINAL PATH");
         for(auto it = astar_path.begin(); it!= astar_path.end(); ++it) {
             real_path.push_back(get_world_pos(*it));
-            ROS_INFO_STREAM(get_world_pos(*it).first << "," << get_world_pos(*it).second);
         }
             
         vector<pair<double,double>> simplified = rdp_simplify(real_path, 0.05);
-        
-        ROS_INFO_STREAM("Simplified PATH");
-        for(auto it = simplified.begin(); it!= simplified.end(); ++it) {
-            ROS_INFO_STREAM((*it).first << "," << (*it).second);
-        }
-
         std::queue<pair<double,double>> q(std::deque<pair<double,double>>(simplified.begin(),
                                                                   simplified.end()));
         return q;
-      
     }
     
     static double distance_line_point(
@@ -135,11 +126,11 @@ public:
     {
         nav_msgs::OccupancyGrid copy = this->og;
         for (const auto& p : points) {
-            copy.data[p.second * copy.info.width + p.first] = 50; 
+            copy.data[p.second * copy.info.width + p.first] = 40; 
         }
         for (const auto& rp : real_points) {
             auto p = this->get_og_pos(rp);
-            copy.data[p.second * copy.info.width + p.first] = 50; 
+            copy.data[p.second * copy.info.width + p.first] = 75; 
         }
         pub.publish(copy);
     }
@@ -174,13 +165,19 @@ public:
         return make_pair(static_cast<int>((pos.first - origin.x) / this->og.info.resolution),
                          static_cast<int>((pos.second - origin.y) / this->og.info.resolution));
     }
+
+    bool certain(pair<int, int>& target) const {
+        auto x = target.first;
+        auto y = target.second;
+        return get_data(x,y) <= 20 || get_data(x,y) >= 95;
+    }
 private:
     void fatten_neighbours(const nav_msgs::OccupancyGrid &og);
     
     nav_msgs::OccupancyGrid og;   
     static const vector<pair<int, int>> DIRECTIONS;
     bool _valid;
-    int fatten_value;
+    size_t fatten_value;
 };
 
 #endif

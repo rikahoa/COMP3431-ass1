@@ -3,16 +3,16 @@
 const vector<pair<int,int>> Maze::DIRECTIONS = 
     vector<pair<int, int>>{make_pair(-1,0),make_pair(1,0),make_pair(0,-1),make_pair(0,1)};
 
-#define MIN_PROB 80
+#define MIN_PROB 95
 void Maze::fatten_neighbours(const nav_msgs::OccupancyGrid &og) {
     vector<vector<bool>> seen;
-    for (int y = 0; y < og.info.height; ++y) {
+    for (size_t y = 0; y < og.info.height; ++y) {
         seen.push_back(vector<bool>(og.info.width));
     }
 
-    queue<pair<pair<int, int>, int>> bfs;
-    for (int y = 0; y < og.info.height; ++y) {
-        for (int x = 0; x < og.info.width; ++x) {
+    queue<pair<pair<size_t, size_t>, size_t>> bfs;
+    for (size_t y = 0; y < og.info.height; ++y) {
+        for (size_t x = 0; x < og.info.width; ++x) {
             if (og.data[y * og.info.width + x] >= MIN_PROB) {
                 bfs.push(make_pair(make_pair(x, y), 0));
             }

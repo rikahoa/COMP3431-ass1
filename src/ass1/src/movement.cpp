@@ -30,10 +30,27 @@ public:
         stuck_sub = n.subscribe("ass1/stuck", 1, &Movement::stuck_callback, this);
         laser_unstuck_sub = n.subscribe("/scan", 1, &Movement::laser_unstuck_callback, this);
         
-        if (pnh.getParam("safe_range", safe_range)) { ROS_INFO("Got safe_range param"); } else { ROS_ERROR("Failed to get param 'safe_range'");}
-        if (pnh.getParam("unstuck_x_movement", unstuck_x_movement)) { ROS_INFO("Got unstuck_x_movement param"); } else { ROS_ERROR("Failed to get param 'unstuck_x_movement'");}
-        if (pnh.getParam("unstuck_angle_threshold", unstuck_angle_threshold)) { ROS_INFO("Got unstuck_angle_threshold param"); } else { ROS_ERROR("Failed to get param 'unstuck_angle_threshold'");}
-        if (pnh.getParam("unstuck_angle_multiplier", unstuck_angle_multiplier)) { ROS_INFO("Got unstuck_angle_multiplier param"); } else { ROS_ERROR("Failed to get param 'unstuck_angle_multiplier'");}
+        if (pnh.getParam("safe_range", safe_range)) { 
+            ROS_INFO("Got safe_range param"); 
+        } else { 
+            ROS_ERROR("Failed to get param 'safe_range'");
+        }
+
+        if (pnh.getParam("unstuck_x_movement", unstuck_x_movement)) { 
+            ROS_INFO("Got unstuck_x_movement param"); 
+        } else { 
+            ROS_ERROR("Failed to get param 'unstuck_x_movement'");
+        }
+        if (pnh.getParam("unstuck_angle_threshold", unstuck_angle_threshold)) { 
+            ROS_INFO("Got unstuck_angle_threshold param"); 
+        } else { 
+            ROS_ERROR("Failed to get param 'unstuck_angle_threshold'");
+        }
+        if (pnh.getParam("unstuck_angle_multiplier", unstuck_angle_multiplier)) { 
+            ROS_INFO("Got unstuck_angle_multiplier param"); 
+        } else { 
+            ROS_ERROR("Failed to get param 'unstuck_angle_multiplier'");
+        }
     }
 private:
     ros::NodeHandle n;
@@ -56,25 +73,31 @@ private:
     
     bool stuck;
     
-            
     void movement_and_laser_callback(const geometry_msgs::TwistStamped::ConstPtr &twist_stamped, 
-            const sensor_msgs::LaserScan::ConstPtr &laser_scan) {
-            
-        if(!this->stuck) {
+            const sensor_msgs::LaserScan::ConstPtr &laser_scan) { 
+        if (!this->stuck) {
             bool safe = false;
 
             if (twist_stamped->twist.linear.x == 0) {
-                if (twist_stamped->twist.angular.z != 0) {
-                    safe = true;
-                }
+                safe = true;
             } else {
-                safe = true;          
+                safe = is_safe(laser_scan, this->safe_range);  
+                /*for(unsigned int i = 0; i < laser_scan->ranges.size(); ++i) {
+                    double angle = i * laser_scan->angle_increment - laser_scan->angle_min;
+                    double range = laser_scan->ranges[i];
+                    double base_x = 0.1 + range*cos(angle);
+                    double base_y = range*sin(angle);
+                    double base_range = sqrt(base_x*base_x + base_y*base_y);
+                    if(base_range < this->safe_range) {
+                        return false;
+                    }
+                }        
                 for (const auto& range : laser_scan->ranges) {
                     if (range < this->safe_range) {
                         safe = false;
                         break;
                     }
-                }
+                }*/
             }
 
             if (safe) {
@@ -92,30 +115,29 @@ private:
     }
 
     void stuck_callback(const std_msgs::String::ConstPtr &msg) {
-        ROS_ERROR_STREAM("unstuck callback!");
-        this->stuck=true;
+        ROS_WARN_STREAM("unstuck callback!");
+        this->stuck = true;
     }
 
     void laser_unstuck_callback(const sensor_msgs::LaserScan::ConstPtr &laser) {
-        if(safe(laser, this->safe_range)) {
-            ROS_INFO("Laser Safe");
-            if(this->stuck) {
-                ROS_INFO("UNSTUCK: NOT STUCK ASKING RECALC");
+        if (is_safe(laser, this->safe_range)) {
+            //ROS_STREAM_INFO("Laser Safe");
+            if (this->stuck) {
+                ROS_INFO_STREAM("UNSTUCK: NOT STUCK ASKING RECALC");
                 this->stuck = false;
+                
                 // signal to recalculate
-                 std_msgs::String msg;
-                 recalc_pub.publish(msg);
+                std_msgs::String msg;
+                recalc_pub.publish(msg);
              }
         } else {
-            ROS_INFO("Laser unsafe");
-            this->stuck=true;
-            ROS_INFO("UNSTUCK: STILL STUCK");
+            this->stuck = true;
             auto it = std::min_element(laser->ranges.begin(), laser->ranges.end());
             auto minindex = std::distance(laser->ranges.begin(), it);
 
             float minangle = laser->angle_min + minindex * laser->angle_increment;
 
-            ROS_INFO_STREAM("min=" << *it << ",minindex=" << minindex << ",minangle=" << minangle);
+            ROS_DEBUG_STREAM("min=" << *it << ",minindex=" << minindex << ",minangle=" << minangle);
 
             geometry_msgs::Twist move;
             move.linear.y = 0;        
@@ -127,20 +149,32 @@ private:
             move.angular.z = 0;
             
             if (fabs(minangle) > this->unstuck_angle_threshold) {
-                move.angular.z = minangle*this->unstuck_angle_multiplier;
+                move.angular.z = std::max(-0.4, 
+                        std::min(0.4, minangle*this->unstuck_angle_multiplier));
             } else {
                 move.linear.x = this->unstuck_x_movement;
             }
                 
-            ROS_INFO_STREAM("UNSTUCK: moving " << move.linear.x << "," << move.angular.z << "...");
+            ROS_WARN_STREAM("UNSTUCK: moving " << move.linear.x << "," << move.angular.z << "...");
             navi_pub.publish(move); 
         }
 
     }
     
-    static bool safe(const sensor_msgs::LaserScan::ConstPtr &laser, double safe_range) {
-        auto it = std::min_element(laser->ranges.begin(), laser->ranges.end());
+    static bool is_safe(const sensor_msgs::LaserScan::ConstPtr &laser_scan, double safe_range) {
+        auto it = std::min_element(laser_scan->ranges.begin(), laser_scan->ranges.end());
         return *it > safe_range;
+        /*for (size_t i = 0; i < laser_scan->ranges.size(); ++i) {
+            double angle = i * laser_scan->angle_increment - laser_scan->angle_min;
+            double range = laser_scan->ranges[i];
+            double base_x = 0.1 + range*cos(angle);
+            double base_y = range*sin(angle);
+            double base_range = sqrt(base_x*base_x + base_y*base_y);
+            if(base_range < safe_range) {
+                return false;
+            }
+        }
+        return true;  */      
     }
 };
 

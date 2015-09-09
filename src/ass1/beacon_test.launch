@@ -11,6 +11,5 @@
     <node pkg="crosbot_ui" type="gui" name="slam" 
         args="$(find comp3431)/launch/crosbot-fastslam.gui" >
     </node>
-
     <node name="odom" pkg="ass1" type="odom" output="screen" />
 </launch>
