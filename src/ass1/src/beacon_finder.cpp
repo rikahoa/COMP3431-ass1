@@ -186,8 +186,10 @@ private:
                 double r2 = laser->ranges[distance_index];
                 double r1 = 0.1;
                 double distance = sqrt( (r1 + r2*cos(theta))*(r1 + r2*cos(theta)) + (r2*sin(theta))*(r2*sin(theta)) );
-                if( std::isfinite(distance) && std::isfinite(theta) ) { 
-                    distance = distance - 0.1;
+                ROS_INFO_STREAM("BEACON IS " << distance << " FROM BOT");
+                found_beacon( "pink", "dunno", make_pair(distance,theta) );
+                if( std::isfinite(distance) && std::isfinite(theta) && distance < 1.5) { 
+                    distance = distance - 0.3;
             //ROS_INFO_STREAM("theta " << (theta * 180 / M_PI) << " distance " << distance);
                     search_for_match(blue_keypoints.begin(), blue_keypoints.end(), pink_pt, "blue", make_pair(distance, theta));
                     search_for_match(yellow_keypoints.begin(), yellow_keypoints.end(), pink_pt, "yellow", make_pair(distance, theta));
@@ -244,7 +246,7 @@ private:
         double beacon_yaw = bot.get_yaw() + theta;
         double b_x = bot_pos.first + d*cos(beacon_yaw);
         double b_y = bot_pos.second + d*sin(beacon_yaw);
-        ROS_DEBUG_STREAM("BOT POS: " << b_x << "," << b_y << "beacon_yaw: " << 
+        ROS_INFO_STREAM("BOT POS: " << b_x << "," << b_y << "beacon_yaw: " << 
                 beacon_yaw << " d: " << d << "robot_yaw " << bot.get_yaw() << "theta: " << theta);
         for (auto it = beacons.begin(); it != beacons.end(); ++it) {
             if (it->top == top && it->bottom == bottom) {

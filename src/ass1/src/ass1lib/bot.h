@@ -109,6 +109,11 @@ public:
         auto displacement = get_displacement(target);
         return displacement.first < 0.3;
     }
+    
+    bool beacon_close_enough(const pair<double, double>& target) const {
+        auto displacement = get_displacement(target);
+        return displacement.first < 0.15;
+    }
 
     bool astar_okay(const pair<double, double>& target) const {
         auto displacement = get_displacement(target);

@@ -106,7 +106,9 @@ private:
         }
 
         if (this->maze.valid()) {
-            while (!started || this->path.empty() || this->bot.close_enough(to_visit.front())) {
+            while (!started || this->path.empty() || 
+                this->bot.beacon_close_enough(to_visit.front())) 
+            {
                 if (started && this->bot.close_enough(to_visit.front())) {
                     ROS_INFO_STREAM("WAYPOINT: found" << to_visit.front().first << 
                             "," << to_visit.front().second );
