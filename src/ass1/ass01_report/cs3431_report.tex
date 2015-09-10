@@ -77,10 +77,23 @@
 	\vfill
         
         \Large
-        September 5, 2015
+        September 8, 2015
         
     \end{center}
 \end{titlepage}
+
+\pagebreak
+
+\section*{Introduction}
+The objective of this assignment was to autonomously navigate an unknown maze and visit beacons in a specified order. To achieve this goal, the assignment was broken down into three main modules - exploration, beacon recognition and localisation and waypoint traversal. \\
+\\
+In exploration, the TurtleBot's task is to map out an unknown maze while avoiding obstacles (walls and beacons). The TurtleBot achieves this by performing a frontier-based search on the data gathered from its laser scan.\\
+\\
+In the beacon module, beacons are pinpointed using the Bot's camera. This information is then combined with the data from the laser scan to determine the position of the beacons. This module is also responsible for keeping track of when the TurtleBot has recognised all four required beacons. \\
+\\
+Waypoint traversal guides the TurtleBot from beacon to beacon. The path the TurtleBot takes is determined by an A* search, using Euclidean distance to the goal as the heuristic. \\
+\\
+These modules are combined to achieve the final assignment goal. The exploration module is in conjunction with the beacon module to simultaneously map the maze and locate beacons. Once the beacon module has detected the four required beacons, a message is sent signalling for waypoint traversal to begin. \\
 
 \pagebreak
 
@@ -169,11 +182,11 @@ During the TurtleBot's first exploration of the maze, the camera is used to iden
 
 \noindent The blob detector produces key points in the form of coordinates on the 640 * 480 RGB image, in the center of the beacon colour block. We conclude that a beacon has been successfully detected if there are two "blobs" in the same image frame within a 20 pixel offset from each other in the horizontal x axis. This threshold of 20 pixels is used to account for any motion blur. The beacon's top colour is determined by comparing the two keypoints' y values.\\
 
-\noindent We also use the laser scan data to find the location of the beacon relative to the bot by reading the laser data at the angle corresponding to the angle on the RGB image. This information is then used in conjunction with the xxx to give the location of the beacon with respect to the global map. \\
+\noindent We also use the laser scan data to find the location of the beacon relative to the bot by reading the laser data at the angle corresponding to the angle on the RGB image. This information is then used in conjunction with the odom to give the location of the beacon with respect to the global map. \\
 
 \pagebreak
 
-\large{\textbf{\\Localisation}} \\
+\large{\textbf{Localisation}} \\
 \normalsize
 \\
 Pinpointing the locations of detected beacons is essential in order for the TurtleBot to complete Waypoint Traversal. Each beacon's position is determined by first considering the TurtleBot's position and orientation in the maze (i.e. relative to the origin of the map), and looking at data from the DepthCloud. \\
