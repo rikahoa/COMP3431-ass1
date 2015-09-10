@@ -119,6 +119,9 @@ private:
 
     void image_callback(const sensor_msgs::LaserScan::ConstPtr& laser, 
                         const sensor_msgs::CompressedImage::ConstPtr& image) {
+        if (!this->bot.valid()) {
+            return;
+        }
         try {
             // Convert from ROS image msg to OpenCV matrix images
             cv_bridge::CvImagePtr cv_ptr;
@@ -183,12 +186,15 @@ private:
 		//ROS_INFO_STREAM("theta: " << (theta * 180 / M_PI));
                 double lTheta = theta - laser->angle_min;
                 int distance_index = lTheta / laser->angle_increment;
+                /*
                 double r2 = laser->ranges[distance_index];
                 double r1 = 0.1;
-                double distance = sqrt( (r1 + r2*cos(theta))*(r1 + r2*cos(theta)) + (r2*sin(theta))*(r2*sin(theta)) );
+                */
+            //    double distance = sqrt( (r1 + r2*cos(theta))*(r1 + r2*cos(theta)) + (r2*sin(theta))*(r2*sin(theta)) );
+                double distance = laser->ranges[distance_index];
                 ROS_INFO_STREAM("BEACON IS " << distance << " FROM BOT");
-                found_beacon( "pink", "dunno", make_pair(distance,theta) );
-                if( std::isfinite(distance) && std::isfinite(theta) && distance < 1.5) { 
+
+                if( std::isfinite(distance) && std::isfinite(theta) && distance < 2.0 ) { 
                     distance = distance - 0.3;
             //ROS_INFO_STREAM("theta " << (theta * 180 / M_PI) << " distance " << distance);
                     search_for_match(blue_keypoints.begin(), blue_keypoints.end(), pink_pt, "blue", make_pair(distance, theta));
@@ -246,7 +252,7 @@ private:
         double beacon_yaw = bot.get_yaw() + theta;
         double b_x = bot_pos.first + d*cos(beacon_yaw);
         double b_y = bot_pos.second + d*sin(beacon_yaw);
-        ROS_INFO_STREAM("BOT POS: " << b_x << "," << b_y << "beacon_yaw: " << 
+        ROS_INFO_STREAM("BOT POS: " << top << " " << bottom << " "  << b_x << "," << b_y << "beacon_yaw: " << 
                 beacon_yaw << " d: " << d << "robot_yaw " << bot.get_yaw() << "theta: " << theta);
         for (auto it = beacons.begin(); it != beacons.end(); ++it) {
             if (it->top == top && it->bottom == bottom) {

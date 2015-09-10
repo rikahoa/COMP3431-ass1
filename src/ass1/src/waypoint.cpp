@@ -25,6 +25,7 @@ public:
     {    
         beacons_sub = n.subscribe("ass1/beacons", 1, &Waypoint::beacon_callback, this);
         unstuck_pub = n.advertise<std_msgs::String>("/ass1/stuck", 1);
+        map_sub = n.subscribe("map", 1, &Waypoint::map_callback, this);
         map_fatten_pub = n.advertise<nav_msgs::OccupancyGrid>("/ass1/map", 1);
 
         if (!pnh.getParam("fatten", fatten_value)) {
@@ -42,7 +43,6 @@ private:
         // start this shizzle up!
         movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
         odom_sub = n.subscribe("ass1/odom", 1, &Waypoint::odom_callback, this);
-        map_sub = n.subscribe("map", 1, &Waypoint::map_callback, this);
         recalc_sub = n.subscribe("ass1/recalc", 1, &Waypoint::recalc_callback, this);
 
         for (auto it = msg->positions.begin(); it != msg->positions.end(); ++it) {
@@ -53,8 +53,10 @@ private:
 
     void map_callback(const nav_msgs::OccupancyGrid::ConstPtr &og) {
         this->maze.set_occupancy_grid(*og);
-        this->maze.rviz(map_fatten_pub, this->og_path, 
-                vector<pair<double,double>>{this->to_visit.front()});
+        if (started) {
+            this->maze.rviz(map_fatten_pub, this->og_path, 
+                    vector<pair<double,double>>{this->to_visit.front()});
+        }
     }
 
     bool recalculate_astar() {
@@ -62,12 +64,11 @@ private:
         auto og_pos = this->bot.get_og_pos(this->maze);
         auto og_path = search(this->maze, 
                 new WaypointState(og_pos.first, og_pos.second, 0, 0, 
-                    this->maze.get_og_pos(to_visit.front()), 0.4));
+                    this->maze.get_og_pos(to_visit.front()), 0.25));
         if (og_path.empty()) {
             ROS_ERROR_STREAM("WAYPOINT: * No Target found...");
             return false;
         }
-        ROS_INFO_STREAM("WAYPOINT ASTAR: size of path: " << og_path.size()); 
 
         this->og_path = og_path;
         this->path = this->maze.og_to_real_path(og_path);
@@ -107,7 +108,7 @@ private:
 
         if (this->maze.valid()) {
             while (!started || this->path.empty() || 
-                this->bot.beacon_close_enough(to_visit.front())) 
+                this->bot.close_enough(to_visit.front())) 
             {
                 if (started && this->bot.close_enough(to_visit.front())) {
                     ROS_INFO_STREAM("WAYPOINT: found" << to_visit.front().first << 
