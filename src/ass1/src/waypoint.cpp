@@ -44,7 +44,8 @@ private:
         movement_pub = n.advertise<geometry_msgs::TwistStamped>("/ass1/movement", 1);
         odom_sub = n.subscribe("ass1/odom", 1, &Waypoint::odom_callback, this);
         recalc_sub = n.subscribe("ass1/recalc", 1, &Waypoint::recalc_callback, this);
-
+        
+        to_visit = queue<pair<double,double>>();
         for (auto it = msg->positions.begin(); it != msg->positions.end(); ++it) {
             ROS_INFO_STREAM("WAYPOINT: beacon: " << it->x << "," << it->y);
             to_visit.push(make_pair(it->x, it->y));
@@ -140,9 +141,6 @@ private:
                 }
                 return;
             }
-            
-            ROS_INFO_STREAM("WAYPOINT: We want to reach " << to_visit.front().first << "," << 
-                    to_visit.front().second);
 
             // Generate me a move message to target.
             geometry_msgs::TwistStamped move;

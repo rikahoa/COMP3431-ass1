@@ -224,6 +224,7 @@ private:
                 // Send beacon message
                 ass1::FoundBeacons msg;
                 msg.n = beacons.size();
+                msg.positions.clear();
                 for (auto it = beacons.begin(); it != beacons.end(); ++it) {
                     geometry_msgs::Point point;
                     point.x = it->x;

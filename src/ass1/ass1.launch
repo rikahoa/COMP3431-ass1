@@ -13,7 +13,7 @@
     </node>
 
     <node name="movement" pkg="ass1" type="movement" output="screen">
-        <param name="safe_range" value="0.31" />
+        <param name="safe_range" value="0.33" />
         <param name="unstuck_x_movement" value="-0.15" />
         <param name="unstuck_angle_threshold" value="0.2" />
         <param name="unstuck_angle_multiplier" value="2" />
