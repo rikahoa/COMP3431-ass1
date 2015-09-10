@@ -68,12 +68,13 @@ private:
         vector<pair<int,int>> og_path;
         if (!started || this->bot.close_enough(this->target) || 
                 maze.certain(this->og_target)) {
+            ROS_INFO_STREAM("go somewhere else!");
             og_path = search(this->maze, 
                 new ExplorationState(og_pos.first, og_pos.second, 0, &this->bot));
         } else {
             ROS_INFO_STREAM("recalculating path to certain target...");
             og_path = search(this->maze, 
-                new WaypointState(og_pos.first, og_pos.second, 0, 0, og_target, 0.5));
+                new WaypointState(og_pos.first, og_pos.second, 0, 0, this->og_target, 0.5));
             if (og_path.empty()) {
                 ROS_INFO_STREAM("giving up...can't get to that point...");
                 og_path = search(this->maze, 

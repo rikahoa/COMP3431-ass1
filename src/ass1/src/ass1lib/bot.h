@@ -84,7 +84,7 @@ public:
         ROS_DEBUG_STREAM("** angle change of " << target_angle << " required.");
         ROS_DEBUG_STREAM("** distance from target is " << distance);
 
-        if (fabs(target_angle) > 0.1) {
+        if (fabs(target_angle) > 0.2) {
             move.angular.z = std::max(-0.6, std::min(0.6, 3*target_angle)); 
         } else {
             if (distance > 0.1) {
@@ -107,7 +107,12 @@ public:
    
     bool close_enough(const pair<double, double>& target) const {
         auto displacement = get_displacement(target);
-        return displacement.first < 0.3;
+        return displacement.first < 0.1;
+    }
+    
+    bool beacon_close_enough(const pair<double, double>& target) const {
+        auto displacement = get_displacement(target);
+        return displacement.first < 0.25;
     }
 
     bool astar_okay(const pair<double, double>& target) const {

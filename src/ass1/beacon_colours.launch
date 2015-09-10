@@ -15,13 +15,13 @@
                 green:
                     h_lo: 60
                     h_hi: 90
-                    s: 140
+                    s: 80
                     v: 40
                 yellow:
-                    h_lo: 15
+                    h_lo: 20
                     h_hi: 40
-                    s: 100
-                    v: 100
+                    s: 150
+                    v: 120
         </rosparam>
     </node>
 </launch>

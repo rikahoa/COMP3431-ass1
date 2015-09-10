@@ -41,7 +41,7 @@ public:
             real_path.push_back(get_world_pos(*it));
         }
             
-        vector<pair<double,double>> simplified = rdp_simplify(real_path, 0.05);
+        vector<pair<double,double>> simplified = rdp_simplify(real_path, 0.055);
         std::queue<pair<double,double>> q(std::deque<pair<double,double>>(simplified.begin(),
                                                                   simplified.end()));
         return q;
@@ -166,10 +166,10 @@ public:
                          static_cast<int>((pos.second - origin.y) / this->og.info.resolution));
     }
 
-    bool certain(pair<int, int>& target) const {
+    bool certain(const pair<int, int>& target) const {
         auto x = target.first;
         auto y = target.second;
-        return get_data(x,y) <= 20 || get_data(x,y) >= 95;
+        return (get_data(x,y) >= 0 && get_data(x,y) <= 20) || get_data(x,y) >= 90;
     }
 private:
     void fatten_neighbours(const nav_msgs::OccupancyGrid &og);
