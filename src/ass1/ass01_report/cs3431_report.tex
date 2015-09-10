@@ -183,8 +183,9 @@ During the TurtleBot's first exploration of the maze, the camera is used to iden
 \noindent The blob detector produces key points in the form of coordinates on the 640 * 480 RGB image, in the center of the beacon colour block. We conclude that a beacon has been successfully detected if there are two ``blobs" in the same image frame within a 20 pixel offset from each other in the horizontal x axis. This threshold of 20 pixels is used to account for any motion blur. The beacon's top colour is determined by comparing the two keypoints' y values.\\
 
 \noindent We also use the laser scan data to find the location of the beacon relative to the bot by reading the laser data at the angle corresponding to the angle on the RGB image. This information is then used in conjunction with the odom to give the location of the beacon with respect to the global map. \\
-
+\\
 \pagebreak
+\\
 \large{\textbf{Localisation}} \\
 \normalsize
 \\
