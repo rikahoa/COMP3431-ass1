@@ -173,14 +173,17 @@ As the OccupancyGrid is continually being updated, the frontier-based search als
 
 \begin{figure}[h]
 	\centering
-	%\includegraphics[scale=0.18]{paths.jpg}
+	\includegraphics[scale=0.7]{paths.png}
 	\caption{\textbf{Left:} Example of wall following exploration in a dead-end. \textbf{Right:} Example of frontier-based search in a dead-end.}
 \end{figure}
 
-\begin{wrapfigure}{l}{0.3\textwidth}
+\pagebreak
+\begin{figure}[h]
+	\centering
 	\includegraphics[scale=0.5]{rdp.png}
 	\caption{RDP}
-\end{wrapfigure}
+\end{figure}
+	
 
 However, as the frontier-based search is performed on a map with a resolution of 0.05, the resulting path can often be jagged and over-complicated. In order to smooth-out our path, the Ramer-Douglas-Peucker algorithm is used to reduce the number of intermediary points in the path (see Appendix). RDP works by recursively dividing a given path, finding an intermediary point that is the furthest from the line segment drawn from the start to the end of a path. If the distance of this furthest point is within the given threshold, the point can be discarded, thus, cutting down the number of intermediary points the TurtleBot must visit. A threshold of 0.055 is used in our RDP path simplification, meaning that points that lie within 5.5cm can be overlooked.
 
