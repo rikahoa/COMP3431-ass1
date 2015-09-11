@@ -115,8 +115,10 @@ If the movement is deemed to be unsafe (as it hits walls), the movement module w
 
 For ease of figuring out when it will crash into a wall, we limit all movement to be either in the x direction, or the angular z direction.
 
+The accepted value from the wall to the robot is 30cm.
+
 \subsubsection{Odometry Module}
-Our custom odometry module waits for a transform from \verb|/map| to \verb|base_link|, such that it always publishes a valid odometry reading in map coordinates. This is published on \verb|ass1/odom|, and is subscribed to instead of \verb|/odom| for easier processing of data.
+Our custom odometry module waits for a transform from \verb|/map| to \verb|base_link|, such that it always publishes a valid odometry reading in map coordinates. This is published on \verb|ass1/odom|, and is subscribed to instead of \verb|/odom|. This allows us to reference all objects relative to the same origin.
 
 \subsection{Mapping}
 For mapping, FastSLAM is used for its speed and accuracy to generate the map. Although HectorSLAM produces a higher resolution map (0.01), it does take longer for A* to work on. FastSLAM's 0.05 resolution is sufficient for our purposes.
@@ -134,13 +136,13 @@ We have chosen to use shared libraries instead of additional ROS nodes, to lower
 \verb|maze.h| contains information on the occupancy grid, and contains routines that allow us to process data regarding the maze as well as wall fattening. It requires setting up an extra callback from the \verb|/map| channel.
 
 \pagebreak
-\section{Exploration}
-
+\section{Operation Phases}
+\subsection{Exploration}
 Before it can visit beacons in a specified order, the TurtleBot must first explore the maze. To begin the exploration phase, the TurtleBot waits for an OccupancyGrid message and an Odom message to ensure the robot's start-up has been successful. 
 
 Exploration of the maze can be completed using a simple wall-follower, or by performing a search algorithm. A wall-follower, although guaranteed to map out the entire maze correctly, has limitations in its speed. It often spends more time than is necessary to finish mapping a location, following any walls it comes across, regardless of any existing knowledge about the area.
 
-Thus, to speed up the exploration of the unknown maze, a frontier-based search is performed on any existing data we have of the maze. This data is delivered to us in the form of an OccupancyGrid message, which publishes an array of integers from -1 to 100 representing knowledge of the maze. The search looks for the closest frontier of -1s in the OccupancyGrid and the TurtleBot is instructed to explore this closest frontier. By moving to this frontier, the TurtleBot is able to expand its map until the entire maze has been explored. 
+Thus, to speed up the exploration of the unknown maze, a frontier-based search is performed on any existing data we have of the maze. This data is delivered to us in the form of an OccupancyGrid message, which publishes an array of integers from -1 to 100 representing knowledge of the maze. The search looks for the closest frontier of unknown points (-1) or uncertain points (20-80\% chance) in the OccupancyGrid and the TurtleBot is instructed to explore this closest frontier. By moving to this frontier, the TurtleBot is able to expand its map until the entire maze has been explored. 
 
 To calculate the movements required by the TurtleBot to reach its goal, we consider the location of the robot and its goal in global coordinates. Letting $\theta$ be the angle of the target from the TurtleBot and $d$ be the distance of the target from the TurtleBot:
 
@@ -156,8 +158,6 @@ Then, if $\theta_m$ is the angle of the target from the origin of the map:
 
 $d$ and $\theta_m$ are written to a Twist message which is published.
 
-To prevent collision, the TurtleBot's movement is interrupted when the robot is within 30cm of a wall. The laser scan is used to detect this, at which point the Bot is instructed to face the wall and reverse into a safe-zone. Once the TurtleBot is safe, an empty message is published, signalling to robot that it can resume it's frontier-based exploration. \\
-
 \begin{figure}[h]
 	\begin{center}
 	\includegraphics[scale=0.25]{wallfatten.jpg}
@@ -165,11 +165,13 @@ To prevent collision, the TurtleBot's movement is interrupted when the robot is 
 	\end{center}
 \end{figure}
 
-As another safety measure, any cells in the OccupancyGrid with an occupancy probability greater than 80 are treated as having 100\% occupancy and are ``fattened" by 20cm. Given that the TurtleBot's radius is 15cm, this gives the robot a 5cm leeway from the walls, and a 60cm-wide pathway to travel along. To ``fatten" the walls, we occupy the rings of cells surrounding every wall in the current OccupancyGrid (Figure 1). Fattening the walls also blocks any gaps between the walls that the robot may have originally seen through. 
+As another safety measure, any cells in the OccupancyGrid with an occupancy probability greater than 95 are treated as having 100\% occupancy and are ``fattened" by 20cm. Given that the TurtleBot's radius is 15cm, this gives the robot a 5cm leeway from the walls, and a 60cm-wide pathway to travel along. To ``fatten" the walls, we occupy the rings of cells surrounding every wall in the current OccupancyGrid (Figure 1). Fattening the walls also blocks any gaps between the walls that the robot may have originally seen through. 
 
 A frontier-based search is advantageous in that the robot can explore areas with an arbitrary number of obstacles (walls and beacons) and loops that may confuse a wall-follower no longer become an issue. 
 
-As the OccupancyGrid is continually being updated, the frontier-based search also increases the speed of the search by eliminating the need for the TurtleBot to travel down dead-ends. Whereas a wall-follower would lead the Bot into the dead-end, the frontier-based search will not.
+As the OccupancyGrid is continually being updated, the frontier-based search also increases the speed of the search by eliminating the need for the TurtleBot to travel down dead-ends. Whereas a wall-follower would lead the Bot into the dead-end, the frontier-based search will not. 
+
+However, this may mean beacons could be missed if the laser scan can infer a corner, and hence skips it. But our movement seemed to be in such a way that it peers through each corner, so we leave it as is.
 
 \begin{figure}[h]
 	\centering
@@ -184,13 +186,14 @@ As the OccupancyGrid is continually being updated, the frontier-based search als
 	\caption{RDP}
 \end{figure}
 	
+As the frontier-based search is performed on a map with a resolution of 0.05, the resulting path can often be jagged and over-complicated. In order to smooth-out our path, the Ramer-Douglas-Peucker algorithm is used to reduce the number of intermediary points in the path (see Appendix). RDP works by recursively dividing a given path, finding an intermediary point that is the furthest from the line segment drawn from the start to the end of a path. If the distance of this furthest point is within the given threshold, the point can be discarded, thus, cutting down the number of intermediary points the TurtleBot must visit. A threshold of 0.055 is used in our RDP path simplification, meaning that points that lie within 5.5cm can be overlooked.
 
-However, as the frontier-based search is performed on a map with a resolution of 0.05, the resulting path can often be jagged and over-complicated. In order to smooth-out our path, the Ramer-Douglas-Peucker algorithm is used to reduce the number of intermediary points in the path (see Appendix). RDP works by recursively dividing a given path, finding an intermediary point that is the furthest from the line segment drawn from the start to the end of a path. If the distance of this furthest point is within the given threshold, the point can be discarded, thus, cutting down the number of intermediary points the TurtleBot must visit. A threshold of 0.055 is used in our RDP path simplification, meaning that points that lie within 5.5cm can be overlooked.
+As movement can be interrupted due to proximity to walls, when the movement module interrupts to perform unsticking actions, an A* is used to recalculate the path to the destination - here we use the Waypoint A* state as it is the same idea. However, as the target may be a wall, we recalculate to be up to 50cm back from where the original target was. This action further guarentees that the Kinect can see all beacons, even if a corner is missed due to the recalculation, and the unsticking action finding a wall.
 
 \pagebreak
-\section{Beacon Recognition and Localisation}
+\subsection{Beacon Recognition and Localisation}
 
-\subsection{Detection}
+\subsubsection{Detection}
 During the TurtleBot's first exploration of the maze, the camera is used to identify and position beacons. The beacon finder node subscribes to RGB images from the Kinect camera and processes them using OpenCV. The following criteria is used to detect the beacons:
 
     \begin{enumerate}
@@ -207,7 +210,7 @@ The blob detector produces key points in the form of coordinates on the 640 * 48
 
 We also use the laser scan data to find the location of the beacon relative to the bot by reading the laser data at the angle corresponding to the angle on the RGB image. This information is then used in conjunction with the odom to give the location of the beacon with respect to the global map. 
 
-\subsection{Localisation}
+\subsubsection{Localisation}
 Pinpointing the locations of detected beacons is essential in order for the TurtleBot to complete waypoint traversal. Each beacon's position is determined by first considering the TurtleBot's position and orientation in the maze (i.e. relative to the origin of the map), and looking at the ranges array from the laser scan. 
 
 To determine the rotation of the beacon from the origin of the map, we consider the pixel in the image at which the beacon was detected, relative to the centre pixel of the image. It is known that the camera has a 58\degree field-of-view and, thus, we are able to use these pixel values to calculate the beacon's rotation from the origin. 
@@ -249,7 +252,7 @@ Letting $\theta_{BL}$ be the angle of the beacon with respect to the laser:
 Using the ranges array gathered from the laser scan eliminates the need for the TurtleBot to be next to the beacon to pinpoint its location. Rather, once a beacon is within the camera's view, it's position can be determined, speeding up the process of beacon localisation. In turn, the TurtleBot's initial exploration is also sped up.
 
 \pagebreak
-\section{Planner}
+\subsection{Planner}
 
 The planner requirement in the assignment specification is merged into the beacon recognition module.
 
@@ -286,13 +289,13 @@ This essentially allows our TurtleBot to stop exploring the maze once all four b
 \end{lstlisting}
 
 \pagebreak
-\section{Waypoint Traversal}
+\subsection{Waypoint Traversal}
 
 Once the FoundBeacons message is published, the TurtleBot will switch from its exploration phase to waypoint traversal.
 
 To speed up the traversal between beacons, an A* search is performed on the available data - namely, the OccupancyGrid and the FoundBeacons message which contains the positions of the beacons. The search considers all the neighbouring cells of the current location and the neighbouring cell's Euclidean distance from the goal (the beacon) to find the shortest path. 
 
-A search is first performed to find a path between the TurtleBot's current location and the first beacon. We consider a TurtleBot to have reached the goal beacon if it is within a 30cm radius of the beacon. That is, if: 
+A search is first performed to find a path between the TurtleBot's current location and the first beacon. We consider a TurtleBot to have reached the goal beacon if it is within a 30cm radius of the beacon - to counteract the wall set by the occupancy grid fattener. That is, if: 
 
 \begin{align*}
 	\sqrt{(x_{BOT} - x_{BEACON})^2 + (y_{BOT} - y_{BEACON})^2} \leq 0.3m 
@@ -309,7 +312,7 @@ Once the TurtleBot reaches the beacon, another search is performed to find the p
 
 As the search is performed on a high-resolution map (0.05m/cell), the resulting path can be jagged and over-complicated. Like in the exploration phase, a Ramer-Douglas-Peucker path simplification is performed on each path that is returned from the A*, cutting down on the number of intermediary points the TurtleBot must visit.
 
-To move from beacon to beacon, the same movement logic from the exploration module is used and the laser's array of ranges is used to detect any potential collisions.
+To move from beacon to beacon, the same movement logic from the exploration module is used and the laser's array of ranges is used to detect any potential collisions. However, if an unstuck action is performed, an A* to the same goal is remade.
 
 \pagebreak
 \section{Results}
@@ -347,7 +350,7 @@ Another would have been to store a position of where we think the beacons are, a
 Another strategy would have been to only mark beacons as explored once the Kinect sees the colour beacon again, and marks the beacon as close enough. In other words, we should have followed the spec, and had a planner module keep track of beacons as they are found and explored. This would have also potentially saved time during exploration - in which beacons found already in order could be ignored during waypoint traversal!
 
 \subsection*{More tests - on powered up TurtleBots!}
-TurtleBots were always low on battery, with all 6 groups using all 5 bots. This made it hard to test, as it was always running out of charge. More experimentation and refinement could have been made in the allocated timeframe if this was fixed!
+TurtleBots were always low on battery, with all 6 groups using all 5 bots. This made it hard to test, as it was always running out of charge. More experimentation and refinement could have been made in the allocated timeframe if this was fixed. That said, we could have started earlier...
 
 \pagebreak
 \section{Appendix}
