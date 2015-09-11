@@ -1,5 +1,6 @@
 \documentclass[titlepage,12pt,a4paper]{article}
-\usepackage[a4paper]{geometry}
+
+\usepackage[left=2cm,top=3cm,right=2cm,bottom=3cm,bindingoffset=0.5cm]{geometry}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{enumitem}
@@ -17,6 +18,7 @@
 \usepackage{wrapfig}
 \usepackage{parskip}
 
+\usepackage{fancyhdr}
 \usepackage{color}
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -41,7 +43,13 @@
   tabsize=3
 }
 
-\usepackage{fancyhdr}
+
+\pagestyle{fancy}\lhead{A} \rhead{C}
+\chead{{\large{\bf B}}}
+\lfoot{}
+\rfoot{\bf \thepage}
+\cfoot{}
+
 \setlength{\headheight}{15.2pt}
 \pagestyle{fancy}
 \fancyhf{}
@@ -90,9 +98,6 @@
 \section{Architecture}
 The objective of this assignment is to autonomously navigate an unknown maze and visit beacons in a specified order. To achieve this goal, the assignment is broken down into three main modules - exploration, beacon recognition and localisation and waypoint traversal. We also have two modules which aid us in providing or processing data - the movement and odometry modules, and a shared library handling typical robot movement and occupancy grid processing.
 
-\subsection{Mapping}
-For mapping, FastSLAM is used for its speed and accuracy to generate the map. Although HectorSLAM produces a higher resolution map (0.01), it does take longer for A* to work on. FastSLAM's 0.05 resolution is sufficient for our purposes.
-
 \subsection{Main Modules}
 In exploration, the TurtleBot's task is to map out an unknown maze while avoiding obstacles (walls and beacons). The TurtleBot achieves this by performing a frontier-based search on the data gathered from its laser scan. 
 
@@ -113,6 +118,9 @@ For ease of figuring out when it will crash into a wall, we limit all movement t
 \subsubsection{Odometry Module}
 Our custom odometry module waits for a transform from \verb|/map| to \verb|base_link|, such that it always publishes a valid odometry reading in map coordinates. This is published on \verb|ass1/odom|, and is subscribed to instead of \verb|/odom| for easier processing of data.
 
+\subsection{Mapping}
+For mapping, FastSLAM is used for its speed and accuracy to generate the map. Although HectorSLAM produces a higher resolution map (0.01), it does take longer for A* to work on. FastSLAM's 0.05 resolution is sufficient for our purposes.
+
 \subsection{Helper Libraries}
 We have chosen to use shared libraries instead of additional ROS nodes, to lower communication and prevent more handling of callbacks (concurrency is hard enough!). These libraries are used by all the main modules to aid with processing common routines.
 
@@ -123,8 +131,7 @@ We have chosen to use shared libraries instead of additional ROS nodes, to lower
 \verb|bot.h| contains typical routines that help with localising the bot have such as generating movement directions, and figuring out where the bot is. It requires setting up an extra callback from our own odometry module.
 
 \subsubsection{maze.h}
-\verb|maze.h| contains information on the occupancy grid, and contains routines that allow us to process data regarding the maze.
-
+\verb|maze.h| contains information on the occupancy grid, and contains routines that allow us to process data regarding the maze as well as wall fattening. It requires setting up an extra callback from the \verb|/map| channel.
 
 \pagebreak
 \section{Exploration}
@@ -241,9 +248,11 @@ Using the ranges array gathered from the laser scan eliminates the need for the 
 \pagebreak
 \section{Planner}
 
+The planner requirement in the assignment specification is merged into the beacon recognition module.
+
 A vector of four Beacon objects is created when the beacon recognition module first begins, where the first index holds the first beacon to visit, the second index holds the second beacon to visit, and so on. Beacon objects store the top and bottom colour of the beacon as strings, x and y coordinates, and a boolean value as to whether the beacon has been found within the maze. 
 
-As beacons are detected during the exploration phase, their positions are stored in the vector. Once the four beacons have been found, their coordinates are moved from the vector to a FoundBeacons message which is published, signalling to the Exploration module to stop and the Waypoint Traversal module to begin.
+As beacons are detected during the exploration phase, their positions are stored in the vector. Once the four beacons have been found, their coordinates are moved from the vector to a FoundBeacons message which is published, signalling to the Exploration module to shutdown and the Waypoint Traversal module to begin. Image data is also terminated on the beacon recognition module, as we have all positions, so data is no longer required.
 
 This essentially allows our TurtleBot to stop exploring the maze once all four beacons have been detected, regardless of whether the robot has finished exploring the entire maze.
 
@@ -298,6 +307,44 @@ Once the TurtleBot reaches the beacon, another search is performed to find the p
 As the search is performed on a high-resolution map (0.05m/cell), the resulting path can be jagged and over-complicated. Like in the exploration phase, a Ramer-Douglas-Peucker path simplification is performed on each path that is returned from the A*, cutting down on the number of intermediary points the TurtleBot must visit.
 
 To move from beacon to beacon, the same movement logic from the exploration module is used and the laser's array of ranges is used to detect any potential collisions.
+
+\pagebreak
+\section{Results}
+During exploration, the robot managed to look at every corner as it goes through the maze with the laser and our frontier exploration into an unknown or uncertain cell. There were fears that as the frontier search does not do a second round, and the laser's higher angle compared to the Kinect, we would not be able to see all four beacons. However, all four required beacons were recognised before the 8 minute mark.
+
+However, during waypoint traversal, we had some mixed results:
+
+\begin{itemize}
+	\item The first beacon was found and reached successfully.
+	\item The second beacon was around a corner, which the Kinect just managed to see through as the bot turned to look in that corner, and the laser successfully mapping it. With our beacon localisation strategy of bringing the beacon 30cm forward, and the tight angle, the beacon was reported to be at an incorrect location, a cell off, as it was reported to be on the other side of the wall. However, waypoint successfully navigated to that location.
+	\item The third beacon was found and reached - however, due to some inaccuracies, it was placed in the wall. The robot kept trying to get into the wall - but our movement prevented this from happening. This meant our waypoint "targeting" was uncalibrated - which was true, as we increased the wall fattening to 5 units at the last minute. 
+	\item Nudging the bot against the wall to mark the bot as seen the third beacon, the bot successfully visited the last beacon, albeit overtime at about 16 minutes and 30 seconds from start.
+\end{itemize}
+
+Movement by the bot was ineffective when trying to turn any corner. As we only allow forward xor angular movements, this made it turn through corners too straight - thus increasing likelihood of the movement module detecting it was too close to the wall, requiring the bot to reverse and try turn the corner again - but then being too close to the wall. We thought having more circular walls would prevent this, but the effect was limited. The net result was in a longer period of time navigating the maze. However, with RDP, straight lines were efficient.
+
+\pagebreak
+\section{Future Improvements}
+
+\subsection*{Movement}
+One of the biggest optimisations is time - and with our movement strategy, it was slow around the corner. We believe that with our strategy of only turning xor walking straight impacted us - and moving forwards whilst turning in an arc may have prevented what we have observed. 
+
+As mentioned earlier, fattening the walls would have been another strategy, as the A* would return a path that does not hit the walls. However, make it too fat, and the A* may not be able to "cross" the wall.
+
+\subsection*{Potentially missing corners on Exploration} 
+We believe that the bot may miss corners. To prevent this, we could have set up a secondary structure to keep track of where the bot has been before in terms of metre by metre cells, and reconfigure the A* to search this cell if necessary. 
+
+\subsection*{Beacon Localisation}
+As shown in results, beacons could be recognised but localised incorrectly.
+
+One strategy would have been to instead use the Kinect DepthCloud, which provided a more accurate distance measurement. 
+
+Another would have been to store a position of where we think the beacons are, and take the average after applying a Kalman filter to filter outliers. However, this might have been missed during exploration as the laser scanner marks the cell as explored and moves along. To prevent this, the exploration would have to take in the exploration improvement mentioned above.
+
+Another strategy would have been to only mark beacons as explored once the Kinect sees the colour beacon again, and marks the beacon as close enough. In other words, we should have followed the spec, and had a planner module keep track of beacons as they are found and explored. This would have also potentially saved time during exploration - in which beacons found already in order could be ignored during waypoint traversal!
+
+\subsection*{More tests - on powered up TurtleBots!}
+TurtleBots were always low on battery, with all 6 groups using all 5 bots. This made it hard to test, as it was always running out of charge. More experimentation and refinement could have been made in the allocated timeframe if this was fixed!
 
 \pagebreak
 \section{Appendix}
