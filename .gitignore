@@ -78,3 +78,5 @@ devel
 *.mtc1
 *.out
 *.synctex.gz
+
+*.psd
