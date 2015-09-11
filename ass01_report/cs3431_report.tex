@@ -121,19 +121,19 @@ The accepted value from the wall to the robot is 30cm.
 Our custom odometry module waits for a transform from \verb|/map| to \verb|base_link|, such that it always publishes a valid odometry reading in map coordinates. This is published on \verb|ass1/odom|, and is subscribed to instead of \verb|/odom|. This allows us to reference all objects relative to the same origin.
 
 \subsection{Mapping}
-For mapping, FastSLAM is used for its speed and accuracy to generate the map. Although HectorSLAM produces a higher resolution map (0.01), it does take longer for A* to work on. FastSLAM's 0.05 resolution is sufficient for our purposes.
+For mapping, FastSLAM is used for its speed and accuracy. Although HectorSLAM produces a higher resolution map (0.01), A* takes longer to run on the map data. FastSLAM's 0.05 resolution is sufficient for our purposes.
 
 \subsection{Helper Libraries}
-We have chosen to use shared libraries instead of additional ROS nodes, to lower communication and prevent more handling of callbacks (concurrency is hard enough!). These libraries are used by all the main modules to aid with processing common routines.
+Shared libraries are used instead of additional ROS nodes to lower communication and prevent more handling of callbacks (concurrency is hard enough!). These libraries are used by all the main modules to aid with processing common routines.
 
 \subsubsection{astar.h}
-\verb|astar.h| is a generic A* library that allows us to perform A* search on grid-based maps. It works by passing in a State class, which has their own definitions of "goal" state, the heuristic and methods to explore the maze. State examples are also in \verb|astar.h|.
+\verb|astar.h| is a generic A* library that allows us to perform A* search on grid-based maps. It works by passing in a State class, which has their own definitions of ``goal" state, the heuristic and methods to explore the maze. State examples are also in \verb|astar.h|.
 
 \subsubsection{bot.h}
 \verb|bot.h| contains typical routines that help with localising the bot such as generating movement instructions, and positioning the bot within the map. It requires setting up an extra callback from our own odometry module.
 
 \subsubsection{maze.h}
-\verb|maze.h| contains information on the occupancy grid, and contains routines that allow us to process data regarding the maze as well as wall fattening. It requires setting up an extra callback from the \verb|/map| channel.
+\verb|maze.h| contains information about the occupancy grid and routines that allow us to process data regarding the maze and wall fattening. It requires setting up an extra callback from the \verb|/map| channel.
 
 \pagebreak
 \section{Operation}
@@ -171,7 +171,7 @@ A frontier-based search is advantageous in that the robot can explore areas with
 
 As the OccupancyGrid is continually being updated, the frontier-based search also increases the speed of the search by eliminating the need for the TurtleBot to travel down dead-ends. Whereas a wall-follower would lead the Bot into the dead-end, the frontier-based search will not. 
 
-However, this may mean beacons could be missed if the laser scan can infer a corner, and hence skips it. But our movement seemed to be in such a way that it peers through each corner, so we leave it as is.
+Although this may potentially lead to undetected beacons (if the laser scan infers the corner and skips it), our TurtleBot movement appears to allow the Bot to detect and ``see" every corner.
 
 \begin{figure}[h]
 	\centering
@@ -188,7 +188,7 @@ However, this may mean beacons could be missed if the laser scan can infer a cor
 	
 As the frontier-based search is performed on a map with a resolution of 0.05, the resulting path can often be jagged and over-complicated. In order to smooth-out our path, the Ramer-Douglas-Peucker algorithm is used to reduce the number of intermediary points in the path (see Appendix). RDP works by recursively dividing a given path, finding an intermediary point that is the furthest from the line segment drawn from the start to the end of a path. If the distance of this furthest point is within the given threshold, the point can be discarded, thus, cutting down the number of intermediary points the TurtleBot must visit. A threshold of 0.055 is used in our RDP path simplification, meaning that points that lie within 5.5cm can be overlooked.
 
-As movement can be interrupted due to proximity to walls, when the movement module interrupts to perform unsticking actions, an A* is used to recalculate the path to the destination - here we use the Waypoint A* state as it is the same idea. However, as the target may be a wall, we recalculate to be up to 50cm back from where the original target was. This action further guarentees that the Kinect can see all beacons, even if a corner is missed due to the recalculation, and the unsticking action finding a wall.
+The TurtleBot's movement can often be interrupted due to close proximity to walls. When the movement module interrupts to perform unsticking actions, an A* is used to recalculate the path to the destination - here we use the Waypoint A* state as it is the same idea. However, as the target may be a wall, we recalculate a path to within 50cm of the original target. This action further guarantees that the Kinect will see all beacons, even if a corner is missed, due to the path recalculation and the unsticking action detecting a wall.
 
 \pagebreak
 \subsection{Beacon Recognition and Localisation}
@@ -197,8 +197,8 @@ As movement can be interrupted due to proximity to walls, when the movement modu
 During the TurtleBot's first exploration of the maze, the camera is used to identify and position beacons. The beacon finder node subscribes to RGB images from the Kinect camera and processes them using OpenCV. The following criteria is used to detect the beacons:
 
     \begin{enumerate}
-        \item Colour range filtering to see only and distinguish pink, blue, green and yellow colours of the beacons.
-        \item Simple blob detection to find beacon shaped objects:
+        \item Colour range filtering to see only, and distinguish pink, blue, green and yellow colours of the beacons.
+        \item Simple blob detection to find beacon shaped objects with:
         \begin{enumerate}
             \item Area greater than 200 pixels.
             \item Inertia greater than 0.65.
@@ -208,7 +208,7 @@ During the TurtleBot's first exploration of the maze, the camera is used to iden
 
 The blob detector produces key points in the form of coordinates on the 640 * 480 RGB image, in the center of the beacon colour block. We conclude that a beacon has been successfully detected if there are two ``blobs" in the same image frame within a 20 pixel offset from each other in the horizontal x axis. This threshold of 20 pixels is used to account for any motion blur. The beacon's top colour is determined by comparing the two keypoints' y values.
 
-We also use the laser scan data to find the location of the beacon relative to the bot by reading the laser data at the angle corresponding to the angle on the RGB image. This information is then used in conjunction with the odom to give the location of the beacon with respect to the global map. 
+The laser scan data is then used to find the location of the beacon relative to the bot by reading the laser's ranges data at the index corresponding to the beacon's angle on the RGB image. This information is then used in conjunction with the odom to give the location of the beacon with respect to the global map. 
 
 \subsubsection{Localisation}
 Pinpointing the locations of detected beacons is essential in order for the TurtleBot to complete waypoint traversal. Each beacon's position is determined by first considering the TurtleBot's position and orientation in the maze (i.e. relative to the origin of the map), and looking at the ranges array from the laser scan. 
@@ -312,44 +312,44 @@ Once the TurtleBot reaches the beacon, another search is performed to find the p
 
 As the search is performed on a high-resolution map (0.05m/cell), the resulting path can be jagged and over-complicated. Like in the exploration phase, a Ramer-Douglas-Peucker path simplification is performed on each path that is returned from the A*, cutting down on the number of intermediary points the TurtleBot must visit.
 
-To move from beacon to beacon, the same movement logic from the exploration module is used and the laser's array of ranges is used to detect any potential collisions. However, if an unstuck action is performed, an A* to the same goal is remade.
+To move from beacon to beacon, the same movement logic from the exploration module is used and the laser's array of ranges is used to detect any potential collisions. However, if an unstuck action is performed, an A* to the same goal is performed.
 
 \pagebreak
 \section{Results}
-During exploration, the robot managed to look at every corner as it goes through the maze with the laser and our frontier exploration into an unknown or uncertain cell. There were fears that as the frontier search does not do a second round, and the laser's higher angle compared to the Kinect, we would not be able to see all four beacons. However, all four required beacons were recognised before the 8 minute mark.
+During exploration, the robot saw every corner whilst traversing the maze with the laser and our frontier exploration to an unknown or uncertain cell. Due to the laser's larger field-of-view, there was a possibility the Kinect would not detect all four beacons; however, all four required beacons were recognised before the 8 minute mark.
 
-However, during waypoint traversal, we had some mixed results:
+During waypoint traversal, however, we had some mixed results:
 
 \begin{itemize}
 	\item The first beacon was found and reached successfully.
 	\item The second beacon was around a corner, which the Kinect just managed to see through as the bot turned to look in that corner, and the laser successfully mapping it. With our beacon localisation strategy of bringing the beacon 30cm forward, and the tight angle, the beacon was reported to be at an incorrect location, a cell off, as it was reported to be on the other side of the wall. However, waypoint successfully navigated to that location.
-	\item The third beacon was found and reached - however, due to some inaccuracies, it was placed in the wall. The robot kept trying to get into the wall - but our movement prevented this from happening. This meant our waypoint "targeting" was uncalibrated - which was true, as we increased the wall fattening to 5 units at the last minute. 
-	\item Nudging the bot against the wall to mark the bot as seen the third beacon, the bot successfully visited the last beacon, albeit overtime at about 16 minutes and 30 seconds from start.
+	\item The third beacon was found and reached - however, due to some inaccuracies, it was positioned in the wall. The robot attempted to reach the beacon within the wall, but our movement prevented this from happening. This meant our waypoint "targeting" was uncalibrated - which was true, as we increased the wall fattening to 5 units at the last minute. 
+	\item After nudging the bot against the wall to mark the bot as having seen the third beacon, the bot successfully visited the last beacon, albeit overtime at about 16 minutes and 30 seconds from start.
 \end{itemize}
 
-Movement by the bot was ineffective when trying to turn any corner. As we only allow forward xor angular movements, this made it turn through corners too straight - thus increasing likelihood of the movement module detecting it was too close to the wall, requiring the bot to reverse and try turn the corner again - but then being too close to the wall. We thought having more circular walls would prevent this, but the effect was limited. The net result was in a longer period of time navigating the maze. However, with RDP, straight lines were efficient.
+Movement by the bot was ineffective when trying to turn any corner. As we only allow forward or angular movements, turns through corners were too straight - thus increasing likelihood of the movement module detecting it was too close to the wall, requiring the bot to reverse and try to turn the corner again - but then being too close to the wall. Rounded corner walls (as opposed to square corners) were thought to prevent this, however the effect was limited. The net result was a longer period of time to navigate the maze. However, with RDP, travelling straight lines was efficient.
 
-Overall, a success with a few hiccups. All components integrated together - just a few values that required more fine tuning.
+Overall, the TurtleBot was successful with a few hiccups. All components integrated together - just a few values that required more fine-tuning.
 
 \pagebreak
 \section{Future Improvements}
 
 \subsection*{Movement}
-One of the biggest optimisations is time - and with our movement strategy, it was slow around the corner. We believe that with our strategy of only turning xor walking straight impacted us - and moving forwards whilst turning in an arc may have prevented what we have observed. 
+One of the biggest optimisations that can be made is with time. With our movement strategy, the TurtleBot was slow to navigate around corners. We believe that with our strategy of only turning or walking straight impacted us; moving forwards whilst turning in an arc may have prevented what we have observed. 
 
-As mentioned earlier, fattening the walls would have been another strategy, as the A* would return a path that does not hit the walls. However, make it too fat, and the A* may not be able to "cross" the wall.
+As mentioned earlier, fattening the walls would have been another strategy, as the A* would return a path that does not hit the walls. However, in making walls too fat, the A* may not be able to ``cross" the wall.
 
 \subsection*{Potentially missing corners on Exploration} 
-We believe that the bot may miss corners. To prevent this, we could have set up a secondary structure to keep track of where the bot has been before in terms of metre by metre cells, and reconfigure the A* to search this cell if necessary. 
+We believe that the bot may miss corners. To prevent this, a secondary structure tracking where the bot has physically visited in terms of metre by metre cells could be set up, and the A* can be reconfigured to search these cells if necessary. 
 
 \subsection*{Beacon Localisation}
-As shown in results, beacons could be recognised but localised incorrectly.
+As shown in results, beacons could be recognised, however localisation was incorrect.
 
-One strategy would have been to instead use the Kinect DepthCloud, which provided a more accurate distance measurement. 
+One strategy could be to, instead, use the Kinect DepthCloud, which provides a more accurate distance measurement. 
 
-Another would have been to store a position of where we think the beacons are, and take the average after applying a Kalman filter to filter outliers. However, this might have been missed during exploration as the laser scanner marks the cell as explored and moves along. To prevent this, the exploration would have to take in the exploration improvement mentioned above.
+Alternatively, the position of where we think the beacons are can be stored. The average of these positions can then be taken after applying a Kalman filter to filter outliers. However, this may have been missed during exploration as the laser scanner marks cells as explored and moves along. To prevent this, the exploration would have to take in the exploration improvement mentioned above.
 
-Another strategy would have been to only mark beacons as explored once the Kinect sees the colour beacon again, and marks the beacon as close enough. In other words, we should have followed the spec, and had a planner module keep track of beacons as they are found and explored. This would have also potentially saved time during exploration - in which beacons found already in order could be ignored during waypoint traversal!
+Another strategy would have been to only mark beacons as explored once the Kinect sees the colour beacon again, and marks the beacon as close enough. In other words, we should have followed the spec, and had a planner module keep track of beacons as they are found and explored. This would have also potentially saved time during exploration - beacons already found in order can be ignored during waypoint traversal!
 
 \subsection*{More tests - on powered up TurtleBots!}
 TurtleBots were always low on battery, with all 6 groups using all 5 bots. This made it hard to test, as it was always running out of charge. More experimentation and refinement could have been made in the allocated timeframe if this was fixed. That said, we could have started earlier...
