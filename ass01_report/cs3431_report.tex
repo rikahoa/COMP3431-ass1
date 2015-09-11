@@ -136,7 +136,7 @@ We have chosen to use shared libraries instead of additional ROS nodes, to lower
 \verb|maze.h| contains information on the occupancy grid, and contains routines that allow us to process data regarding the maze as well as wall fattening. It requires setting up an extra callback from the \verb|/map| channel.
 
 \pagebreak
-\section{Operation Phases}
+\section{Operation}
 \subsection{Exploration}
 Before it can visit beacons in a specified order, the TurtleBot must first explore the maze. To begin the exploration phase, the TurtleBot waits for an OccupancyGrid message and an Odom message to ensure the robot's start-up has been successful. 
 
